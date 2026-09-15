@@ -1,0 +1,705 @@
+{
+  "generated_at": "2026-09-15T14:23:10.207Z",
+  "suite": {
+    "scenarios": 177,
+    "judge_scale": "1-5",
+    "judge_satisfied_at": 3.5
+  },
+  "models": [
+    {
+      "name": "light-german-tutor-v17",
+      "label": "Light German Tutor v17",
+      "line": "German tutor",
+      "edition": "browser",
+      "weights": "onnx",
+      "pitch": "A German tutor for A2-C1 learners and the telc / Goethe exams that runs entirely in your browser: the weights download once, nothing you type leaves your machine.",
+      "purpose": "German tutor for A2-C1 learners and the telc / Goethe exams: plans a session, drills, corrects and explains, in German or English. Trained on a verified lexicon of 3,800 nouns and 164 irregular verbs, about 1,400 engine-computed rule drills (numbers, dates, prices, clock times, contractions, verb prepositions), a rebuilt correction family - a rule kind for every classic learner error with verified bilingual rule sentences and a diff line that names the changed word - and a family of bilingual grammar rule cards (Perfekt, adjective endings, cases, word order, and from this version the C1 topics: Nominalstil, Partizipialattribut, indirect speech with Konjunktiv I, passive substitutes, two-part connectors) whose rule sentences are copied from one verified fact block and, where that block is in front of the tutor, quoted from it word for word. Teacher-written rows whose German contradicts the lexicon's gender, plural or verb forms are dropped at build time, and long answers - letters, dialogues, study plans, translations - are trained to a length budget so they end inside the browser's token limit. Asked to prepare for an everyday situation (\"train me to go to a barber shop\"), it writes a briefing - what happens, the phrases both ways with glosses, a short rehearsal - and offers to play the counterpart; asked for the role-play itself, it answers in character with one short German line and a question, from a family of engine-composed situation cards (A2-C1) whose facts are fixed.",
+      "showcase": true,
+      "params_b": 3,
+      "memory_gb": null,
+      "licence": "Apache-2.0 (inherited from the base model)",
+      "measured_at": "2026-09-12T22:44:07+00:00",
+      "gate": {
+        "suite_size": 177,
+        "release": true,
+        "runtime": "transformersjs",
+        "dtype": "q8",
+        "max_new_tokens": 700,
+        "created_at": "2026-09-12T22:44:07+00:00",
+        "gates": {
+          "no_loop": {
+            "threshold": 1,
+            "actual": 1,
+            "ok": true
+          },
+          "not_truncated": {
+            "threshold": 0.97,
+            "actual": 0.9887,
+            "ok": true
+          },
+          "no_ai_talk": {
+            "threshold": 1,
+            "actual": 1,
+            "ok": true
+          },
+          "language_follows": {
+            "threshold": 0.9,
+            "actual": 0.9831,
+            "ok": true
+          },
+          "facts": {
+            "threshold": 0.85,
+            "actual": 0.9205,
+            "ok": true
+          },
+          "shape": {
+            "threshold": 0.8,
+            "actual": 0.8824,
+            "ok": true
+          },
+          "lexicon": {
+            "threshold": 0.95,
+            "actual": 0.9774,
+            "ok": true
+          },
+          "export": {
+            "threshold": 1,
+            "actual": 1,
+            "ok": true
+          }
+        },
+        "rates": {
+          "no_loop": 1,
+          "not_truncated": 0.9887,
+          "no_ai_talk": 1,
+          "no_emoji": 0.9944,
+          "language_follows": 0.9831,
+          "length_budget": 0.904,
+          "markdown_sane": 0.9944,
+          "lexicon": 0.9774,
+          "facts": 0.9205,
+          "shape": 0.8824,
+          "all_checks": 0.791
+        },
+        "by_category": {
+          "adjective-declension": {
+            "n": 6,
+            "facts": 1,
+            "ok": 0.8333,
+            "not_truncated": 1,
+            "length_budget": 1
+          },
+          "c1-connectors": {
+            "n": 6,
+            "facts": 0.6667,
+            "ok": 0.5,
+            "not_truncated": 1,
+            "length_budget": 0.6667
+          },
+          "c1-transform": {
+            "n": 10,
+            "facts": 0.7,
+            "ok": 0.2,
+            "not_truncated": 1,
+            "length_budget": 0.3
+          },
+          "clock": {
+            "n": 8,
+            "facts": 1,
+            "ok": 1,
+            "not_truncated": 1,
+            "length_budget": 1
+          },
+          "contractions": {
+            "n": 4,
+            "facts": 0.75,
+            "ok": 0.75,
+            "not_truncated": 1,
+            "length_budget": 1
+          },
+          "correction": {
+            "n": 12,
+            "facts": 0.75,
+            "ok": 0.5833,
+            "not_truncated": 1,
+            "length_budget": 1
+          },
+          "dates": {
+            "n": 6,
+            "facts": 1,
+            "ok": 1,
+            "not_truncated": 1,
+            "length_budget": 1
+          },
+          "dialogue": {
+            "n": 4,
+            "ok": 0.5,
+            "not_truncated": 0.75,
+            "length_budget": 0.75
+          },
+          "exam-facts": {
+            "n": 12,
+            "facts": 1,
+            "ok": 1,
+            "not_truncated": 1,
+            "length_budget": 1
+          },
+          "false-friends": {
+            "n": 6,
+            "facts": 0.8333,
+            "ok": 0.6667,
+            "not_truncated": 1,
+            "length_budget": 0.8333
+          },
+          "gender-plural": {
+            "n": 12,
+            "facts": 0.9167,
+            "ok": 0.9167,
+            "not_truncated": 1,
+            "length_budget": 1
+          },
+          "grammar-explain": {
+            "n": 6,
+            "ok": 0.8333,
+            "not_truncated": 1,
+            "length_budget": 1
+          },
+          "irregular-verbs": {
+            "n": 10,
+            "facts": 1,
+            "ok": 1,
+            "not_truncated": 1,
+            "length_budget": 1
+          },
+          "letter-formal": {
+            "n": 4,
+            "facts": 1,
+            "ok": 0.75,
+            "not_truncated": 0.75,
+            "length_budget": 0.75
+          },
+          "letter-informal": {
+            "n": 3,
+            "facts": 1,
+            "ok": 0,
+            "not_truncated": 1,
+            "length_budget": 0
+          },
+          "numbers": {
+            "n": 8,
+            "facts": 1,
+            "ok": 1,
+            "not_truncated": 1,
+            "length_budget": 1
+          },
+          "ordinals": {
+            "n": 4,
+            "facts": 1,
+            "ok": 1,
+            "not_truncated": 1,
+            "length_budget": 1
+          },
+          "preposition-case": {
+            "n": 8,
+            "facts": 1,
+            "ok": 0.875,
+            "not_truncated": 1,
+            "length_budget": 0.875
+          },
+          "prices": {
+            "n": 6,
+            "facts": 1,
+            "ok": 1,
+            "not_truncated": 1,
+            "length_budget": 1
+          },
+          "roleplay": {
+            "n": 10,
+            "facts": 0.9,
+            "ok": 0.6,
+            "not_truncated": 1,
+            "length_budget": 1
+          },
+          "scenario-brief": {
+            "n": 8,
+            "ok": 0.75,
+            "not_truncated": 1,
+            "length_budget": 1
+          },
+          "translation": {
+            "n": 8,
+            "ok": 0.875,
+            "not_truncated": 1,
+            "length_budget": 0.875
+          },
+          "verb-prepositions": {
+            "n": 8,
+            "facts": 1,
+            "ok": 1,
+            "not_truncated": 1,
+            "length_budget": 1
+          },
+          "vocab-list": {
+            "n": 8,
+            "facts": 1,
+            "ok": 0.875,
+            "not_truncated": 1,
+            "length_budget": 1
+          }
+        }
+      },
+      "panel": {
+        "round": 12,
+        "mean": 3.56,
+        "means": {
+          "accuracy": 3.17,
+          "helpfulness": 3.41,
+          "german": 3.79,
+          "format": 3.86
+        },
+        "satisfied": 0,
+        "required": 5,
+        "judges": [
+          {
+            "judge": "claude-fable-5.1",
+            "mean": 3.54,
+            "means": {
+              "accuracy": 3.24,
+              "helpfulness": 3.24,
+              "german": 3.83,
+              "format": 3.83
+            },
+            "satisfied": false,
+            "severe_errors": 20
+          },
+          {
+            "judge": "gemini-3.8-flash",
+            "mean": 3.74,
+            "means": {
+              "accuracy": 3.44,
+              "helpfulness": 3.76,
+              "german": 3.78,
+              "format": 4
+            },
+            "satisfied": false,
+            "severe_errors": 8
+          },
+          {
+            "judge": "gpt-6-astra",
+            "mean": 3.28,
+            "means": {
+              "accuracy": 2.76,
+              "helpfulness": 2.83,
+              "german": 3.66,
+              "format": 3.88
+            },
+            "satisfied": false,
+            "severe_errors": 60
+          },
+          {
+            "judge": "grok-4.6",
+            "mean": 3.47,
+            "means": {
+              "accuracy": 3,
+              "helpfulness": 3.46,
+              "german": 3.66,
+              "format": 3.76
+            },
+            "satisfied": false,
+            "severe_errors": 21
+          },
+          {
+            "judge": "kimi-k3",
+            "mean": 3.76,
+            "means": {
+              "accuracy": 3.41,
+              "helpfulness": 3.76,
+              "german": 4.02,
+              "format": 3.85
+            },
+            "satisfied": false,
+            "severe_errors": 12
+          }
+        ]
+      },
+      "measured": [
+        {
+          "machine": "Apple-silicon laptop, 16 GiB, Chrome WebGPU (v9 build of the same graph)",
+          "dtype": "q8",
+          "tok_s": "3-9",
+          "load_network_s": 22,
+          "load_cache_s": 5
+        }
+      ],
+      "hub": {
+        "repo": "lamplitlabs/licht-german-tutor",
+        "public": true,
+        "revision": "v16",
+        "student": "light-german-tutor-v16",
+        "space": "lamplitlabs/licht-german-tutor"
+      },
+      "base_model": "HuggingFaceTB/SmolLM3-3B",
+      "exported_at": "2026-09-12T21:04:37Z",
+      "opset": 18,
+      "runtime": {
+        "onnxruntime": "1.29.0",
+        "transformers": "4.57.6"
+      },
+      "grounding": true,
+      "dtypes": [
+        {
+          "dtype": "q8",
+          "size_mb": 3552,
+          "chunks": 2,
+          "max_chunk_mb": 1796,
+          "wasm": false
+        },
+        {
+          "dtype": "q4",
+          "size_mb": 2086,
+          "chunks": 2,
+          "max_chunk_mb": 1808,
+          "wasm": false
+        }
+      ],
+      "browser": true,
+      "wasm": false,
+      "export_agreement": {
+        "fp32": 1,
+        "q8": 0.9583,
+        "q4": 0.8333
+      },
+      "system_prompt": "You are a patient, precise German tutor for learners from A1 to C1. Reply in the language the learner writes in (usually English) and keep German examples in German, with translations. Adapt depth to the learner's level when it is given. Be compact: state the meaning or rule in a few sentences, give two or three short example sentences, always mark gender and plural for nouns, and when correcting show the corrected sentence first, then explain briefly. Plain text with light Markdown, no emojis, and never mention being an AI model."
+    },
+    {
+      "name": "light-german-tutor-pro-v22",
+      "label": "Light German Tutor Pro v22",
+      "line": "German tutor",
+      "edition": "pro",
+      "weights": "pytorch",
+      "pitch": "The same tutor at 8 billion parameters for a GPU server or a workstation: fuller explanations, C1 transformations and exam preparation, measured on the same suite.",
+      "purpose": "The pro edition of the German tutor: 8 billion parameters fine-tuned from Qwen3-8B, delivered as merged bf16 weights for a GPU server or a workstation with about 20 GB of memory. It explains grammar and vocabulary with short bilingual examples, corrects a sentence and names the changed word and the rule, drills genders, plurals, irregular verbs, numbers, dates, prices, clock times and verb prepositions, briefs you before an everyday situation and plays the counterpart in short German turns, transforms sentences the way C1 courses ask (Nominalstil and Verbalstil, Partizipialattribut and Relativsatz, Konjunktiv I, passive substitutes, two-part connectors) and prepares telc and Goethe tasks. It answers in the language you write in. Trained on the browser edition's data plus a scenario-briefing family written off held-out situations, full contraction pair lists and C1 paradigm drills; the same release gates and the same five-judge panel measure it, on its trained weights rather than on a quantised export.",
+      "showcase": true,
+      "params_b": 8,
+      "memory_gb": 20,
+      "licence": "Apache-2.0 (inherited from the base model)",
+      "measured_at": "2026-09-15T06:19:17+00:00",
+      "gate": {
+        "suite_size": 177,
+        "release": true,
+        "runtime": "pytorch",
+        "dtype": null,
+        "max_new_tokens": 700,
+        "created_at": "2026-09-15T06:19:17+00:00",
+        "gates": {
+          "no_loop": {
+            "threshold": 1,
+            "actual": 1,
+            "ok": true
+          },
+          "not_truncated": {
+            "threshold": 0.97,
+            "actual": 1,
+            "ok": true
+          },
+          "no_ai_talk": {
+            "threshold": 1,
+            "actual": 1,
+            "ok": true
+          },
+          "language_follows": {
+            "threshold": 0.9,
+            "actual": 0.9944,
+            "ok": true
+          },
+          "facts": {
+            "threshold": 0.85,
+            "actual": 0.9272,
+            "ok": true
+          },
+          "shape": {
+            "threshold": 0.8,
+            "actual": 0.9412,
+            "ok": true
+          },
+          "lexicon": {
+            "threshold": 0.95,
+            "actual": 0.9944,
+            "ok": true
+          }
+        },
+        "rates": {
+          "no_loop": 1,
+          "not_truncated": 1,
+          "no_ai_talk": 1,
+          "no_emoji": 1,
+          "language_follows": 0.9944,
+          "length_budget": 0.9718,
+          "markdown_sane": 1,
+          "lexicon": 0.9944,
+          "facts": 0.9272,
+          "shape": 0.9412,
+          "all_checks": 0.887
+        },
+        "by_category": {
+          "adjective-declension": {
+            "n": 6,
+            "facts": 1,
+            "ok": 1,
+            "not_truncated": 1,
+            "length_budget": 1
+          },
+          "c1-connectors": {
+            "n": 6,
+            "facts": 0.8333,
+            "ok": 0.8333,
+            "not_truncated": 1,
+            "length_budget": 1
+          },
+          "c1-transform": {
+            "n": 10,
+            "facts": 0.9,
+            "ok": 0.9,
+            "not_truncated": 1,
+            "length_budget": 1
+          },
+          "clock": {
+            "n": 8,
+            "facts": 1,
+            "ok": 1,
+            "not_truncated": 1,
+            "length_budget": 1
+          },
+          "contractions": {
+            "n": 4,
+            "facts": 1,
+            "ok": 0.75,
+            "not_truncated": 1,
+            "length_budget": 0.75
+          },
+          "correction": {
+            "n": 12,
+            "facts": 0.75,
+            "ok": 0.6667,
+            "not_truncated": 1,
+            "length_budget": 1
+          },
+          "dates": {
+            "n": 6,
+            "facts": 1,
+            "ok": 1,
+            "not_truncated": 1,
+            "length_budget": 1
+          },
+          "dialogue": {
+            "n": 4,
+            "ok": 0.75,
+            "not_truncated": 1,
+            "length_budget": 1
+          },
+          "exam-facts": {
+            "n": 12,
+            "facts": 1,
+            "ok": 1,
+            "not_truncated": 1,
+            "length_budget": 1
+          },
+          "false-friends": {
+            "n": 6,
+            "facts": 0.8333,
+            "ok": 0.8333,
+            "not_truncated": 1,
+            "length_budget": 1
+          },
+          "gender-plural": {
+            "n": 12,
+            "facts": 0.75,
+            "ok": 0.75,
+            "not_truncated": 1,
+            "length_budget": 1
+          },
+          "grammar-explain": {
+            "n": 6,
+            "ok": 1,
+            "not_truncated": 1,
+            "length_budget": 1
+          },
+          "irregular-verbs": {
+            "n": 10,
+            "facts": 1,
+            "ok": 1,
+            "not_truncated": 1,
+            "length_budget": 1
+          },
+          "letter-formal": {
+            "n": 4,
+            "facts": 1,
+            "ok": 1,
+            "not_truncated": 1,
+            "length_budget": 1
+          },
+          "letter-informal": {
+            "n": 3,
+            "facts": 1,
+            "ok": 1,
+            "not_truncated": 1,
+            "length_budget": 1
+          },
+          "numbers": {
+            "n": 8,
+            "facts": 1,
+            "ok": 1,
+            "not_truncated": 1,
+            "length_budget": 1
+          },
+          "ordinals": {
+            "n": 4,
+            "facts": 1,
+            "ok": 1,
+            "not_truncated": 1,
+            "length_budget": 1
+          },
+          "preposition-case": {
+            "n": 8,
+            "facts": 1,
+            "ok": 1,
+            "not_truncated": 1,
+            "length_budget": 1
+          },
+          "prices": {
+            "n": 6,
+            "facts": 1,
+            "ok": 1,
+            "not_truncated": 1,
+            "length_budget": 1
+          },
+          "roleplay": {
+            "n": 10,
+            "facts": 0.9,
+            "ok": 0.8,
+            "not_truncated": 1,
+            "length_budget": 1
+          },
+          "scenario-brief": {
+            "n": 8,
+            "ok": 0.875,
+            "not_truncated": 1,
+            "length_budget": 1
+          },
+          "translation": {
+            "n": 8,
+            "ok": 0.5,
+            "not_truncated": 1,
+            "length_budget": 0.5
+          },
+          "verb-prepositions": {
+            "n": 8,
+            "facts": 0.875,
+            "ok": 0.875,
+            "not_truncated": 1,
+            "length_budget": 1
+          },
+          "vocab-list": {
+            "n": 8,
+            "facts": 1,
+            "ok": 1,
+            "not_truncated": 1,
+            "length_budget": 1
+          }
+        }
+      },
+      "panel": {
+        "round": 18,
+        "mean": 3.66,
+        "means": {
+          "accuracy": 3.39,
+          "helpfulness": 3.46,
+          "german": 3.95,
+          "format": 3.83
+        },
+        "satisfied": 0,
+        "required": 5,
+        "judges": [
+          {
+            "judge": "fable",
+            "mean": 3.7,
+            "means": {
+              "accuracy": 3.49,
+              "helpfulness": 3.27,
+              "german": 4.15,
+              "format": 3.88
+            },
+            "satisfied": false,
+            "severe_errors": 13
+          },
+          {
+            "judge": "gemini",
+            "mean": 3.47,
+            "means": {
+              "accuracy": 3.22,
+              "helpfulness": 3.54,
+              "german": 3.56,
+              "format": 3.56
+            },
+            "satisfied": false,
+            "severe_errors": 11
+          },
+          {
+            "judge": "gpt",
+            "mean": 3.63,
+            "means": {
+              "accuracy": 3.12,
+              "helpfulness": 3.12,
+              "german": 4.17,
+              "format": 4.1
+            },
+            "satisfied": false,
+            "severe_errors": 31
+          },
+          {
+            "judge": "grok",
+            "mean": 3.54,
+            "means": {
+              "accuracy": 3.29,
+              "helpfulness": 3.46,
+              "german": 3.56,
+              "format": 3.83
+            },
+            "satisfied": false,
+            "severe_errors": 9
+          },
+          {
+            "judge": "kimi",
+            "mean": 3.96,
+            "means": {
+              "accuracy": 3.83,
+              "helpfulness": 3.93,
+              "german": 4.29,
+              "format": 3.8
+            },
+            "satisfied": false,
+            "severe_errors": 9
+          }
+        ]
+      },
+      "measured": [],
+      "hub": {
+        "repo": null,
+        "public": false
+      },
+      "base_model": "Qwen/Qwen3-8B",
+      "exported_at": null,
+      "opset": null,
+      "runtime": {
+        "onnxruntime": null,
+        "transformers": null
+      },
+      "grounding": true,
+      "dtypes": [],
+      "browser": false,
+      "wasm": false,
+      "export_agreement": null,
+      "system_prompt": null
+    }
+  ]
+}
