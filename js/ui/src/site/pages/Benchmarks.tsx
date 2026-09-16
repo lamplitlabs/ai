@@ -188,7 +188,7 @@ export function Benchmarks() {
         n="bench"
         eyebrow="The measurements"
         title="Every number, including the ones we are not proud of"
-        lead={`A fixed suite of ${siteData.suite.scenarios ?? '–'} learner scenarios runs against every edition - a browser edition on the export the browser runs, a pro edition on its trained weights - then independent frontier models score the answers ${siteData.suite.judge_scale}. Nothing is released before the gates pass and the panel agrees.`}
+        lead={`A fixed suite of ${siteData.suite.scenarios ?? '–'} learner scenarios runs against every edition - a browser edition on the export the browser runs, a larger edition on its trained weights - then independent frontier models score the answers ${siteData.suite.judge_scale}. Nothing is released before the gates pass and the panel agrees.`}
         aside={
           <>
             <Status ok={gate?.release ?? false}>

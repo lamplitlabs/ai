@@ -57,7 +57,8 @@ export interface Measured {
   load_network_s: number | null;
   load_cache_s: number | null;
 }
-export type Edition = 'browser' | 'pro';
+/** editions of a line, named by size class (ADR-018 in the model repository): `browser` fits a browser, `medium` needs a GPU */
+export type Edition = 'browser' | 'medium';
 export interface SiteModel {
   name: string;
   label: string;
@@ -74,6 +75,8 @@ export interface SiteModel {
   params_b: number;
   /** memory a GPU or workstation needs for the weights, when the line is not a download */
   memory_gb: number | null;
+  /** size of the trained weights a visitor downloads (safetensors shards), for a line without an export; null when unknown */
+  weights_mb: number | null;
   licence: string;
   /** null for a line without an export */
   exported_at: string | null;
@@ -114,7 +117,7 @@ export const lines = [...new Set(showcaseModels.map((m) => m.line))].map((line) 
 /** The newest measurement on the site. */
 export const latestMeasuredAt = showcaseModels.map((m) => m.measured_at ?? '').sort().at(-1) || null;
 
-export const EDITION_LABELS: Record<Edition, string> = { browser: 'browser edition', pro: 'pro edition' };
+export const EDITION_LABELS: Record<Edition, string> = { browser: 'browser edition', medium: 'medium edition' };
 /** Where an edition runs, from its weights: a browser export or a GPU-sized checkpoint. */
 export const runsIn = (m: SiteModel) => (m.weights === 'pytorch' ? 'GPU server · workstation' : m.browser ? 'browser · desktop · server' : 'desktop · server');
 export const runsInDetail = (m: SiteModel) => (m.weights === 'pytorch' ? `${m.memory_gb ? `about ${m.memory_gb} GB of memory` : 'a GPU'} · PyTorch` : m.browser ? (m.wasm ? 'WebGPU / WASM' : 'WebGPU (Chrome, Edge)') : 'file over the browser limit');

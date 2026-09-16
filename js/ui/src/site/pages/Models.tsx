@@ -1,4 +1,4 @@
-import { Cpu, FileDown, Globe, Mail, Scale, Server, Sparkles } from 'lucide-react';
+import { ArrowUpRight, Cpu, FileDown, Globe, Mail, Scale, Server, Sparkles } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { CommissionCard } from '../Offerings';
 import { Reveal } from '../Reveal';
@@ -6,7 +6,7 @@ import { CONTACT } from '../SiteLayout';
 import { Link } from '../router';
 import { TryLink } from '../TryLink';
 import { Gauge, Index, Spec, Status, Tag } from '../lab';
-import { categoryLabel, EDITION_LABELS, factCategories, gb, lines, measuredOn, models, pct, runsIn, runsInDetail, shortDate, showcaseModels, tryUrl, weightsDetail, weightsFormat, type SiteModel } from '../data';
+import { categoryLabel, EDITION_LABELS, factCategories, gb, hubRepoUrl, lines, measuredOn, models, pct, runsIn, runsInDetail, shortDate, showcaseModels, tryUrl, weightsDetail, weightsFormat, type SiteModel } from '../data';
 import { container, primaryCta, secondaryCta } from '../cta';
 
 /** The page head shared by /models and /benchmarks: index, eyebrow, a large title, the lead, an optional status chip. */
@@ -40,8 +40,9 @@ function Number({ k, v, sub, ok, value, threshold }: { k: string; v: string; sub
 }
 
 /** The datasheet of one edition. An ONNX edition is a download you try in the browser; a PyTorch edition is a
- *  GPU-sized checkpoint whose weights are asked for - it has no quantised export, so no export-fidelity number. */
-function ModelCard({ m, featured }: { m: SiteModel; featured: boolean }) {
+ *  GPU-sized checkpoint - it has no quantised export, so no export-fidelity number. Weights that are public link to
+ *  their Hugging Face repository (the primary call when there is nothing to try); the rest are asked for by mail. */
+export function ModelCard({ m, featured }: { m: SiteModel; featured: boolean }) {
   const g = m.gate;
   const facts = g?.gates.facts;
   const size = m.dtypes[0];
@@ -50,7 +51,8 @@ function ModelCard({ m, featured }: { m: SiteModel; featured: boolean }) {
   const weakest = cats[cats.length - 1];
   const gates = g ? Object.values(g.gates) : [];
   const passed = gates.filter((x) => x.ok).length;
-  const publicWeights = Boolean(m.hub.public && m.hub.repo);
+  const hubUrl = m.hub.public && m.hub.repo ? hubRepoUrl(m.hub.repo) : null;
+  const publicWeights = hubUrl != null;
   return (
     <article className={`glass card-glow corner-marks scroll-mt-20 rounded-3xl p-6 sm:p-8 lg:p-10 ${featured ? 'glow-border' : ''}`} id={m.name}>
       <div className="flex flex-wrap items-center gap-2">
@@ -63,7 +65,7 @@ function ModelCard({ m, featured }: { m: SiteModel; featured: boolean }) {
         ) : (
           <Tag>{weightsDetail(m)}</Tag>
         )}
-        <Tag>{publicWeights ? `public weights${m.hub.revision ? ` · release ${m.hub.revision}` : ''}` : 'weights on request'}</Tag>
+        <Tag>{publicWeights ? `public weights${m.hub.revision ? ` · ${m.hub.revision}` : ''}` : 'weights on request'}</Tag>
         <span className="mono-label ml-auto hidden text-muted-foreground sm:inline">{m.exported_at ? `exported ${shortDate(m.exported_at)}` : `measured ${shortDate(m.measured_at)}`}</span>
       </div>
 
@@ -80,11 +82,20 @@ function ModelCard({ m, featured }: { m: SiteModel; featured: boolean }) {
             <TryLink href={tryUrl(m)} className={primaryCta}>
               Try
             </TryLink>
+          ) : hubUrl ? (
+            <a href={hubUrl} target="_blank" rel="noopener noreferrer" className={primaryCta}>
+              <ArrowUpRight className="size-4" aria-hidden="true" /> Weights on Hugging Face
+            </a>
           ) : (
             <a href={`mailto:${CONTACT}?subject=${encodeURIComponent(`${m.line} - ${EDITION_LABELS[m.edition]} (${m.label})`)}`} className={primaryCta}>
               <Mail className="size-4" aria-hidden="true" /> Ask for the weights
             </a>
           )}
+          {m.browser && hubUrl ? (
+            <a href={hubUrl} target="_blank" rel="noopener noreferrer" className={secondaryCta}>
+              Hugging Face <ArrowUpRight className="size-4" aria-hidden="true" />
+            </a>
+          ) : null}
           <Link to={`/benchmarks#${m.name}`} className={secondaryCta}>
             Benchmarks
           </Link>
@@ -93,7 +104,12 @@ function ModelCard({ m, featured }: { m: SiteModel; featured: boolean }) {
 
       <dl className="mt-8 grid grid-cols-2 gap-x-6 gap-y-6 border-t border-border pt-8 sm:grid-cols-3 lg:grid-cols-6">
         <Spec icon={<Cpu className="size-3.5" />} k="size" v={`${m.params_b}B parameters`} sub={`base ${m.base_model.split('/').pop()}`} />
-        <Spec icon={<FileDown className="size-3.5" />} k={m.weights === 'pytorch' ? 'weights' : 'download'} v={size ? gb(size.size_mb) : 'on request'} sub={size ? `${size.dtype} · ${size.chunks > 1 ? `${size.chunks} files` : 'one file'}` : 'delivered as a Hugging Face repository or as files'} />
+        <Spec
+          icon={<FileDown className="size-3.5" />}
+          k={m.weights === 'pytorch' ? 'weights' : 'download'}
+          v={size ? gb(size.size_mb) : m.weights_mb ? gb(m.weights_mb) : 'on request'}
+          sub={size ? `${size.dtype} · ${size.chunks > 1 ? `${size.chunks} files` : 'one file'}` : publicWeights ? 'bf16 · safetensors · on the Hugging Face Hub' : 'delivered as a Hugging Face repository or as files'}
+        />
         <Spec icon={<Globe className="size-3.5" />} k="runs in" v={runsIn(m)} sub={runsInDetail(m)} />
         <Spec icon={<Server className="size-3.5" />} k="format" v={weightsFormat(m)} sub={weightsDetail(m)} />
         <Spec icon={<Scale className="size-3.5" />} k="licence" v={m.licence.split(' (')[0]} sub="inherited from the base" />
@@ -171,14 +187,14 @@ export function Models() {
             <div className="mono-label text-primary">reading the numbers</div>
             <h2 className="mt-3 font-semibold">How to read the numbers</h2>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              <strong className="text-foreground">Facts</strong> is the share of answers whose checkable statements match the reference pack; the release gate asks for 85%. <strong className="text-foreground">Judges</strong> are independent frontier models from different vendors scoring every answer 1-5 on accuracy, helpfulness, language and format; a judge is satisfied at a mean of 3.5 with no severe error. <strong className="text-foreground">Export fidelity</strong> is how often the quantised file the browser runs gives the same answer as the trained weights; a pro edition is measured on those weights directly and has no such number.
+              <strong className="text-foreground">Facts</strong> is the share of answers whose checkable statements match the reference pack; the release gate asks for 85%. <strong className="text-foreground">Judges</strong> are independent frontier models from different vendors scoring every answer 1-5 on accuracy, helpfulness, language and format; a judge is satisfied at a mean of 3.5 with no severe error. <strong className="text-foreground">Export fidelity</strong> is how often the quantised file the browser runs gives the same answer as the trained weights; an edition that ships as trained weights is measured on those weights directly and has no such number.
             </p>
           </div>
           <div className="glass rounded-2xl p-6 sm:p-7">
             <div className="mono-label text-primary">weights and licences</div>
             <h2 className="mt-3 font-semibold">Weights and licences</h2>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              Each model inherits the licence of its open base. Apache-2.0 bases can be redistributed freely; research licences are shared with customers under their terms. A browser edition's weights are public on the Hugging Face Hub; a pro edition's are delivered on request as a Hugging Face repository or as files, together with the export the runtime loads and the report you see here.
+              Each model inherits the licence of its open base. Apache-2.0 bases can be redistributed freely; research licences are shared with customers under their terms. Weights marked public are on the Hugging Face Hub under lamplitlabs, every version under its own tag and with a model card that carries the measurements you see here; an edition not yet public is delivered on request as a Hugging Face repository or as files, together with the export the runtime loads and the report.
               {hidden.length ? ` Earlier prototypes (${hidden.map((m) => m.label).join(', ')}) appear on the benchmarks page only.` : ''}
             </p>
           </div>

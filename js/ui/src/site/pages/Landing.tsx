@@ -233,7 +233,7 @@ export function Landing() {
             <CommissionCard wide />
           </Reveal>
           <p className="mono-label mt-6 text-muted-foreground/80">
-            {pct(facts?.actual, 1)} facts against the reference and {passed}/{gates.length} gates on the {m?.edition ?? 'browser'} edition today · the pro edition is measured on its trained weights, not on a quantised export ·{' '}
+            {pct(facts?.actual, 1)} facts against the reference and {passed}/{gates.length} gates on the {m?.edition ?? 'browser'} edition today · an edition that ships as trained weights is measured on those weights, not on a quantised export ·{' '}
             <Link to="/benchmarks" className="text-primary hover:underline">
               every report
             </Link>

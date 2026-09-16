@@ -9,9 +9,9 @@ import { primaryCta, secondaryCta } from './cta';
 /**
  * One offering: an edition of a model line as something you can take home today - what it is, where it runs, how its
  * weights are had, and the measurement that stands behind it. Every number comes from `site.json`; the card links to
- * the edition's datasheet (/models) and its full report (/benchmarks). The browser edition is tried on the Space;
- * the pro edition's weights are asked for by mail (nothing of that line is on the Hub until a round passes its
- * publish rule).
+ * the edition's datasheet (/models) and its full report (/benchmarks). The browser edition is tried on the Space; an
+ * edition with public weights and nothing to try leads to its Hugging Face repository; weights not yet public are
+ * asked for by mail.
  */
 export function OfferingCard({ m, featured = false }: { m: SiteModel; featured?: boolean }) {
   const g = m.gate;
@@ -19,11 +19,16 @@ export function OfferingCard({ m, featured = false }: { m: SiteModel; featured?:
   const gates = g ? Object.values(g.gates) : [];
   const passed = gates.filter((x) => x.ok).length;
   const size = m.dtypes[0];
-  const publicWeights = Boolean(m.hub.public && m.hub.repo);
+  const hubUrl = m.hub.public && m.hub.repo ? hubRepoUrl(m.hub.repo) : null;
+  const publicWeights = hubUrl != null;
   const primary = m.browser ? (
     <TryLink href={tryUrl(m)} className={primaryCta}>
       Try it
     </TryLink>
+  ) : hubUrl ? (
+    <a href={hubUrl} target="_blank" rel="noopener noreferrer" className={primaryCta}>
+      <ArrowUpRight className="size-4" aria-hidden="true" /> Weights on Hugging Face
+    </a>
   ) : (
     <a href={`mailto:${CONTACT}?subject=${encodeURIComponent(`${m.line} - ${EDITION_LABELS[m.edition]} (${m.label})`)}`} className={primaryCta}>
       <Mail className="size-4" aria-hidden="true" /> Ask for the weights
@@ -45,7 +50,7 @@ export function OfferingCard({ m, featured = false }: { m: SiteModel; featured?:
       <dl className="mt-6 grid grid-cols-2 gap-x-6 gap-y-5 border-t border-border pt-6 sm:grid-cols-3">
         <Spec icon={<Cpu className="size-3.5" />} k="size" v={`${m.params_b}B`} sub={`base ${m.base_model.split('/').pop()}`} />
         <Spec icon={<Globe className="size-3.5" />} k="runs in" v={runsIn(m)} sub={runsInDetail(m)} />
-        <Spec icon={<KeyRound className="size-3.5" />} k="weights" v={publicWeights ? 'yours to download' : 'yours on request'} sub={publicWeights ? (size ? `${size.dtype} · ${gb(size.size_mb)} · ${m.licence.split(' (')[0]}` : m.licence.split(' (')[0]) : `${m.weights === 'pytorch' ? 'merged bf16' : 'export'} · ${m.licence.split(' (')[0]}`} />
+        <Spec icon={<KeyRound className="size-3.5" />} k="weights" v={publicWeights ? 'yours to download' : 'yours on request'} sub={publicWeights ? (size ? `${size.dtype} · ${gb(size.size_mb)} · ${m.licence.split(' (')[0]}` : m.weights_mb ? `bf16 · ${gb(m.weights_mb)} · ${m.licence.split(' (')[0]}` : m.licence.split(' (')[0]) : `${m.weights === 'pytorch' ? 'merged bf16' : 'export'} · ${m.licence.split(' (')[0]}`} />
       </dl>
 
       {g ? (
@@ -81,8 +86,8 @@ export function OfferingCard({ m, featured = false }: { m: SiteModel; featured?:
         <Link to={`/models#${m.name}`} className={secondaryCta}>
           Datasheet
         </Link>
-        {publicWeights && m.hub.repo ? (
-          <a href={hubRepoUrl(m.hub.repo)} target="_blank" rel="noopener noreferrer" className="mono-label ml-auto inline-flex items-center gap-1 text-muted-foreground transition-colors hover:text-foreground">
+        {hubUrl && m.browser ? (
+          <a href={hubUrl} target="_blank" rel="noopener noreferrer" className="mono-label ml-auto inline-flex items-center gap-1 text-muted-foreground transition-colors hover:text-foreground">
             weights on hugging face <ArrowUpRight className="size-3" aria-hidden="true" />
           </a>
         ) : (

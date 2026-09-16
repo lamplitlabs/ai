@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-16T10:04:11.500Z",
+  "generated_at": "2026-09-16T10:29:28.345Z",
   "suite": {
     "scenarios": 177,
     "judge_scale": "1-5",
@@ -339,6 +339,7 @@
         "space": "lamplitlabs/licht-german-tutor"
       },
       "base_model": "HuggingFaceTB/SmolLM3-3B",
+      "weights_mb": null,
       "exported_at": "2026-09-12T21:04:37Z",
       "opset": 18,
       "runtime": {
@@ -373,12 +374,12 @@
     },
     {
       "name": "light-german-tutor-pro-v22",
-      "label": "Light German Tutor Pro v22",
+      "label": "Light German Tutor Medium v22",
       "line": "German tutor",
-      "edition": "pro",
+      "edition": "medium",
       "weights": "pytorch",
       "pitch": "The same tutor at 8 billion parameters for a GPU server or a workstation: fuller explanations, C1 transformations and exam preparation, measured on the same suite.",
-      "purpose": "The pro edition of the German tutor: 8 billion parameters fine-tuned from Qwen3-8B, delivered as merged bf16 weights for a GPU server or a workstation with about 20 GB of memory. It explains grammar and vocabulary with short bilingual examples, corrects a sentence and names the changed word and the rule, drills genders, plurals, irregular verbs, numbers, dates, prices, clock times and verb prepositions, briefs you before an everyday situation and plays the counterpart in short German turns, transforms sentences the way C1 courses ask (Nominalstil and Verbalstil, Partizipialattribut and Relativsatz, Konjunktiv I, passive substitutes, two-part connectors) and prepares telc and Goethe tasks. It answers in the language you write in. Trained on the browser edition's data plus a scenario-briefing family written off held-out situations, full contraction pair lists and C1 paradigm drills; the same release gates and the same five-judge panel measure it, on its trained weights rather than on a quantised export.",
+      "purpose": "The medium edition of the German tutor: 8 billion parameters fine-tuned from Qwen3-8B, delivered as merged bf16 weights for a GPU server or a workstation with about 20 GB of memory. It explains grammar and vocabulary with short bilingual examples, corrects a sentence and names the changed word and the rule, drills genders, plurals, irregular verbs, numbers, dates, prices, clock times and verb prepositions, briefs you before an everyday situation and plays the counterpart in short German turns, transforms sentences the way C1 courses ask (Nominalstil and Verbalstil, Partizipialattribut and Relativsatz, Konjunktiv I, passive substitutes, two-part connectors) and prepares telc and Goethe tasks. It answers in the language you write in. Trained on the browser edition's data plus a scenario-briefing family written off held-out situations, full contraction pair lists and C1 paradigm drills; the same release gates and the same five-judge panel measure it, on its trained weights rather than on a quantised export.",
       "showcase": true,
       "params_b": 8,
       "memory_gb": 20,
@@ -690,6 +691,7 @@
         "student": "light-german-tutor-pro-v22"
       },
       "base_model": "Qwen/Qwen3-8B",
+      "weights_mb": 15618,
       "exported_at": null,
       "opset": null,
       "runtime": {
