@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-15T14:23:10.207Z",
+  "generated_at": "2026-09-16T10:04:11.500Z",
   "suite": {
     "scenarios": 177,
     "judge_scale": "1-5",
@@ -684,8 +684,10 @@
       },
       "measured": [],
       "hub": {
-        "repo": null,
-        "public": false
+        "repo": "lamplitlabs/licht-german-tutor-medium",
+        "public": true,
+        "revision": "v22-preview",
+        "student": "light-german-tutor-pro-v22"
       },
       "base_model": "Qwen/Qwen3-8B",
       "exported_at": null,
