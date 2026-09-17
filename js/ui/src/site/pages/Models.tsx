@@ -121,12 +121,12 @@ export function ModelCard({ m, featured }: { m: SiteModel; featured: boolean }) 
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <Index n="measured">{shortDate(g.created_at)}</Index>
             <span className="mono-label tnum text-muted-foreground">
-              {passed}/{gates.length} gates · {g.suite_size} scenarios · {measuredOn(g)}
+              {g.suite_size} scenarios · {measuredOn(g)}
             </span>
           </div>
           <div className="mt-6 grid gap-6 sm:grid-cols-3">
             <Number k="facts against the reference" v={pct(facts?.actual, 1)} sub={`gate ${pct(facts?.threshold)}`} ok={facts?.ok} value={facts?.actual ?? 0} threshold={facts?.threshold} />
-            <Number k="independent judges" v={m.panel?.mean != null ? `${m.panel.mean.toFixed(2)} / 5` : 'not judged'} sub={m.panel ? `${m.panel.satisfied} of ${m.panel.required} would ship it · satisfied at 3.5` : 'panel pending'} ok={m.panel ? m.panel.satisfied >= m.panel.required : undefined} value={m.panel?.mean != null ? m.panel.mean / 5 : undefined} threshold={0.7} />
+            <Number k="release gates" v={`${passed} / ${gates.length}`} sub={g.release ? 'every gate passed' : `${gates.length - passed} not passed yet`} ok={g.release} value={gates.length ? passed / gates.length : undefined} />
             {m.weights === 'pytorch' ? (
               <Number k="measured on" v="bf16 weights" sub="the trained weights themselves, in PyTorch - there is no quantised export to compare" />
             ) : (
@@ -187,7 +187,7 @@ export function Models() {
             <div className="mono-label text-primary">reading the numbers</div>
             <h2 className="mt-3 font-semibold">How to read the numbers</h2>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              <strong className="text-foreground">Facts</strong> is the share of answers whose checkable statements match the reference pack; the release gate asks for 85%. <strong className="text-foreground">Judges</strong> are independent frontier models from different vendors scoring every answer 1-5 on accuracy, helpfulness, language and format; a judge is satisfied at a mean of 3.5 with no severe error. <strong className="text-foreground">Export fidelity</strong> is how often the quantised file the browser runs gives the same answer as the trained weights; an edition that ships as trained weights is measured on those weights directly and has no such number.
+              <strong className="text-foreground">Facts</strong> is the share of answers whose checkable statements match the reference pack; the release gate asks for 85%. <strong className="text-foreground">Release gates</strong> are deterministic checks on every answer of the suite - it never loops, finishes, stays in the asked language, avoids assistant talk, matches the reference, cites genders and plurals that match the lexicon, has the right shape for the task and, for a browser edition, the export agrees with the trained weights; an edition is released when every gate passes. <strong className="text-foreground">Export fidelity</strong> is how often the quantised file the browser runs gives the same answer as the trained weights; an edition that ships as trained weights is measured on those weights directly and has no such number. Independent judges also score every answer 1-5; their scores are on the benchmarks page, per judge.
             </p>
           </div>
           <div className="glass rounded-2xl p-6 sm:p-7">

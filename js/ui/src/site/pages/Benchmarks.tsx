@@ -22,7 +22,7 @@ function Progression() {
             <th className="px-5 py-3.5">facts</th>
             <th className="px-5 py-3.5">finishes</th>
             <th className="px-5 py-3.5">language</th>
-            <th className="px-5 py-3.5">judges</th>
+            <th className="px-5 py-3.5">judges · 1-5</th>
             <th className="px-5 py-3.5">release</th>
           </tr>
         </thead>
@@ -49,7 +49,7 @@ function Progression() {
                 </td>
                 <td className="px-5 py-3.5 font-mono text-xs">{pct(g.gates.not_truncated?.actual, 1)}</td>
                 <td className="px-5 py-3.5 font-mono text-xs">{pct(g.gates.language_follows?.actual, 1)}</td>
-                <td className="px-5 py-3.5 font-mono text-xs">{m.panel?.mean != null ? `${m.panel.mean.toFixed(2)} · ${m.panel.satisfied}/${m.panel.required}` : '–'}</td>
+                <td className="px-5 py-3.5 font-mono text-xs">{m.panel?.mean != null ? m.panel.mean.toFixed(2) : '–'}</td>
                 <td className="px-5 py-3.5">{g.release ? <Tag tone="success">passed</Tag> : <Tag>not yet</Tag>}</td>
               </tr>
             );
@@ -126,9 +126,9 @@ function GateCard({ m }: { m: SiteModel }) {
       {m.panel ? (
         <div className="mt-10 border-t border-border pt-8">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <Index n="c">Independent panel</Index>
+            <Index n="c">Independent judges</Index>
             <span className="mono-label tnum text-muted-foreground">
-              round {m.panel.round ?? '–'} · mean {m.panel.mean?.toFixed(2) ?? '–'} / 5 · {m.panel.satisfied} of {m.panel.required} satisfied
+              round {m.panel.round ?? '–'} · {m.panel.judges.length} judges · mean {m.panel.mean?.toFixed(2) ?? '–'} / 5 · a signal beside the gates, not a gate
             </span>
           </div>
           <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fit,minmax(10rem,1fr))]">
@@ -136,10 +136,10 @@ function GateCard({ m }: { m: SiteModel }) {
               <div key={j.judge} className="@container rounded-2xl border border-border bg-background/50 p-5 text-sm">
                 <div className="flex items-center justify-between gap-2">
                   <span className="font-medium">{j.judge}</span>
-                  <Tag tone={j.satisfied ? 'success' : 'muted'}>{j.satisfied ? 'would ship' : 'not yet'}</Tag>
+                  <span className="mono-label text-muted-foreground/70">mean / 5</span>
                 </div>
-                <div className={`datum-value mt-4 text-3xl font-semibold leading-none ${j.satisfied ? 'text-success' : ''}`}>{j.mean?.toFixed(2) ?? '–'}</div>
-                <Gauge className="mt-3" value={(j.mean ?? 0) / 5} threshold={siteData.suite.judge_satisfied_at / 5} ok={j.satisfied} />
+                <div className="datum-value mt-4 text-3xl font-semibold leading-none">{j.mean?.toFixed(2) ?? '–'}</div>
+                <Gauge className="mt-3" value={(j.mean ?? 0) / 5} />
                 <dl className="mt-4 grid gap-x-4 gap-y-1.5 text-xs text-muted-foreground @3xs:grid-cols-2">
                   {Object.entries(j.means).map(([k, v]) => (
                     <div key={k} className="flex justify-between">
@@ -188,14 +188,11 @@ export function Benchmarks() {
         n="bench"
         eyebrow="The measurements"
         title="Every number, including the ones we are not proud of"
-        lead={`A fixed suite of ${siteData.suite.scenarios ?? '–'} learner scenarios runs against every edition - a browser edition on the export the browser runs, a larger edition on its trained weights - then independent frontier models score the answers ${siteData.suite.judge_scale}. Nothing is released before the gates pass and the panel agrees.`}
+        lead={`A fixed suite of ${siteData.suite.scenarios ?? '–'} learner scenarios runs against every edition - a browser edition on the export the browser runs, a larger edition on its trained weights - then independent frontier models score the answers ${siteData.suite.judge_scale}. Nothing is released before the gates pass; the judges' scores are published beside them.`}
         aside={
-          <>
-            <Status ok={gate?.release ?? false}>
-              {latest?.label ?? 'no model'} · {gate?.release ? 'gate passed' : 'gate not passed'}
-            </Status>
-            <Status ok={latest?.panel ? latest.panel.satisfied >= latest.panel.required : false}>panel {latest?.panel?.mean?.toFixed(2) ?? '–'} / 5 · bar {siteData.suite.judge_satisfied_at}</Status>
-          </>
+          <Status ok={gate?.release ?? false}>
+            {latest?.label ?? 'no model'} · {gate?.release ? 'gate passed' : 'gate not passed'}
+          </Status>
         }
       />
       <section className={`${container} space-y-10 py-16 lg:py-20`}>
@@ -206,15 +203,14 @@ export function Benchmarks() {
           </div>
           <p className="mt-4 max-w-4xl text-sm leading-relaxed text-muted-foreground">
             {`We show the newest version of each edition, measured with one suite${lines.length ? ` (${lines.map((l) => `${l.line}: ${l.editions.map((e) => e.edition).join(' and ')}`).join('; ')})` : ''}; earlier rounds were retired with their exports and their reports stay in the project's decision records. `}
-            {withGate.map((m) => `${m.label} (${m.edition}, ${m.params_b}B, ${measuredOn(m.gate!)}): facts ${pct(m.gate!.gates.facts?.actual, 1)}, ${m.gate!.release ? 'release gate met' : 'release gate not yet met'}${m.panel?.mean != null ? `, judges ${m.panel.mean.toFixed(2)} / 5 with ${m.panel.satisfied} of ${m.panel.required} satisfied` : ''}.`).join(' ')}
-            {` The panel's bar is ${siteData.suite.judge_satisfied_at} / 5 per judge; `}
-            {withGate.some((m) => m.panel && m.panel.satisfied >= m.panel.required) ? 'where it is met the edition is shipped; where it is not, the next round is measured the same way.' : 'no edition has met it yet, so the next round of each is measured the same way.'}
+            {withGate.map((m) => `${m.label} (${m.edition}, ${m.params_b}B, ${measuredOn(m.gate!)}): facts ${pct(m.gate!.gates.facts?.actual, 1)}, ${m.gate!.release ? 'release gate met' : 'release gate not yet met'}${m.panel?.mean != null ? `, judges ${m.panel.mean.toFixed(2)} / 5` : ''}.`).join(' ')}
+            {" The judges' scores are a signal beside the gates, not a gate of their own: each report shows them per judge, and the next round of every edition is measured the same way."}
           </p>
         </Reveal>
         <Reveal stagger className="grid gap-3 md:grid-cols-3">
           {[
-            { n: 'gates', k: 'Gates', t: 'Deterministic checks on every answer: does it loop, does it finish, does it stay in the asked language, do its checkable statements match the reference, is the shape right for the task, does the export agree with the trained weights.' },
-            { n: 'judges', k: 'Judges', t: 'Frontier models from different vendors score each answer 1-5 on accuracy, helpfulness, language and format, and flag severe errors. Each has to be satisfied on its own; we do not average the disagreement away.' },
+            { n: 'gates', k: 'Gates', t: 'Deterministic checks on every answer: does it loop, does it finish, does it stay in the asked language, do its checkable statements match the reference, is the shape right for the task, does the export agree with the trained weights. An edition is released when every gate passes.' },
+            { n: 'judges', k: 'Judges', t: 'Frontier models from different vendors score each answer 1-5 on accuracy, helpfulness, language and format, and flag severe errors. Each is shown on its own - we do not average the disagreement away - and the scores sit beside the gates as a signal, not as a release condition.' },
             { n: 'honesty', k: 'Honesty', t: 'Judges are models too and make mistakes; scores are a signal, not a certificate. Measurements come from one machine at a time and are labelled as such.' },
           ].map((c) => (
             <div key={c.k} className="glass glass-lift rounded-2xl p-6">

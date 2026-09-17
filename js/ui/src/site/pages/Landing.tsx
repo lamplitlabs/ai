@@ -64,12 +64,10 @@ export function Landing() {
       {m && g ? (
         <section className="border-b border-border bg-card/40" aria-label="Measured today - the edition every Try opens">
           <div className={container}>
-            <Reveal stagger className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
-              <Datum className="border-b border-border py-7 pr-6 md:border-r lg:border-b-0" k="parameters" value={m.params_b} format={(v) => `${v.toFixed(v >= 1 ? 0 : 1)}B`} sub={`base ${m.base_model.split('/').pop()}`} />
-              <Datum className="border-b border-border py-7 pr-6 md:border-r md:pl-6 lg:border-b-0" k="facts checked" value={(facts?.actual ?? 0) * 100} format={(v) => `${v.toFixed(1)}%`} sub={`against the reference · gate ${pct(facts?.threshold)} · ${g.suite_size} scenarios`} ok={facts?.ok} />
-              <Datum className="border-b border-border py-7 pr-6 md:border-r md:pl-6 lg:border-b-0 lg:border-r" k="release gates" value={passed} format={(v) => `${Math.round(v)} / ${gates.length}`} sub={g.release ? 'every gate passed' : 'not all gates passed yet'} ok={g.release} />
-              <Datum className="border-b border-border py-7 pr-6 md:border-b-0 md:border-r lg:pl-6" k="judge panel" value={m.panel?.mean ?? 0} format={(v) => (m.panel?.mean != null ? `${v.toFixed(2)} / 5` : '–')} sub={m.panel ? `${m.panel.satisfied} of ${m.panel.required} judges would ship it` : 'panel pending'} ok={m.panel ? m.panel.satisfied >= m.panel.required : undefined} />
-              <Datum className="py-7 pr-6 md:border-r md:pl-6" k="export fidelity" value={(q8 ?? 0) * 100} format={(v) => (q8 == null ? '–' : `${v.toFixed(1)}%`)} sub="q8 file agrees with the trained weights" ok={q8 != null ? q8 >= 0.95 : undefined} />
+            <Reveal stagger className="grid grid-cols-2 lg:grid-cols-4">
+              <Datum className="border-b border-border py-7 pr-6 md:border-r lg:border-b-0" k="facts checked" value={(facts?.actual ?? 0) * 100} format={(v) => `${v.toFixed(1)}%`} sub={`against the reference · gate ${pct(facts?.threshold)} · ${g.suite_size} scenarios`} ok={facts?.ok} />
+              <Datum className="border-b border-border py-7 pr-6 md:pl-6 lg:border-b-0 lg:border-r" k="release gates" value={passed} format={(v) => `${Math.round(v)} / ${gates.length}`} sub={g.release ? 'every gate passed' : 'not all gates passed yet'} ok={g.release} />
+              <Datum className="border-border py-7 pr-6 md:border-r lg:pl-6" k="export fidelity" value={(q8 ?? 0) * 100} format={(v) => (q8 == null ? '–' : `${v.toFixed(1)}%`)} sub="q8 file agrees with the trained weights" ok={q8 != null ? q8 >= 0.95 : undefined} />
               <Datum className="py-7 md:pl-6" k="download" value={size ? size.size_mb / 1000 : 0} format={(v) => (size ? (size.size_mb >= 1000 ? `${v.toFixed(1)} GB` : `${Math.round(v * 1000)} MB`) : '–')} sub={size ? `${size.dtype} · ${size.chunks > 1 ? `${size.chunks} files` : 'one file'} · ${m.browser ? 'runs in the browser' : 'desktop and server'}` : undefined} />
             </Reveal>
             <p className="mono-label flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-border py-3 text-muted-foreground/80">

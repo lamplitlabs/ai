@@ -57,9 +57,7 @@ export function OfferingCard({ m, featured = false }: { m: SiteModel; featured?:
         <div className="mt-6 rounded-2xl border border-border bg-background/50 p-4 sm:p-5">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <span className="mono-label text-muted-foreground">measured {shortDate(g.created_at)}</span>
-            <span className="mono-label tnum text-muted-foreground">
-              {passed}/{gates.length} gates · {g.suite_size} scenarios
-            </span>
+            <span className="mono-label tnum text-muted-foreground">{g.suite_size} scenarios</span>
           </div>
           <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
             <div>
@@ -68,9 +66,11 @@ export function OfferingCard({ m, featured = false }: { m: SiteModel; featured?:
               <Gauge className="mt-2" value={facts?.actual ?? 0} threshold={facts?.threshold} ok={facts?.ok} />
             </div>
             <div>
-              <div className="mono-label text-muted-foreground">judges</div>
-              <div className={`datum-value mt-1.5 text-2xl font-semibold leading-none ${m.panel && m.panel.satisfied >= m.panel.required ? 'text-success' : ''}`}>{m.panel?.mean != null ? `${m.panel.mean.toFixed(2)} / 5` : '–'}</div>
-              <div className="mt-2 text-xs text-muted-foreground">{m.panel ? `${m.panel.satisfied} of ${m.panel.required} would ship it` : 'panel pending'}</div>
+              <div className="mono-label text-muted-foreground">release gates</div>
+              <div className={`datum-value mt-1.5 text-2xl font-semibold leading-none ${g.release ? 'text-success' : 'text-warning'}`}>
+                {passed} / {gates.length}
+              </div>
+              <div className="mt-2 text-xs text-muted-foreground">{g.release ? 'every gate passed' : `${gates.length - passed} not passed yet`}</div>
             </div>
             <div className="max-sm:hidden">
               <div className="mono-label text-muted-foreground">measured on</div>

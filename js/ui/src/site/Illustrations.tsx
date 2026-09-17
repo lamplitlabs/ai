@@ -130,8 +130,8 @@ export const STAGES = [
     key: 'measure',
     icon: Gauge,
     title: 'Measure, then judge',
-    short: 'Release gates plus an independent panel.',
-    long: 'A fixed suite of scenarios runs against the exported model: facts against the reference, no loops, finished answers, the right language. Then three independent frontier models judge the answers and say whether they would ship it. Every number is published.',
+    short: 'Release gates plus independent judges.',
+    long: 'A fixed suite of scenarios runs against the exported model: facts against the reference, no loops, finished answers, the right language. Then independent frontier models score every answer, and their scores are published beside the gates. Every number is published.',
   },
   {
     key: 'ship',
