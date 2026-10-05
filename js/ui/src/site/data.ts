@@ -120,7 +120,7 @@ export const latestMeasuredAt = showcaseModels.map((m) => m.measured_at ?? '').s
 export const EDITION_LABELS: Record<Edition, string> = { browser: 'browser edition', medium: 'medium edition' };
 /** Where an edition runs, from its weights: a browser export or a GPU-sized checkpoint. */
 export const runsIn = (m: SiteModel) => (m.weights === 'pytorch' ? 'GPU server · workstation' : m.browser ? 'browser · desktop · server' : 'desktop · server');
-export const runsInDetail = (m: SiteModel) => (m.weights === 'pytorch' ? `${m.memory_gb ? `about ${m.memory_gb} GB of memory` : 'a GPU'} · PyTorch` : m.browser ? (m.wasm ? 'WebGPU / WASM' : 'WebGPU (Chrome, Edge)') : 'file over the browser limit');
+export const runsInDetail = (m: SiteModel) => (m.weights === 'pytorch' ? `${m.memory_gb ? `about ${m.memory_gb} GB of memory` : 'a GPU'} · PyTorch` : m.browser ? (m.wasm ? 'WebGPU / WASM' : 'WebGPU (Chrome, Edge)') : 'ONNX Runtime (desktop · server)');
 export const weightsFormat = (m: SiteModel) => (m.weights === 'pytorch' ? 'safetensors' : 'ONNX');
 export const weightsDetail = (m: SiteModel) => (m.weights === 'pytorch' ? 'merged weights · bf16' : `opset ${m.opset ?? '–'} · ORT ${m.runtime.onnxruntime ?? '–'}`);
 /** How the gate answered: the export the browser runs, or the trained weights themselves. */
