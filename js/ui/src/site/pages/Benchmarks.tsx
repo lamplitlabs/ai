@@ -7,7 +7,7 @@ import { PageIntro } from './Models';
 
 const withGate = models.filter((m) => m.gate);
 const chronological = [...withGate].sort((a, b) => (a.gate!.created_at ?? '').localeCompare(b.gate!.created_at ?? ''));
-const latest = withGate[0];
+const latest = chronological.at(-1);
 
 function Progression() {
   return (
