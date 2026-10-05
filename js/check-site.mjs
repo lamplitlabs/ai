@@ -5,7 +5,7 @@
 //
 //   node js/check-site.mjs [--base http://127.0.0.1:8787] [--routes /,/models,/benchmarks]
 //                          [--theme dark|light] [--shots <dir>] [--width 1280] [--browser <path>] [--reduced-motion]
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { spawn } from 'node:child_process';
 
@@ -39,20 +39,46 @@ if (!browser) {
 }
 if (args.shots) mkdirSync(args.shots, { recursive: true });
 
-const port = 9300 + Math.floor(Math.random() * 500);
-const profile = join(process.env.TMPDIR || '/tmp', `check-site-${process.pid}`);
-const proc = spawn(browser, [`--headless=new`, `--remote-debugging-port=${port}`, `--user-data-dir=${profile}`, '--no-first-run', '--disable-gpu', '--hide-scrollbars', `--window-size=${width},900`, 'about:blank'], { stdio: 'ignore' });
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const tmp = process.env.TMPDIR || '/tmp';
+let port = 0;
+let proc = null;
 
-async function waitForDevtools() {
+// One launch attempt: a fresh random DevTools port and profile directory each time, so a port already taken or a
+// profile left by a killed run cannot wedge the check. Resolves with /json/version once the browser answers.
+async function launchOnce() {
+  port = 9300 + Math.floor(Math.random() * 500);
+  const profile = join(tmp, `check-site-${process.pid}-${port}`);
+  rmSync(profile, { recursive: true, force: true });
+  proc = spawn(browser, [`--headless=new`, `--remote-debugging-port=${port}`, `--user-data-dir=${profile}`, '--no-first-run', '--disable-gpu', '--hide-scrollbars', `--window-size=${width},900`, 'about:blank'], { stdio: 'ignore' });
+  let exited = false;
+  proc.once('exit', () => { exited = true; });
   for (let i = 0; i < 100; i++) {
+    if (exited) throw new Error(`browser exited before exposing the DevTools port ${port}`);
     try {
       const res = await fetch(`http://127.0.0.1:${port}/json/version`);
       if (res.ok) return res.json();
     } catch {}
     await sleep(200);
   }
-  throw new Error('browser did not expose the DevTools port');
+  throw new Error(`browser did not expose the DevTools port ${port}`);
+}
+
+// Launching a headless browser is the flaky step (port collisions, a slow cold start): retry it a few times with a
+// short backoff before failing the check, so a transient launch hiccup is not reported as a broken site.
+async function waitForDevtools(attempts = 3) {
+  let lastErr;
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    try {
+      return await launchOnce();
+    } catch (err) {
+      lastErr = err;
+      proc?.kill();
+      console.error(`browser launch attempt ${attempt}/${attempts} failed: ${err.message}`);
+      if (attempt < attempts) await sleep(500 * attempt);
+    }
+  }
+  throw lastErr;
 }
 
 class CDP {
@@ -150,7 +176,7 @@ try {
   failed = true;
   results.push({ error: err.message });
 } finally {
-  proc.kill();
+  proc?.kill();
 }
 console.log(JSON.stringify({ base, theme, ok: !failed, pages: results }, null, 2));
 process.exit(failed ? 1 : 0);
