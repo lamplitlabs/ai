@@ -3,7 +3,7 @@ import { CONTACT } from './SiteLayout';
 import { Link } from './router';
 import { TryLink } from './TryLink';
 import { Gauge, Spec, Tag } from './lab';
-import { EDITION_LABELS, gb, hubRepoUrl, pct, runsIn, runsInDetail, shortDate, tryUrl, type SiteModel } from './data';
+import { EDITION_LABELS, gb, modelCta, pct, runsIn, runsInDetail, shortDate, type SiteModel } from './data';
 import { primaryCta, secondaryCta } from './cta';
 
 /**
@@ -19,19 +19,18 @@ export function OfferingCard({ m, featured = false }: { m: SiteModel; featured?:
   const gates = g ? Object.values(g.gates) : [];
   const passed = gates.filter((x) => x.ok).length;
   const size = m.dtypes[0];
-  const hubUrl = m.hub.public && m.hub.repo ? hubRepoUrl(m.hub.repo) : null;
-  const publicWeights = hubUrl != null;
-  const tryHref = tryUrl(m);
-  const primary = m.browser && tryHref ? (
-    <TryLink href={tryHref} className={primaryCta}>
+  const cta = modelCta(m);
+  const { publicWeights } = cta;
+  const primary = cta.kind === 'try' ? (
+    <TryLink href={cta.href} className={primaryCta}>
       Try it
     </TryLink>
-  ) : hubUrl ? (
-    <a href={hubUrl} target="_blank" rel="noopener noreferrer" className={primaryCta}>
+  ) : cta.kind === 'hub' ? (
+    <a href={cta.href} target="_blank" rel="noopener noreferrer" className={primaryCta}>
       <ArrowUpRight className="size-4" aria-hidden="true" /> Weights on Hugging Face
     </a>
   ) : (
-    <a href={`mailto:${CONTACT}?subject=${encodeURIComponent(`${m.line} - ${EDITION_LABELS[m.edition]} (${m.label})`)}`} className={primaryCta}>
+    <a href={cta.href} className={primaryCta}>
       <Mail className="size-4" aria-hidden="true" /> Ask for the weights
     </a>
   );
@@ -87,8 +86,8 @@ export function OfferingCard({ m, featured = false }: { m: SiteModel; featured?:
         <Link to={`/models#${m.name}`} className={secondaryCta}>
           Datasheet
         </Link>
-        {hubUrl && m.browser && tryHref ? (
-          <a href={hubUrl} target="_blank" rel="noopener noreferrer" className="mono-label ml-auto inline-flex items-center gap-1 text-muted-foreground transition-colors hover:text-foreground">
+        {cta.secondaryHub ? (
+          <a href={cta.secondaryHub} target="_blank" rel="noopener noreferrer" className="mono-label ml-auto inline-flex items-center gap-1 text-muted-foreground transition-colors hover:text-foreground">
             weights on hugging face <ArrowUpRight className="size-3" aria-hidden="true" />
           </a>
         ) : (

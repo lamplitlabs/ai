@@ -4,10 +4,10 @@ import { Logo } from './Logo';
 import { LampToggle } from './LampToggle';
 import { Link, useRoute } from './router';
 import { TryLink } from './TryLink';
-import { flagship, shortDate, siteData, tryLabel } from './data';
+import { CONTACT, flagship, shortDate, siteData, tryLabel } from './data';
 
 export const MAIN_SITE = 'https://www.lamplitlabs.com/';
-export const CONTACT = 'hello@lamplitlabs.com';
+export { CONTACT };
 const container = 'mx-auto w-full max-w-6xl px-5 sm:px-8';
 
 // the site's own pages; every "try" is an external link to the model's Space (TryLink). /models keeps its path (links

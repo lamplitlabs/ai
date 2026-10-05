@@ -133,6 +133,32 @@ export const hubRepoUrl = (repo: string) => `${HUB_HOST}/${repo}`;
 export const spaceUrl = (space: string) => `${HUB_HOST}/spaces/${space}`;
 /** Where a model can be tried: its Hugging Face Space, or null - the site ships no runtime of its own (ADR-001). */
 export const tryUrl = (m: SiteModel | undefined) => (m?.hub.space ? spaceUrl(m.hub.space) : null);
+/** Where to ask for weights or a model; one address for every mailto on the site. */
+export const CONTACT = 'hello@lamplitlabs.com';
+/** The Hub repo page of a model's weights, or null while they are not public. */
+export const hubUrl = (m: SiteModel) => (m.hub.public && m.hub.repo ? hubRepoUrl(m.hub.repo) : null);
+/**
+ * The one primary call to action a model card shows, the same rule on /models and the offerings list (510cf0a):
+ * a browser model with a Space gets `try`; otherwise public weights get `hub`; otherwise `mail` asks for them.
+ * `secondaryHub` is the Hub link shown next to a `try` CTA.
+ */
+export interface ModelCta {
+  kind: 'try' | 'hub' | 'mail';
+  href: string;
+  hubUrl: string | null;
+  tryHref: string | null;
+  publicWeights: boolean;
+  secondaryHub: string | null;
+}
+export const mailtoFor = (m: SiteModel) => `mailto:${CONTACT}?subject=${encodeURIComponent(`${m.line} - ${EDITION_LABELS[m.edition]} (${m.label})`)}`;
+export function modelCta(m: SiteModel): ModelCta {
+  const hub = hubUrl(m);
+  const tryHref = tryUrl(m);
+  const canTry = m.browser && tryHref != null;
+  const kind: ModelCta['kind'] = canTry ? 'try' : hub ? 'hub' : 'mail';
+  const href = kind === 'try' ? (tryHref as string) : kind === 'hub' ? (hub as string) : mailtoFor(m);
+  return { kind, href, hubUrl: hub, tryHref, publicWeights: hub != null, secondaryHub: canTry && hub ? hub : null };
+}
 /** The label of a "try" link, from the line's name ("Try the <line>"); "Try it" when nothing is on offer. */
 export const tryLabel = (m: SiteModel | undefined = flagship) => (m ? `Try the ${m.line}` : 'Try it');
 

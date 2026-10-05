@@ -2,11 +2,10 @@ import { ArrowUpRight, Cpu, FileDown, Globe, Mail, Scale, Server, Sparkles } fro
 import type { ReactNode } from 'react';
 import { CommissionCard } from '../Offerings';
 import { Reveal } from '../Reveal';
-import { CONTACT } from '../SiteLayout';
 import { Link } from '../router';
 import { TryLink } from '../TryLink';
 import { Gauge, Index, Spec, Status, Tag } from '../lab';
-import { categoryLabel, EDITION_LABELS, factCategories, gb, hubRepoUrl, lines, measuredOn, models, pct, runsIn, runsInDetail, shortDate, showcaseModels, tryUrl, weightsDetail, weightsFormat, type SiteModel } from '../data';
+import { categoryLabel, EDITION_LABELS, factCategories, gb, lines, measuredOn, models, pct, runsIn, runsInDetail, modelCta, shortDate, showcaseModels, tryUrl, weightsDetail, weightsFormat, type SiteModel } from '../data';
 import { container, primaryCta, secondaryCta } from '../cta';
 
 /** The page head shared by /models and /benchmarks: index, eyebrow, a large title, the lead, an optional status chip. */
@@ -51,9 +50,8 @@ export function ModelCard({ m, featured }: { m: SiteModel; featured: boolean }) 
   const weakest = cats[cats.length - 1];
   const gates = g ? Object.values(g.gates) : [];
   const passed = gates.filter((x) => x.ok).length;
-  const hubUrl = m.hub.public && m.hub.repo ? hubRepoUrl(m.hub.repo) : null;
-  const publicWeights = hubUrl != null;
-  const tryHref = tryUrl(m);
+  const cta = modelCta(m);
+  const { publicWeights } = cta;
   return (
     <article className={`glass card-glow corner-marks scroll-mt-20 rounded-3xl p-6 sm:p-8 lg:p-10 ${featured ? 'glow-border' : ''}`} id={m.name}>
       <div className="flex flex-wrap items-center gap-2">
@@ -79,21 +77,21 @@ export function ModelCard({ m, featured }: { m: SiteModel; featured: boolean }) 
           <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{m.purpose}</p>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row">
-          {m.browser && tryHref ? (
-            <TryLink href={tryHref} className={primaryCta}>
+          {cta.kind === 'try' ? (
+            <TryLink href={cta.href} className={primaryCta}>
               Try
             </TryLink>
-          ) : hubUrl ? (
-            <a href={hubUrl} target="_blank" rel="noopener noreferrer" className={primaryCta}>
+          ) : cta.kind === 'hub' ? (
+            <a href={cta.href} target="_blank" rel="noopener noreferrer" className={primaryCta}>
               <ArrowUpRight className="size-4" aria-hidden="true" /> Weights on Hugging Face
             </a>
           ) : (
-            <a href={`mailto:${CONTACT}?subject=${encodeURIComponent(`${m.line} - ${EDITION_LABELS[m.edition]} (${m.label})`)}`} className={primaryCta}>
+            <a href={cta.href} className={primaryCta}>
               <Mail className="size-4" aria-hidden="true" /> Ask for the weights
             </a>
           )}
-          {m.browser && tryHref && hubUrl ? (
-            <a href={hubUrl} target="_blank" rel="noopener noreferrer" className={secondaryCta}>
+          {cta.secondaryHub ? (
+            <a href={cta.secondaryHub} target="_blank" rel="noopener noreferrer" className={secondaryCta}>
               Hugging Face <ArrowUpRight className="size-4" aria-hidden="true" />
             </a>
           ) : null}
