@@ -53,6 +53,7 @@ export function ModelCard({ m, featured }: { m: SiteModel; featured: boolean }) 
   const passed = gates.filter((x) => x.ok).length;
   const hubUrl = m.hub.public && m.hub.repo ? hubRepoUrl(m.hub.repo) : null;
   const publicWeights = hubUrl != null;
+  const tryHref = tryUrl(m);
   return (
     <article className={`glass card-glow corner-marks scroll-mt-20 rounded-3xl p-6 sm:p-8 lg:p-10 ${featured ? 'glow-border' : ''}`} id={m.name}>
       <div className="flex flex-wrap items-center gap-2">
@@ -78,8 +79,8 @@ export function ModelCard({ m, featured }: { m: SiteModel; featured: boolean }) 
           <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{m.purpose}</p>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row">
-          {m.browser ? (
-            <TryLink href={tryUrl(m)} className={primaryCta}>
+          {m.browser && tryHref ? (
+            <TryLink href={tryHref} className={primaryCta}>
               Try
             </TryLink>
           ) : hubUrl ? (
@@ -91,7 +92,7 @@ export function ModelCard({ m, featured }: { m: SiteModel; featured: boolean }) 
               <Mail className="size-4" aria-hidden="true" /> Ask for the weights
             </a>
           )}
-          {m.browser && hubUrl ? (
+          {m.browser && tryHref && hubUrl ? (
             <a href={hubUrl} target="_blank" rel="noopener noreferrer" className={secondaryCta}>
               Hugging Face <ArrowUpRight className="size-4" aria-hidden="true" />
             </a>
