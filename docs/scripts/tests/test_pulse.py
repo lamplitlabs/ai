@@ -856,6 +856,28 @@ class StoreTestCase(StoreFixture):
         pulse.create_post(self.con, "vote", "proj", "evolution", "speed", "up: owner", agent=pulse.HUMAN_AGENT, on=sug["id"], vote="up",
                           session="sess-1")
 
+    def test_plan_jobs_skips_cards_whose_file_already_landed_since_the_post(self):
+        for name in ("cinder", "dusk", "ember"):
+            pulse.join_agent(self.con, name, "r", "m")
+        for j in self.con.execute("SELECT id FROM jobs WHERE status = 'queued'").fetchall():
+            pulse.finish_job(self.con, j["id"], "human", "cancelled")
+        body = "Class: product\nFile: README.md\nVariable: add a banner\nHypothesis: x\nTier: 1\nSignal: README.md\n"
+        card = pulse.create_post(self.con, "suggestion", "proj", "evolution", "speed", "add the README banner",
+                                 body, agent="cinder", date="2026-09-09T09:00:00Z")
+        for voter in ("dusk", "ember"):
+            pulse.create_post(self.con, "vote", "proj", "evolution", "speed", "up: because", "", agent=voter,
+                              on=card["id"], vote="up", date="2026-09-09T10:00:00Z")
+        # Another landing moved README.md on the default branch after the card was posted.
+        (self.repo / "README.md").write_text("hello\nbanner\n", encoding="utf-8")
+        git(self.repo, "add", "-A")
+        git(self.repo, "commit", "-q", "-m", "Land: add the README banner")
+        sha = git(self.repo, "rev-parse", "HEAD").stdout.strip()
+        jobs = pulse.plan_jobs(self.con, "proj", now=NOW)
+        self.assertEqual([j["kind"] for j in jobs], ["reflect"], "a card whose File: already landed is never planned")
+        ev = self.con.execute("SELECT detail FROM events WHERE action = 'plan.landed' AND subject = ?", (card["id"],)).fetchone()
+        self.assertIsNotNone(ev)
+        self.assertEqual(json.loads(ev["detail"]), {"commit": sha, "file": "README.md"})
+
     def test_plan_jobs_skips_worker_cards_without_a_resolving_signal(self):
         pulse.join_agent(self.con, "aurora", "r", "m", kind="worker")
         for name in ("cinder", "dusk"):

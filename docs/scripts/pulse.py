@@ -3532,6 +3532,44 @@ def is_worker_post(con, post):
     return bool(row) and row.get("kind") == "worker"
 
 
+CARD_FILE_RE = re.compile(r"(?im)^\s*(?:-\s*)?`?file`?\s*:\s*`?([^\s`]+)`?\s*$")
+
+
+def card_file(post):
+    """The one repository-relative file an experiment card names in its `File:` field, or ''."""
+    m = CARD_FILE_RE.search((post or {}).get("body", "") or "")
+    return m.group(1).strip() if m else ""
+
+
+def landed_since(project, post):
+    """Return the default-branch commit that already moved the card's File: after the card was posted, or ''.
+
+    Three jobs this week ended as "already done on the default branch" no-ops: a landing moved the file the
+    card names between its posting and its dispatch. The planner checks the commits since the post date on the
+    default branch before spending a worker on it."""
+    path = card_file(post)
+    if not path or not project:
+        return ""
+    since = (post or {}).get("date") or ""
+    if not since:
+        return ""
+    root = project.get("path") or ""
+    if not root or not os.path.isdir(root):
+        return ""
+    branch = project.get("default_branch") or "HEAD"
+    try:
+        res = git(root, "log", "--format=%H", "--since=%s" % since, branch, "--", path, timeout=30)
+    except (OSError, subprocess.TimeoutExpired):
+        return ""
+    if res.returncode != 0:
+        return ""
+    for line in res.stdout.splitlines():
+        line = line.strip()
+        if line:
+            return line
+    return ""
+
+
 def is_owner_addressed_post(post):
     """Return True when a suggestion is addressed to the owner and should be skipped by the planner."""
     if not post:
@@ -3568,6 +3606,12 @@ def plan_jobs(con, slug, now=None, created_by="daemon"):
             continue
         # A worker's card without a resolving Signal: is a guess; the ballot keeps it, the planner does not.
         if is_worker_post(con, post) and not signal_resolves(con, project, post):
+            continue
+        # The default branch already moved the card's File: after it was posted: another landing covered
+        # it, so a job would only report "already done". Record which commit and move on.
+        landed = landed_since(project, post)
+        if landed:
+            event(con, created_by, "plan.landed", s["id"], {"file": card_file(post), "commit": landed})
             continue
         brief = ("The agents voted this the top eligible suggestion (score %+d, %d voters). Thread %s.\n\n%s\n\n"
                  "One variable, measured by the project's own checks. When the change is kept, say what moved in SUMMARY:."
