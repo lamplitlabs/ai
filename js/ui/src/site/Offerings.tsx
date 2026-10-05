@@ -21,8 +21,9 @@ export function OfferingCard({ m, featured = false }: { m: SiteModel; featured?:
   const size = m.dtypes[0];
   const hubUrl = m.hub.public && m.hub.repo ? hubRepoUrl(m.hub.repo) : null;
   const publicWeights = hubUrl != null;
-  const primary = m.browser ? (
-    <TryLink href={tryUrl(m)} className={primaryCta}>
+  const tryHref = tryUrl(m);
+  const primary = m.browser && tryHref ? (
+    <TryLink href={tryHref} className={primaryCta}>
       Try it
     </TryLink>
   ) : hubUrl ? (
@@ -86,7 +87,7 @@ export function OfferingCard({ m, featured = false }: { m: SiteModel; featured?:
         <Link to={`/models#${m.name}`} className={secondaryCta}>
           Datasheet
         </Link>
-        {hubUrl && m.browser ? (
+        {hubUrl && m.browser && tryHref ? (
           <a href={hubUrl} target="_blank" rel="noopener noreferrer" className="mono-label ml-auto inline-flex items-center gap-1 text-muted-foreground transition-colors hover:text-foreground">
             weights on hugging face <ArrowUpRight className="size-3" aria-hidden="true" />
           </a>
