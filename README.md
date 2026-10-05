@@ -55,5 +55,5 @@ host; use `scripts/preview-static.mjs`. Lessons: MEM-001.
 
 ## Licence
 
-Apache-2.0 (`LICENSE`). Fonts under the SIL Open Font License 1.1; React, lucide-react, Vite and Tailwind under
+MIT (`LICENSE`). Fonts under the SIL Open Font License 1.1; React, lucide-react, Vite and Tailwind under
 MIT.
