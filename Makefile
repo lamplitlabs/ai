@@ -25,7 +25,12 @@ build: ## Production build only (js/ui/dist)
 
 ui-check: ## Every route headless on the built site (needs Chrome/Edge; BROWSER_PATH to point at one), dark 1280 and light 390
 	@test -f $(UI)/dist/index.html || (echo "build first: make build" && exit 1)
-	@node $(UI)/scripts/preview-static.mjs $(PORT) & pid=$$!; sleep 1; \
+	@node $(UI)/scripts/preview-static.mjs $(PORT) & pid=$$!; \
+	  for i in $$(seq 1 50); do \
+	    kill -0 $$pid 2>/dev/null || { wait $$pid; echo "preview server exited before accepting connections"; exit 1; }; \
+	    curl -sf -o /dev/null http://127.0.0.1:$(PORT)/ && break; sleep 0.2; \
+	  done; \
+	  curl -sf -o /dev/null http://127.0.0.1:$(PORT)/ || { echo "preview server not reachable on port $(PORT)"; kill $$pid; exit 1; }; \
 	  node js/check-site.mjs --base http://127.0.0.1:$(PORT) --theme dark --width 1280 && \
 	  node js/check-site.mjs --base http://127.0.0.1:$(PORT) --theme light --width 390; status=$$?; kill $$pid; exit $$status
 
