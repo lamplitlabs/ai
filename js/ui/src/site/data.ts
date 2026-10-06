@@ -165,6 +165,8 @@ export interface ModelCta {
 }
 /** The site's general contact link (header and footer): one subject so the two can't drift apart. */
 export const contactMailto = () => `mailto:${CONTACT}?subject=${encodeURIComponent('Hello from lamplitlabs.com')}`;
+/** The commission offer's mailto ("A model for your job"): subject plus a prefilled body so the draft opens with the job already named, not blank. */
+export const commissionMailto = () => `mailto:${CONTACT}?subject=${encodeURIComponent('A model for our job')}&body=${encodeURIComponent("We have a job for a small model - here's the task, where it needs to run, and what a right answer looks like:")}`;
 export const mailtoFor = (m: SiteModel) => {
   const what = `${m.line} - ${EDITION_LABELS[m.edition]} (${m.label})`;
   const body = `I'm interested in ${what} - can you tell me about self-hosting it?`;

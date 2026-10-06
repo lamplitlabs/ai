@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { CATEGORY_LABELS, CONTACT, contactMailto, EDITION_LABELS, mailtoFor, factCategories, flagship, latestMeasuredAt, licenceName, lines, models, runsIn, runsInDetail, showcaseModels, siteData, spaceUrl, tryLabel, tryUrl, weightsAvailability, weightsSpec } from './data';
+import { CATEGORY_LABELS, CONTACT, commissionMailto, contactMailto, EDITION_LABELS, mailtoFor, factCategories, flagship, latestMeasuredAt, licenceName, lines, models, runsIn, runsInDetail, showcaseModels, siteData, spaceUrl, tryLabel, tryUrl, weightsAvailability, weightsSpec } from './data';
 
 describe('site data (site.json is generated outside this repo, ADR-001)', () => {
   it('leads with a browser-runnable flagship and offers one edition of each kind per line', () => {
@@ -136,5 +136,14 @@ describe('weights and licence copy (one helper for /models and the offerings lis
 
   it('contactMailto targets CONTACT with an encoded subject', () => {
     expect(contactMailto()).toBe(`mailto:${CONTACT}?subject=Hello%20from%20lamplitlabs.com`);
+  });
+
+  it('commissionMailto prefills a non-empty body so the commission draft is not blank', () => {
+    const href = commissionMailto();
+    expect(href.startsWith(`mailto:${CONTACT}?`)).toBe(true);
+    const params = new URLSearchParams(href.slice(href.indexOf('?') + 1));
+    expect(params.get('subject')).toBe('A model for our job');
+    const body = params.get('body') ?? '';
+    expect(body.length).toBeGreaterThan(0);
   });
 });

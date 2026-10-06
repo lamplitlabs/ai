@@ -1,5 +1,5 @@
 import { ArrowRight, ArrowUpRight, Cpu, Globe, KeyRound, Mail, Wrench } from 'lucide-react';
-import { CONTACT } from './SiteLayout';
+import { commissionMailto } from './data';
 import { Link } from './router';
 import { TryLink } from './TryLink';
 import { Gauge, Spec, Tag } from './lab';
@@ -123,7 +123,7 @@ export function CommissionCard({ wide = false }: { wide?: boolean }) {
           <Spec icon={<Wrench className="size-3.5" />} k="you get" v="weights · export · report" sub="everything needed to run it without us" />
         </dl>
         <div className="mt-auto flex flex-wrap items-center gap-3 pt-7">
-          <a href={`mailto:${CONTACT}?subject=${encodeURIComponent('A model for our job')}`} className={primaryCta}>
+          <a href={commissionMailto()} className={primaryCta}>
             <Mail className="size-4" aria-hidden="true" /> Start with a measurement
           </a>
           <Link to="/#how" className={secondaryCta}>
