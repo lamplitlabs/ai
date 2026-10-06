@@ -4,7 +4,7 @@ import { Logo } from './Logo';
 import { LampToggle } from './LampToggle';
 import { Link, useRoute } from './router';
 import { TryLink } from './TryLink';
-import { CONTACT, flagship, shortDate, siteData, tryLabel } from './data';
+import { CONTACT, contactMailto, flagship, shortDate, siteData, tryLabel } from './data';
 
 export const MAIN_SITE = 'https://www.lamplitlabs.com/';
 export { CONTACT };
@@ -127,7 +127,7 @@ export function SiteFooter() {
             </span>
           </div>
           <p className="max-w-sm text-sm leading-relaxed text-muted-foreground">Small, practical software that illuminates the path forward. The AI side builds small models you can hold in your own hands - ready-made editions you can take home today, or one built for your job.</p>
-          <a href={`mailto:${CONTACT}?subject=${encodeURIComponent('Hello from lamplitlabs.com')}`} className="mono-label inline-flex items-center gap-2 normal-case tracking-normal text-muted-foreground transition-colors hover:text-foreground">
+          <a href={contactMailto()} className="mono-label inline-flex items-center gap-2 normal-case tracking-normal text-muted-foreground transition-colors hover:text-foreground">
             {CONTACT}
           </a>
         </div>
@@ -166,7 +166,7 @@ export function SiteFooter() {
               </a>
             </li>
             <li>
-              <a href={`mailto:${CONTACT}?subject=${encodeURIComponent('Hello from lamplitlabs.com')}`} className="transition-colors hover:text-foreground">
+              <a href={contactMailto()} className="transition-colors hover:text-foreground">
                 Contact
               </a>
             </li>

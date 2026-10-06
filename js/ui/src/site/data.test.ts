@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { CATEGORY_LABELS, factCategories, flagship, latestMeasuredAt, licenceName, lines, models, runsIn, runsInDetail, showcaseModels, siteData, spaceUrl, tryLabel, tryUrl, weightsAvailability, weightsSpec } from './data';
+import { CATEGORY_LABELS, CONTACT, contactMailto, factCategories, flagship, latestMeasuredAt, licenceName, lines, models, runsIn, runsInDetail, showcaseModels, siteData, spaceUrl, tryLabel, tryUrl, weightsAvailability, weightsSpec } from './data';
 
 describe('site data (site.json is generated outside this repo, ADR-001)', () => {
   it('leads with a browser-runnable flagship and offers one edition of each kind per line', () => {
@@ -121,5 +121,9 @@ describe('weights and licence copy (one helper for /models and the offerings lis
       expect(weightsSpec(m, false).endsWith(licenceName(m))).toBe(true);
     }
     expect(weightsSpec({ ...base, dtypes: [], weights_mb: null, licence: 'MIT (x)' }, true)).toBe('MIT');
+  });
+
+  it('contactMailto targets CONTACT with an encoded subject', () => {
+    expect(contactMailto()).toBe(`mailto:${CONTACT}?subject=Hello%20from%20lamplitlabs.com`);
   });
 });

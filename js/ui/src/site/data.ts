@@ -163,6 +163,8 @@ export interface ModelCta {
   publicWeights: boolean;
   secondaryHub: string | null;
 }
+/** The site's general contact link (header and footer): one subject so the two can't drift apart. */
+export const contactMailto = () => `mailto:${CONTACT}?subject=${encodeURIComponent('Hello from lamplitlabs.com')}`;
 export const mailtoFor = (m: SiteModel) => `mailto:${CONTACT}?subject=${encodeURIComponent(`${m.line} - ${EDITION_LABELS[m.edition]} (${m.label})`)}`;
 export function modelCta(m: SiteModel): ModelCta {
   const hub = hubUrl(m);
