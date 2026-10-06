@@ -187,6 +187,8 @@ export const GATE_DEFINITIONS: Record<string, string> = {
 
 export const CATEGORY_LABELS: Record<string, string> = {
   'adjective-declension': 'Adjective endings',
+  'c1-connectors': 'Two-part connectors (C1)',
+  'c1-transform': 'Sentence transformation (C1)',
   clock: 'Telling the time',
   contractions: 'Contractions',
   correction: 'Correcting a learner',
@@ -203,6 +205,8 @@ export const CATEGORY_LABELS: Record<string, string> = {
   ordinals: 'Ordinal numbers',
   'preposition-case': 'Cases after prepositions',
   prices: 'Prices',
+  roleplay: 'Role-play in German',
+  'scenario-brief': 'Briefing before a situation',
   translation: 'Translation',
   'verb-prepositions': 'Verbs with prepositions',
   'vocab-list': 'Vocabulary lists',

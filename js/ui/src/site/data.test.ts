@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { factCategories, flagship, latestMeasuredAt, lines, models, runsIn, runsInDetail, showcaseModels, siteData, spaceUrl, tryLabel, tryUrl } from './data';
+import { CATEGORY_LABELS, factCategories, flagship, latestMeasuredAt, lines, models, runsIn, runsInDetail, showcaseModels, siteData, spaceUrl, tryLabel, tryUrl } from './data';
 
 describe('site data (site.json is generated outside this repo, ADR-001)', () => {
   it('leads with a browser-runnable flagship and offers one edition of each kind per line', () => {
@@ -92,5 +92,14 @@ describe('try links', () => {
     const vercel = JSON.parse(readFileSync(new URL('../../vercel.json', import.meta.url), 'utf8')) as { redirects?: { source: string; destination: string }[] };
     const redirect = vercel.redirects?.find((r) => r.source === '/try');
     expect(redirect?.destination).toBe(tryUrl(flagship));
+  });
+  it('names every benchmark category in site.json with a curated label, never the title-cased fallback', () => {
+    const seen = new Set<string>();
+    JSON.stringify(siteData, (k, v) => {
+      if (k === 'by_category' && v && typeof v === 'object') for (const c of Object.keys(v)) seen.add(c);
+      return v;
+    });
+    expect(seen.size).toBeGreaterThan(0);
+    for (const c of [...seen].sort()) expect(CATEGORY_LABELS, `missing CATEGORY_LABELS entry for ${c}`).toHaveProperty(c);
   });
 });
