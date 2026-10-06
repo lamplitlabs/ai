@@ -22,4 +22,11 @@ createServer((req, res) => {
   }
   res.writeHead(200, { ...headers, 'Content-Type': MIME[extname(file)] || 'application/octet-stream', 'Content-Length': statSync(file).size });
   createReadStream(file).pipe(res);
-}).listen(port, '127.0.0.1', () => console.log(`static preview of ${dist} on http://127.0.0.1:${port}/`));
+}).listen(port, '127.0.0.1', () => console.log(`static preview of ${dist} on http://127.0.0.1:${port}/`))
+  .on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.error(`port ${port} already in use, is another ui-check still running?`);
+      process.exit(1);
+    }
+    throw err;
+  });
