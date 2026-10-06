@@ -3,7 +3,7 @@ import { CONTACT } from './SiteLayout';
 import { Link } from './router';
 import { TryLink } from './TryLink';
 import { Gauge, Spec, Tag } from './lab';
-import { EDITION_LABELS, gb, modelCta, pct, runsIn, runsInDetail, shortDate, type SiteModel } from './data';
+import { EDITION_LABELS, modelCta, pct, runsIn, runsInDetail, shortDate, weightsAvailability, weightsSpec, type SiteModel } from './data';
 import { primaryCta, secondaryCta } from './cta';
 
 /**
@@ -18,7 +18,6 @@ export function OfferingCard({ m, featured = false }: { m: SiteModel; featured?:
   const facts = g?.gates.facts;
   const gates = g ? Object.values(g.gates) : [];
   const passed = gates.filter((x) => x.ok).length;
-  const size = m.dtypes[0];
   const cta = modelCta(m);
   const { publicWeights } = cta;
   const primary = cta.kind === 'try' ? (
@@ -39,7 +38,7 @@ export function OfferingCard({ m, featured = false }: { m: SiteModel; featured?:
       <div className="flex flex-wrap items-center gap-2">
         <Tag tone="primary">{EDITION_LABELS[m.edition]}</Tag>
         {g ? <Tag tone={g.release ? 'success' : 'warning'}>{g.release ? 'release gate passed' : 'gate not passed'}</Tag> : null}
-        <Tag>{publicWeights ? `public weights${m.hub.revision ? ` · ${m.hub.revision}` : ''}` : 'weights on request'}</Tag>
+        <Tag>{weightsAvailability(m, publicWeights)}</Tag>
         <span className="mono-label ml-auto hidden text-muted-foreground sm:inline">{m.label}</span>
       </div>
       <h3 id={`offer-${m.name}`} className="font-display mt-5 text-2xl font-semibold tracking-tight sm:text-3xl">
@@ -50,7 +49,7 @@ export function OfferingCard({ m, featured = false }: { m: SiteModel; featured?:
       <dl className="mt-6 grid grid-cols-2 gap-x-6 gap-y-5 border-t border-border pt-6 sm:grid-cols-3">
         <Spec icon={<Cpu className="size-3.5" />} k="size" v={`${m.params_b}B`} sub={`base ${m.base_model.split('/').pop()}`} />
         <Spec icon={<Globe className="size-3.5" />} k="runs in" v={runsIn(m)} sub={runsInDetail(m)} />
-        <Spec icon={<KeyRound className="size-3.5" />} k="weights" v={publicWeights ? 'yours to download' : 'yours on request'} sub={publicWeights ? (size ? `${size.dtype} · ${gb(size.size_mb)} · ${m.licence.split(' (')[0]}` : m.weights_mb ? `bf16 · ${gb(m.weights_mb)} · ${m.licence.split(' (')[0]}` : m.licence.split(' (')[0]) : `${m.weights === 'pytorch' ? 'merged bf16' : 'export'} · ${m.licence.split(' (')[0]}`} />
+        <Spec icon={<KeyRound className="size-3.5" />} k="weights" v={publicWeights ? 'yours to download' : 'yours on request'} sub={weightsSpec(m, publicWeights)} />
       </dl>
 
       {g ? (

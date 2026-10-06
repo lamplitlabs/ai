@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { CATEGORY_LABELS, factCategories, flagship, latestMeasuredAt, lines, models, runsIn, runsInDetail, showcaseModels, siteData, spaceUrl, tryLabel, tryUrl } from './data';
+import { CATEGORY_LABELS, factCategories, flagship, latestMeasuredAt, licenceName, lines, models, runsIn, runsInDetail, showcaseModels, siteData, spaceUrl, tryLabel, tryUrl, weightsAvailability, weightsSpec } from './data';
 
 describe('site data (site.json is generated outside this repo, ADR-001)', () => {
   it('leads with a browser-runnable flagship and offers one edition of each kind per line', () => {
@@ -101,5 +101,25 @@ describe('try links', () => {
     });
     expect(seen.size).toBeGreaterThan(0);
     for (const c of [...seen].sort()) expect(CATEGORY_LABELS, `missing CATEGORY_LABELS entry for ${c}`).toHaveProperty(c);
+  });
+});
+
+describe('weights and licence copy (one helper for /models and the offerings list)', () => {
+  const base = models[0];
+  it('drops the licence parenthetical and keeps a licence that has none', () => {
+    expect(licenceName({ ...base, licence: 'Apache-2.0 (inherited from the base)' })).toBe('Apache-2.0');
+    expect(licenceName({ ...base, licence: 'MIT' })).toBe('MIT');
+  });
+  it('says the same "public weights" / "weights on request" words for both pages', () => {
+    expect(weightsAvailability({ ...base, hub: { ...base.hub, revision: undefined } }, true)).toBe('public weights');
+    expect(weightsAvailability({ ...base, hub: { ...base.hub, revision: 'v3' } }, true)).toBe('public weights · v3');
+    expect(weightsAvailability(base, false)).toBe('weights on request');
+  });
+  it('ends every weights spec line with the licence name, with or without a measured size', () => {
+    for (const m of models) {
+      expect(weightsSpec(m, true).endsWith(licenceName(m))).toBe(true);
+      expect(weightsSpec(m, false).endsWith(licenceName(m))).toBe(true);
+    }
+    expect(weightsSpec({ ...base, dtypes: [], weights_mb: null, licence: 'MIT (x)' }, true)).toBe('MIT');
   });
 });

@@ -5,7 +5,7 @@ import { Reveal } from '../Reveal';
 import { Link } from '../router';
 import { TryLink } from '../TryLink';
 import { Gauge, Index, Spec, Status, Tag } from '../lab';
-import { categoryLabel, EDITION_LABELS, factCategories, gb, lines, measuredOn, models, pct, runsIn, runsInDetail, modelCta, shortDate, showcaseModels, weightsDetail, weightsFormat, type SiteModel } from '../data';
+import { categoryLabel, licenceName, weightsAvailability, EDITION_LABELS, factCategories, gb, lines, measuredOn, models, pct, runsIn, runsInDetail, modelCta, shortDate, showcaseModels, weightsDetail, weightsFormat, type SiteModel } from '../data';
 import { container, primaryCta, secondaryCta } from '../cta';
 
 /** The page head shared by /models and /benchmarks: index, eyebrow, a large title, the lead, an optional status chip. */
@@ -64,7 +64,7 @@ export function ModelCard({ m, featured }: { m: SiteModel; featured: boolean }) 
         ) : (
           <Tag>{weightsDetail(m)}</Tag>
         )}
-        <Tag>{publicWeights ? `public weights${m.hub.revision ? ` · ${m.hub.revision}` : ''}` : 'weights on request'}</Tag>
+        <Tag>{weightsAvailability(m, publicWeights)}</Tag>
         <span className="mono-label ml-auto hidden text-muted-foreground sm:inline">{m.exported_at ? `exported ${shortDate(m.exported_at)}` : `measured ${shortDate(m.measured_at)}`}</span>
       </div>
 
@@ -116,7 +116,7 @@ export function ModelCard({ m, featured }: { m: SiteModel; featured: boolean }) 
         />
         <Spec icon={<Globe className="size-3.5" />} k="runs in" v={runsIn(m)} sub={runsInDetail(m)} />
         <Spec icon={<Server className="size-3.5" />} k="format" v={weightsFormat(m)} sub={weightsDetail(m)} />
-        <Spec icon={<Scale className="size-3.5" />} k="licence" v={m.licence.split(' (')[0]} sub="inherited from the base" />
+        <Spec icon={<Scale className="size-3.5" />} k="licence" v={licenceName(m)} sub="inherited from the base" />
         <Spec icon={<Sparkles className="size-3.5" />} k="grounding" v={m.grounding ? 'verified reference' : 'none'} sub={m.grounding ? 'attached at run time' : 'answers from weights alone'} />
       </dl>
 
