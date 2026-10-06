@@ -44,4 +44,17 @@ describe('ModelCard primary CTA', () => {
     expectPrimaryCta(html, `${v22.name} (browser, no space)`);
     expect(html).not.toContain('>Try<');
   });
+
+  // A non-public edition explains on the card itself why there is no Try/Hub link, pointing at the mailto CTA,
+  // so a visitor scanning one card need not read the page-level "Weights and licences" legend first.
+  it('shows a per-card note when an edition is not public, and none when it is', () => {
+    const v22 = models.find((m) => m.name === 'light-german-tutor-pro-v22')!;
+    const privateHtml = renderToStaticMarkup(<ModelCard m={{ ...v22, hub: { ...v22.hub, public: false } }} featured={false} />);
+    expect(privateHtml).toContain('data-testid="non-public-note"');
+    expect(privateHtml).toMatch(/Not yet public: there is nothing to try here and no Hub page\. Ask by mail/);
+    expect(primaryAnchor(privateHtml)).toMatch(/href="mailto:/);
+    for (const m of models.filter((x) => x.hub.public)) {
+      expect(renderToStaticMarkup(<ModelCard m={m} featured={false} />)).not.toContain('data-testid="non-public-note"');
+    }
+  });
 });

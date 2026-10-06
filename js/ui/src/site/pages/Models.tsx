@@ -100,6 +100,11 @@ export function ModelCard({ m, featured }: { m: SiteModel; featured: boolean }) 
           </Link>
         </div>
       </div>
+      {cta.kind === 'mail' ? (
+        <p className="mt-4 text-xs leading-relaxed text-muted-foreground" data-testid="non-public-note">
+          Not yet public: there is nothing to try here and no Hub page. Ask by mail and the weights come as a Hugging Face repository or as files, with the export the runtime loads and the report.
+        </p>
+      ) : null}
 
       <dl className="mt-8 grid grid-cols-2 gap-x-6 gap-y-6 border-t border-border pt-8 sm:grid-cols-3 lg:grid-cols-6">
         <Spec icon={<Cpu className="size-3.5" />} k="size" v={`${m.params_b}B parameters`} sub={`base ${m.base_model.split('/').pop()}`} />
