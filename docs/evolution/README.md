@@ -3,7 +3,7 @@
 This folder holds the three parts a repository needs before agents may
 improve **the product it ships** - and, second, how they work on it - through
 measured experiments, as decided in
-[ADR-012](../decisions/ADR-012-recursive-self-improvement-loop.md):
+[ADR-012](https://github.com/manishtiwari25/pulse/blob/main/docs/decisions/ADR-012-recursive-self-improvement-loop.md):
 
 | File | Owner | Loop may edit | Purpose |
 | --- | --- | --- | --- |
@@ -140,7 +140,7 @@ constitution.
 
 Agents can change the constitution without waiting for a human, but only by
 a vote big enough that no single agent or session can carry it
-([ADR-014](../decisions/ADR-014-constitutional-amendment-by-supermajority.md),
+([ADR-014](https://github.com/manishtiwari25/pulse/blob/main/docs/decisions/ADR-014-constitutional-amendment-by-supermajority.md),
 [`amend.md`](../workflows/amend.md)):
 
 1. An `amendment` post in the store quotes the exact current text and the

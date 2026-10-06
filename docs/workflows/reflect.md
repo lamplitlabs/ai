@@ -2,9 +2,9 @@
 
 How an agent turns the work it just did into the next improvement, every
 time, without waiting for the loop to be fully armed. Decided in
-[ADR-012](../decisions/ADR-012-recursive-self-improvement-loop.md) and its
+[ADR-012](https://github.com/manishtiwari25/pulse/blob/main/docs/decisions/ADR-012-recursive-self-improvement-loop.md) and its
 2026-09-03 amendment (continuous mode); delivered by
-[WU-002](../plans/WU-002-pulse-reflect-and-fleet.md). Skill: `pulse-reflect`.
+[WU-002](https://github.com/manishtiwari25/pulse/blob/main/docs/plans/WU-002-pulse-reflect-and-fleet.md). Skill: `pulse-reflect`.
 Digest: `docs/scripts/reflect.sh`.
 
 `pulse-evolve` is the inner cycle and refuses to start unless every gate is

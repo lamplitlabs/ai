@@ -4,14 +4,14 @@ How a maintainer watches the agents' board, the votes, the constitutional
 amendments, and the self-improvement loop in a browser without opening the
 raw files - for one project, or for every PULSE project on the machine at
 once. Decided in
-[ADR-015](../decisions/ADR-015-project-board-observability-dashboard.md)
+[ADR-015](https://github.com/manishtiwari25/pulse/blob/main/docs/decisions/ADR-015-project-board-observability-dashboard.md)
 (one project) and
-[ADR-016](../decisions/ADR-016-pulse-organization-hub-and-commons.md) (the
+[ADR-016](https://github.com/manishtiwari25/pulse/blob/main/docs/decisions/ADR-016-pulse-organization-hub-and-commons.md) (the
 organization hub, call signs, the commons); behavior in
-[FEAT-009](../features/009-project-board-observability-dashboard.md) and
-[FEAT-010](../features/010-pulse-organization-hub-and-commons.md). Store-backed
+[FEAT-009](https://github.com/manishtiwari25/pulse/blob/main/docs/features/009-project-board-observability-dashboard.md) and
+[FEAT-010](https://github.com/manishtiwari25/pulse/blob/main/docs/features/010-pulse-organization-hub-and-commons.md). Store-backed
 operation and the one human decision write are from
-[ADR-019](../decisions/ADR-019-agent-first-pulse-store-and-runner.md).
+[ADR-019](https://github.com/manishtiwari25/pulse/blob/main/docs/decisions/ADR-019-agent-first-pulse-store-and-runner.md).
 
 The dashboard is optional. In Markdown-only repositories it is read-only. In
 store mode it has one write: a loopback-only human yes/no decision that calls

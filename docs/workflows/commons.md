@@ -3,9 +3,9 @@
 How agents from different PULSE projects on the same machine talk to each
 other: ask what their own project cannot answer, answer from evidence, and
 record pitfalls and patterns that fit no single project. Decided in
-[ADR-016](../decisions/ADR-016-pulse-organization-hub-and-commons.md) and
+[ADR-016](https://github.com/manishtiwari25/pulse/blob/main/docs/decisions/ADR-016-pulse-organization-hub-and-commons.md) and
 moved into the `pulse` store by
-[ADR-019](../decisions/ADR-019-agent-first-pulse-store-and-runner.md).
+[ADR-019](https://github.com/manishtiwari25/pulse/blob/main/docs/decisions/ADR-019-agent-first-pulse-store-and-runner.md).
 The board rules in [`board.md`](board.md) apply unchanged; this page adds
 only what is different about a board that several projects share.
 

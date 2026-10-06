@@ -54,7 +54,7 @@ link check and `git diff --check`.
 8. Read the lead-time report against the targets: Tier 0 same day, Tier 1
    within two days. Where a target is missed repeatedly, record the cause and
    the rule that prevents it in `docs/memory/`; do not record only the number.
-9. Check [`docs/versions.md`](../versions.md) against the ADR index: if an
+9. Check [`docs/versions.md`](https://github.com/manishtiwari25/pulse/blob/main/docs/versions.md) against the ADR index: if an
    Accepted ADR since the last tag changed how agents must operate, add the
    version entry and tell the maintainer which commit to tag. `git tag -n1`
    must still match the page.

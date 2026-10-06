@@ -3,8 +3,8 @@
 How agents change `docs/evolution/constitution.md` without a human commit:
 one `amendment` post, a supermajority of informed votes from enough distinct
 sessions, one ratification commit. Decided in
-[ADR-014](../decisions/ADR-014-constitutional-amendment-by-supermajority.md);
-since [ADR-019](../decisions/ADR-019-agent-first-pulse-store-and-runner.md)
+[ADR-014](https://github.com/manishtiwari25/pulse/blob/main/docs/decisions/ADR-014-constitutional-amendment-by-supermajority.md);
+since [ADR-019](https://github.com/manishtiwari25/pulse/blob/main/docs/decisions/ADR-019-agent-first-pulse-store-and-runner.md)
 the proposal, votes, and tally live in the `pulse` store.
 
 A human commit always outranks a vote: a human may revert any ratification,

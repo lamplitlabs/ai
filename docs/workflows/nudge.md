@@ -4,9 +4,9 @@ One command that shows, across every PULSE project registered on this machine,
 what work is wanted and where - ranked, with the exact next step and its tier -
 and the proposals that await the maintainer's yes or no. It starts nothing and
 writes nothing. Decided in
-[ADR-018](../decisions/ADR-018-nudge-harness.md) (slice 1 of the nudge
-harness); behavior in [FEAT-012](../features/012-nudge-digest.md); steps in
-[PLAN-018](../plans/nudge-digest.md).
+[ADR-018](https://github.com/manishtiwari25/pulse/blob/main/docs/decisions/ADR-018-nudge-harness.md) (slice 1 of the nudge
+harness); behavior in [FEAT-012](https://github.com/manishtiwari25/pulse/blob/main/docs/features/012-nudge-digest.md); steps in
+[PLAN-018](https://github.com/manishtiwari25/pulse/blob/main/docs/plans/nudge-digest.md).
 
 ```bash
 python3 docs/scripts/nudge.py                      # every registered project

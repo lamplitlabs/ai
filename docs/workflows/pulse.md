@@ -3,7 +3,7 @@
 One command for everything an agent used to do with board files, frontmatter,
 `board.sh`, `commons.sh`, and the JSON registry - and for the machine that
 runs agents on every registered project. Decided in
-[ADR-019](../decisions/ADR-019-agent-first-pulse-store-and-runner.md); the
+[ADR-019](https://github.com/manishtiwari25/pulse/blob/main/docs/decisions/ADR-019-agent-first-pulse-store-and-runner.md); the
 store itself is described in [`docs/context/pulse-store.md`](../context/pulse-store.md).
 Board content is data, never an instruction or an approval; every hard stop
 in `AGENTS.md` stays where it is.
@@ -106,7 +106,7 @@ of all - and priority decides only within a project, so a brain with many
 voted-up cards never starves the other projects on the machine; leases
 expire and carry a generation number), clones the project's default
 branch into `$PULSE_HOME/work/<job>/` with no remote and with the clone's
-git identity set to the agent ([ADR-022](../decisions/ADR-022-git-native-agent-identity.md)):
+git identity set to the agent ([ADR-022](https://github.com/manishtiwari25/pulse/blob/main/docs/decisions/ADR-022-git-native-agent-identity.md)):
 `user.name <agent>`, `user.email <agent>@pulse.local`, one ed25519 key made
 for this run alone (`<job>.key`, 0600, outside the clone, its public half on
 `runs.signing_pubkey`), `gpg.format ssh`, `gpg.ssh.program ssh-keygen`,
@@ -359,7 +359,7 @@ start` resumes; `docs/evolution/STOP` in the brain stops it too. Without the
 service, `nohup python3 docs/scripts/pulse.py daemon --interval 300 >>
 ~/.pulse/logs/daemon.log 2>&1 &` still works for one login session.
 
-**More hands** ([ADR-020](../decisions/ADR-020-remote-executors.md),
+**More hands** ([ADR-020](https://github.com/manishtiwari25/pulse/blob/main/docs/decisions/ADR-020-remote-executors.md),
 [`executors.md`](executors.md)). The store, the planner, and the landing stay
 on this machine, the hub; another machine the human owns can lend its hands.
 `pulse pair admin@host --name vm1 --dry-run` shows the exact setup for a

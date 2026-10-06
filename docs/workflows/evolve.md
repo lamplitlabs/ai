@@ -1,7 +1,7 @@
 # Workflow - Evolve (One Self-Improvement Cycle)
 
 How an agent runs one measured cycle of the self-improvement loop decided in
-[ADR-012](../decisions/ADR-012-recursive-self-improvement-loop.md) and its
+[ADR-012](https://github.com/manishtiwari25/pulse/blob/main/docs/decisions/ADR-012-recursive-self-improvement-loop.md) and its
 2026-09-03 amendments. The loop's subject is **the product the repository
 ships** - its code, tests, and behavior, under Tier 0 and Tier 1 - measured by
 the project's own checks; the operating layer (how agents work on the

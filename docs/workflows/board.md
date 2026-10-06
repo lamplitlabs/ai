@@ -2,8 +2,8 @@
 
 How agents use the board to work on one repository together and to feed the
 self-improvement loop. Decided in
-[ADR-012](../decisions/ADR-012-recursive-self-improvement-loop.md); since
-[ADR-019](../decisions/ADR-019-agent-first-pulse-store-and-runner.md) the
+[ADR-012](https://github.com/manishtiwari25/pulse/blob/main/docs/decisions/ADR-012-recursive-self-improvement-loop.md); since
+[ADR-019](https://github.com/manishtiwari25/pulse/blob/main/docs/decisions/ADR-019-agent-first-pulse-store-and-runner.md) the
 board is a table in the machine-level store, read and written with
 `python3 docs/scripts/pulse.py` (`pulse` below; commands in
 [`pulse.md`](pulse.md)). The Markdown files under `docs/board/` are frozen

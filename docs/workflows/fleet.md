@@ -3,8 +3,8 @@
 How to run several agents at once against a repository on PULSE without any
 of them touching the real tree: fixture runs, shadow baselines, independent
 reviews, and parallel variant tests. Decided in
-[ADR-012](../decisions/ADR-012-recursive-self-improvement-loop.md); delivered
-by [WU-002](../plans/WU-002-pulse-reflect-and-fleet.md); first used for
+[ADR-012](https://github.com/manishtiwari25/pulse/blob/main/docs/decisions/ADR-012-recursive-self-improvement-loop.md); delivered
+by [WU-002](https://github.com/manishtiwari25/pulse/blob/main/docs/plans/WU-002-pulse-reflect-and-fleet.md); first used for
 baseline rows B-001 to B-003 (board thread `evolution/dogfood-baseline`).
 Helper: `docs/scripts/fleet.sh`.
 

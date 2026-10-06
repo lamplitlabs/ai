@@ -4,8 +4,8 @@ How a maintainer lends the runner a second machine's hands - a VM in a cloud
 resource group, a box under a desk, any Linux host reachable over ssh - so
 every registered project's jobs can run there while the store, the planner,
 and the landing stay on this machine, the hub. Decided in
-[ADR-020](../decisions/ADR-020-remote-executors.md); the plan is
-[PLAN-020](../plans/remote-executors.md); the runner's own procedure is
+[ADR-020](https://github.com/manishtiwari25/pulse/blob/main/docs/decisions/ADR-020-remote-executors.md); the plan is
+[PLAN-020](https://github.com/manishtiwari25/pulse/blob/main/docs/plans/remote-executors.md); the runner's own procedure is
 [`pulse.md`](pulse.md) and the schema is
 [`pulse-store.md`](../context/pulse-store.md). Every command below is the
 human's by default: agents never add, activate, or remove an executor on
@@ -35,7 +35,7 @@ own.
   EXECUTOR`, takes this run's private signing key on stdin after `prepare`
   and writes it as `<job>/run.key` (0600, outside the clone) with the
   clone's signing config and provenance hook
-  ([ADR-022](../decisions/ADR-022-git-native-agent-identity.md)); `clean`
+  ([ADR-022](https://github.com/manishtiwari25/pulse/blob/main/docs/decisions/ADR-022-git-native-agent-identity.md)); `clean`
   removes it with the directory. A hub upgraded to that verb needs the hands
   refreshed once - `pulse pair <admin@host> --name <executor>` - or every
   run there ends `error` with `verb not allowed: key`.
@@ -212,7 +212,7 @@ run, `done <job> <agent> on vm1: <summary>`.
   wait (1, 2, 4 minutes … capped at its interval or an hour). A passing
   probe - the daemon's or yours - brings it back with the counters reset.
 - **Faults - the machine answered, and the answer means a human must fix
-  it** ([WU-014](../plans/WU-014-executor-faults-are-the-machines.md)):
+  it** ([WU-014](https://github.com/manishtiwari25/pulse/blob/main/docs/plans/WU-014-executor-faults-are-the-machines.md)):
   hands that refuse a verb this hub needs (`verb not allowed: key` - they
   predate the hub; `pulse pair <admin@host> --name vm1` refreshes them) or
   a worker rejected at launch for its login (`re-authenticate`, `not logged
