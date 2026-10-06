@@ -165,7 +165,11 @@ export interface ModelCta {
 }
 /** The site's general contact link (header and footer): one subject so the two can't drift apart. */
 export const contactMailto = () => `mailto:${CONTACT}?subject=${encodeURIComponent('Hello from lamplitlabs.com')}`;
-export const mailtoFor = (m: SiteModel) => `mailto:${CONTACT}?subject=${encodeURIComponent(`${m.line} - ${EDITION_LABELS[m.edition]} (${m.label})`)}`;
+export const mailtoFor = (m: SiteModel) => {
+  const what = `${m.line} - ${EDITION_LABELS[m.edition]} (${m.label})`;
+  const body = `I'm interested in ${what} - can you tell me about self-hosting it?`;
+  return `mailto:${CONTACT}?subject=${encodeURIComponent(what)}&body=${encodeURIComponent(body)}`;
+};
 export function modelCta(m: SiteModel): ModelCta {
   const hub = hubUrl(m);
   const tryHref = tryUrl(m);
