@@ -173,6 +173,18 @@ export const GATE_LABELS: Record<string, string> = {
   export: 'export matches the trained weights',
 };
 
+/** What each release gate measures, in one sentence, for the methodology tooltips beside the gate names. */
+export const GATE_DEFINITIONS: Record<string, string> = {
+  no_loop: 'The answer never falls into a repeating loop of the same words or sentences.',
+  not_truncated: 'The answer reaches a proper ending instead of being cut off at the token limit.',
+  no_ai_talk: 'The answer stays in role and does not talk about being an AI assistant.',
+  language_follows: 'The answer is written in the language the scenario asked for.',
+  facts: 'The checkable statements in the answer match the reference for the scenario; the gate is the share of scenarios where they all do.',
+  shape: 'The answer has the form the task asked for - a list, a correction, a short explanation - rather than something else.',
+  lexicon: 'Every gender and plural the answer cites agrees with the project lexicon.',
+  export: 'The export the browser runs gives the same answers as the trained weights it was made from.',
+};
+
 export const CATEGORY_LABELS: Record<string, string> = {
   'adjective-declension': 'Adjective endings',
   clock: 'Telling the time',

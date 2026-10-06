@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { Benchmarks } from './Benchmarks';
-import { models } from '../data';
+import { GATE_DEFINITIONS, GATE_LABELS, models } from '../data';
 
 const withGate = models.filter((m) => m.gate);
 const newest = withGate.reduce((best, m) => ((m.gate!.created_at ?? '') > (best.gate!.created_at ?? '') ? m : best));
@@ -26,5 +26,29 @@ describe('Benchmarks header picks the newest gate', () => {
     for (const m of withGate) {
       if (m.name !== newest.name) expect(header).not.toContain(`${m.label} · gate`);
     }
+  });
+});
+
+/** Beside every gate name sits a methodology marker: a link with an accessible name and a title tooltip carrying the
+ *  gate's definition, whose href points at a matching anchor in the methodology list on the same page. */
+describe('Benchmarks gate methodology help', () => {
+  const html = renderToStaticMarkup(<Benchmarks />);
+  const gateKeys = [...new Set(withGate.flatMap((m) => Object.keys(m.gate!.gates)))];
+
+  it('every rendered gate has a definition', () => {
+    expect(gateKeys.length).toBeGreaterThan(0);
+    for (const k of gateKeys) expect(GATE_DEFINITIONS[k], `no definition for gate ${k}`).toBeTruthy();
+  });
+
+  it('renders a reachable link with tooltip and accessible name for each gate, pointing at an anchor on the page', () => {
+    for (const k of gateKeys) {
+      const link = html.match(new RegExp(`<a[^>]*data-gate-help="${k}"[^>]*>`));
+      expect(link, `methodology link missing for gate ${k}`).not.toBeNull();
+      expect(link![0]).toContain(`href="#gate-${k}"`);
+      expect(link![0]).toMatch(/title="[^"]+"/);
+      expect(link![0]).toContain(`aria-label="What &quot;${GATE_LABELS[k] ?? k}&quot; measures:`);
+      expect(html, `anchor #gate-${k} missing`).toContain(`id="gate-${k}"`);
+    }
+    expect(html).toContain('id="methodology"');
   });
 });

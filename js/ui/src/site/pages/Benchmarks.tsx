@@ -1,7 +1,7 @@
-import { Check, X } from 'lucide-react';
+import { Check, Info, X } from 'lucide-react';
 import { Reveal } from '../Reveal';
 import { Gauge, Index, Status, Tag } from '../lab';
-import { categoryLabel, EDITION_LABELS, factCategories, GATE_LABELS, lines, measuredOn, models, pct, shortDate, siteData, type SiteModel } from '../data';
+import { categoryLabel, EDITION_LABELS, factCategories, GATE_DEFINITIONS, GATE_LABELS, lines, measuredOn, models, pct, shortDate, siteData, type SiteModel } from '../data';
 import { container } from '../cta';
 import { PageIntro } from './Models';
 
@@ -60,6 +60,41 @@ function Progression() {
   );
 }
 
+/** A small methodology marker beside a gate name: a tooltip with the gate's definition and a link to the
+ *  methodology list further down the page, so a reader can learn what the gate measures without leaving. */
+function GateHelp({ k }: { k: string }) {
+  const def = GATE_DEFINITIONS[k];
+  if (!def) return null;
+  const label = GATE_LABELS[k] ?? k;
+  return (
+    <a
+      href={`#gate-${k}`}
+      title={def}
+      aria-label={`What "${label}" measures: ${def}`}
+      data-gate-help={k}
+      className="inline-flex text-muted-foreground/70 transition-colors hover:text-primary"
+    >
+      <Info className="size-3.5" aria-hidden="true" />
+    </a>
+  );
+}
+
+function Methodology() {
+  return (
+    <div id="methodology" className="glass scroll-mt-20 rounded-2xl p-6 sm:p-8">
+      <Index n="gates">What each gate measures</Index>
+      <dl className="mt-5 grid gap-x-8 gap-y-4 text-sm sm:grid-cols-2">
+        {Object.entries(GATE_DEFINITIONS).map(([k, def]) => (
+          <div key={k} id={`gate-${k}`} className="scroll-mt-20">
+            <dt className="font-medium">{GATE_LABELS[k] ?? k}</dt>
+            <dd className="mt-1 leading-relaxed text-muted-foreground">{def}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  );
+}
+
 function GateCard({ m }: { m: SiteModel }) {
   const g = m.gate!;
   const gates = Object.entries(g.gates);
@@ -90,6 +125,7 @@ function GateCard({ m }: { m: SiteModel }) {
                   <span className="flex items-center gap-2">
                     {v.ok ? <Check className="size-4 text-success" /> : <X className="size-4 text-warning" />}
                     {GATE_LABELS[k] ?? k}
+                    <GateHelp k={k} />
                   </span>
                   <span className="mono-label tnum text-muted-foreground">
                     {v.actual == null ? (
@@ -219,6 +255,9 @@ export function Benchmarks() {
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{c.t}</p>
             </div>
           ))}
+        </Reveal>
+        <Reveal>
+          <Methodology />
         </Reveal>
         {withGate.map((m, i) => (
           <Reveal key={m.name}>
