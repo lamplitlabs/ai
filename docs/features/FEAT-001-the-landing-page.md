@@ -52,7 +52,7 @@ In: the pages, layout, data shape, headless check, host rules. Out: training, me
 
 ## Verification Plan
 
-`make test` (52 vitest cases incl. the data contract and the `/try` redirect check, production build), `make ui-check`
+`make test` (54 vitest cases incl. the data contract and the `/try` redirect check, production build), `make ui-check`
 (4 routes x 2 themes), the deploy workflow's preview on pull requests.
 
 ## Rollback Strategy
