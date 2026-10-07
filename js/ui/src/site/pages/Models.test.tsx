@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { ModelCard } from './Models';
 import { models } from '../data';
 import { primaryCta } from '../cta';
+import { NOT_MEASURED } from '../data';
 
 const PRIMARY_CLASS = `class="${primaryCta}"`;
 
@@ -57,4 +58,16 @@ describe('ModelCard primary CTA', () => {
       expect(renderToStaticMarkup(<ModelCard m={m} featured={false} />)).not.toContain('data-testid="non-public-note"');
     }
   });
+
+  // Same contract as Offerings: a null metric (facts gate or export fidelity) renders the shared NOT_MEASURED phrase,
+  // never a bare dash, on every edition's datasheet.
+  for (const m of models) {
+    it(`${m.name} with unmeasured facts and export fidelity says "${NOT_MEASURED}" instead of a bare dash`, () => {
+      const g = m.gate!;
+      const unmeasured = { ...m, export_agreement: null, gate: { ...g, gates: { ...g.gates, facts: { ...g.gates.facts!, actual: null } } } };
+      const html = renderToStaticMarkup(<ModelCard m={unmeasured} featured={false} />);
+      expect(html).toContain(NOT_MEASURED);
+      expect(html).not.toMatch(/>\s*[–—-]\s*</);
+    });
+  }
 });

@@ -241,6 +241,12 @@ export const categoryLabel = (k: string) => CATEGORY_LABELS[k] ?? k.replace(/-/g
 export const factCategories = (g: GateSummary) => Object.entries(g.by_category).filter((e): e is [string, CategoryRates & { facts: number }] => e[1].facts != null).sort((a, b) => b[1].facts - a[1].facts);
 
 export const pct = (x: number | null | undefined, digits = 0) => (x == null ? '–' : `${(x * 100).toFixed(digits)}%`);
+/** What a card shows in place of a number nobody measured yet. One phrase for every field, so no card falls back to a bare dash
+ *  that a visitor cannot tell from a failed check (the Models/Offerings tests assert cards never render `–` for a null metric). */
+export const NOT_MEASURED = 'not measured yet';
+/** Format a measured value, or say it is not measured; the single source for every "measured vs unmeasured" field on a card. */
+export const measured = <T,>(x: T | null | undefined, format: (v: T) => string): string => (x == null ? NOT_MEASURED : format(x));
+export const measuredPct = (x: number | null | undefined, digits = 0) => measured(x, (v) => pct(v, digits));
 export const gb = (mb: number) => (mb >= 1000 ? `${(mb / 1000).toFixed(1)} GB` : `${Math.round(mb)} MB`);
 /** Days a measurement data set has been generated for; the site shows a warning past STALE_AFTER_DAYS so a visitor can tell old numbers from current ones. */
 export const STALE_AFTER_DAYS = 14;
