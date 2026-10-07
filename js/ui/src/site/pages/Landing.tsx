@@ -7,7 +7,7 @@ import { CONTACT } from '../SiteLayout';
 import { Link } from '../router';
 import { TryLink } from '../TryLink';
 import { Datum, Index, SectionHead, Status } from '../lab';
-import { EDITION_LABELS, STALE_AFTER_DAYS, dataAgeDays, flagship, latestMeasuredAt, lines, measured, pct, shortDate, showcaseModels, siteData } from '../data';
+import { EDITION_LABELS, STALE_AFTER_DAYS, commissionMailto, dataAgeDays, flagship, latestMeasuredAt, lines, measured, pct, shortDate, showcaseModels, siteData } from '../data';
 import { container, primaryCta, secondaryCta } from '../cta';
 
 export { container, primaryCta, secondaryCta };
@@ -253,7 +253,7 @@ export function Landing({ now }: { now?: Date } = {}) {
             </Index>
             <h2 className="font-display mt-6 text-balance text-4xl font-semibold tracking-tight sm:text-5xl lg:text-6xl">Have a job for a model?</h2>
             <p className="mx-auto mt-6 max-w-xl text-balance text-lg text-muted-foreground">Tell us the task, where it has to run and what a right answer looks like. We will tell you whether a small model can do it - and show you the measurement before you commit.</p>
-            <a href={`mailto:${CONTACT}?subject=${encodeURIComponent('A job for a model')}`} className={`${primaryCta} mt-10`}>
+            <a href={commissionMailto()} className={`${primaryCta} mt-10`}>
               {CONTACT}
             </a>
             <p className="mono-label mt-6 text-muted-foreground/70">a measurement before a contract · always</p>
