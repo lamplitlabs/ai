@@ -101,7 +101,9 @@ describe('ModelCard strongest/weakest category line', () => {
     const k0 = Object.keys(g.by_category)[0];
     const by_category = Object.fromEntries(Object.entries(g.by_category).map(([k, c]) => [k, k === k0 ? c : { ...c, facts: undefined }]));
     const html = renderToStaticMarkup(<ModelCard m={{ ...measuredModel, gate: { ...g, by_category } }} featured={false} />);
-    expect(html).toContain('strongest ');
+    // Only one category survives factCategories' null-filter here, so the line names it once rather than
+    // repeating it as both "strongest" and "weakest".
+    expect(html).not.toContain('strongest ');
     expect(html).not.toMatch(/text-(success|warning)">–</);
     expect(html).not.toMatch(/>\s*[–—-]\s*</);
     // Null facts never reach the line through factCategories; if they ever do, measuredPct is what renders them.
