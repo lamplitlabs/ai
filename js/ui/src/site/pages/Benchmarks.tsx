@@ -14,20 +14,12 @@ export function unmetGates(gates: Record<string, { ok: boolean }>): string[] {
   return Object.entries(gates).filter(([, c]) => !c.ok).map(([k]) => k);
 }
 
-/** The release cell's text when an edition is not released: which gate is missing, by its label, so a reader learns
- *  what still has to pass instead of an unexplained "not yet". */
+/** The release cell's text when an edition is not released: every missing gate, by its label, as visible text, so a
+ *  reader (including one on a touch device, where title tooltips are unreachable) learns what still has to pass
+ *  without leaving the row. */
 export function unmetLabel(gates: Record<string, { ok: boolean }>): string {
   const unmet = unmetGates(gates).map((k) => GATE_LABELS[k] ?? k);
   if (unmet.length === 0) return 'not yet released';
-  if (unmet.length === 1) return `not yet: ${unmet[0]}`;
-  return `not yet: ${unmet[0]} +${unmet.length - 1} more`;
-}
-
-/** The release tag's tooltip: every unmet gate by label when more than one fails, so a reader sees the whole list
- *  without leaving the row; undefined when the visible text already says it all. */
-export function unmetTitle(gates: Record<string, { ok: boolean }>): string | undefined {
-  const unmet = unmetGates(gates).map((k) => GATE_LABELS[k] ?? k);
-  if (unmet.length < 2) return undefined;
   return `not yet: ${unmet.join(', ')}`;
 }
 
@@ -77,7 +69,7 @@ function Progression() {
                     <Tag tone="success">passed</Tag>
                   ) : (
                     <Tag tone="warning">
-                      <span data-unmet-gates={unmetGates(g.gates).join(',')} title={unmetTitle(g.gates)}>{unmetLabel(g.gates)}</span>
+                      <span data-unmet-gates={unmetGates(g.gates).join(',')}>{unmetLabel(g.gates)}</span>
                     </Tag>
                   )}
                 </td>

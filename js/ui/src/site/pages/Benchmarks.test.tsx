@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { Benchmarks, unmetGates, unmetLabel, unmetTitle } from './Benchmarks';
+import { Benchmarks, unmetGates, unmetLabel } from './Benchmarks';
 import { GATE_DEFINITIONS, GATE_LABELS, models } from '../data';
 
 const withGate = models.filter((m) => m.gate);
@@ -62,34 +62,23 @@ describe('Benchmarks release cell names the unmet gate', () => {
     expect(html).not.toMatch(/>not yet</);
   });
 
-  it('every unreleased edition names its first failing gate by label', () => {
+  it('every unreleased edition lists each failing gate by label in the visible row text', () => {
     const unreleased = withGate.filter((m) => !m.gate!.release);
     for (const m of unreleased) {
       const keys = unmetGates(m.gate!.gates);
       expect(keys.length, `${m.name} is unreleased but every gate is ok`).toBeGreaterThan(0);
       const text = unmetLabel(m.gate!.gates);
-      expect(text).toContain(GATE_LABELS[keys[0]] ?? keys[0]);
+      for (const k of keys) expect(text).toContain(GATE_LABELS[k] ?? k);
       expect(html).toContain(`data-unmet-gates="${keys.join(',')}"`);
-      expect(html).toContain(text.replace(/\+/g, '+'));
+      expect(html).toContain(`>${text}<`);
     }
   });
 
-  it('labels one, several and no failing gates', () => {
+  it('labels one, several and no failing gates with no "+N more" and no tooltip', () => {
     expect(unmetLabel({ facts: { ok: false }, shape: { ok: true } })).toBe(`not yet: ${GATE_LABELS.facts}`);
-    expect(unmetLabel({ facts: { ok: false }, shape: { ok: false } })).toBe(`not yet: ${GATE_LABELS.facts} +1 more`);
+    expect(unmetLabel({ facts: { ok: false }, shape: { ok: false } })).toBe(`not yet: ${GATE_LABELS.facts}, ${GATE_LABELS.shape}`);
     expect(unmetLabel({ facts: { ok: true } })).toBe('not yet released');
-  });
-
-  it('the tooltip lists every unmet gate label when more than one fails, and is absent otherwise', () => {
-    expect(unmetTitle({ facts: { ok: false }, shape: { ok: false } })).toBe(`not yet: ${GATE_LABELS.facts}, ${GATE_LABELS.shape}`);
-    expect(unmetTitle({ facts: { ok: false }, shape: { ok: true } })).toBeUndefined();
-    expect(unmetTitle({ facts: { ok: true } })).toBeUndefined();
-    for (const m of withGate.filter((x) => !x.gate!.release)) {
-      const keys = unmetGates(m.gate!.gates);
-      if (keys.length < 2) continue;
-      const title = unmetTitle(m.gate!.gates)!;
-      for (const k of keys) expect(title).toContain(GATE_LABELS[k] ?? k);
-      expect(html).toContain(`title="${title}"`);
-    }
+    expect(html).not.toMatch(/\+\d+ more/);
+    expect(html).not.toMatch(/data-unmet-gates="[^"]*" title=/);
   });
 });
