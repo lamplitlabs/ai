@@ -14,6 +14,11 @@ const TITLES: Record<string, string> = {
   '/try': `${tryLabel()} - Lamplit Labs AI`,
 };
 
+/** Tab title for a route; an unknown path gets a "Not found" title instead of keeping the home page's. */
+export function titleFor(route: string): string {
+  return TITLES[route] ?? 'Not found - Lamplit Labs AI';
+}
+
 function NotFound() {
   return (
     <section className="hero-lamplight lab-grid pt-14">
@@ -55,7 +60,7 @@ function TryMoved() {
 export function Site() {
   const route = useRoute();
   useEffect(() => {
-    document.title = TITLES[route] ?? 'Lamplit Labs AI';
+    document.title = titleFor(route);
     document.body.dataset.route = route;
   }, [route]);
   return <SiteLayout>{route === '/' ? <Landing /> : route === '/models' ? <Models /> : route === '/benchmarks' ? <Benchmarks /> : route === '/try' ? <TryMoved /> : <NotFound />}</SiteLayout>;
