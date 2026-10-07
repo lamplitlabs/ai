@@ -5,7 +5,7 @@ import { Reveal } from '../Reveal';
 import { Link } from '../router';
 import { TryLink } from '../TryLink';
 import { Gauge, Index, Spec, Status, Tag } from '../lab';
-import { categoryLabel, licenceName, weightsAvailability, EDITION_LABELS, factCategories, gb, lines, measuredOn, models, pct, runsIn, runsInDetail, modelCta, shortDate, showcaseModels, weightsDetail, weightsFormat, type SiteModel } from '../data';
+import { categoryLabel, licenceName, weightsAvailability, EDITION_LABELS, factCategories, gb, lines, measuredOn, models, pct, runsIn, runsInDetail, modelCta, shortDate, showcaseModels, weightsDetail, weightsFormat, defaultDtype, type SiteModel } from '../data';
 import { container, primaryCta, secondaryCta } from '../cta';
 
 /** The page head shared by /models and /benchmarks: index, eyebrow, a large title, the lead, an optional status chip. */
@@ -44,7 +44,7 @@ function Number({ k, v, sub, ok, value, threshold }: { k: string; v: string; sub
 export function ModelCard({ m, featured }: { m: SiteModel; featured: boolean }) {
   const g = m.gate;
   const facts = g?.gates.facts;
-  const size = m.dtypes[0];
+  const size = defaultDtype(m);
   const cats = g ? factCategories(g) : [];
   const strongest = cats[0];
   const weakest = cats[cats.length - 1];
