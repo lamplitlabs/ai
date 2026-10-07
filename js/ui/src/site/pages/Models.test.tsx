@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { ModelCard } from './Models';
 import { models } from '../data';
 import { primaryCta } from '../cta';
-import { NOT_MEASURED } from '../data';
+import { NOT_MEASURED, measuredPct } from '../data';
 
 const PRIMARY_CLASS = `class="${primaryCta}"`;
 
@@ -70,4 +70,30 @@ describe('ModelCard primary CTA', () => {
       expect(html).not.toMatch(/>\s*[–—-]\s*</);
     });
   }
+});
+
+// The strongest/weakest category line follows the same convention: a category whose facts rate is null is dropped by
+// factCategories, and any value that does reach the line goes through measuredPct, so the line never shows a bare dash.
+describe('ModelCard strongest/weakest category line', () => {
+  const measuredModel = models.find((m) => m.gate && Object.values(m.gate.by_category).some((c) => c.facts != null))!;
+
+  it('renders an unmeasured category facts value as NOT_MEASURED, never a dash', () => {
+    const g = measuredModel.gate!;
+    const k0 = Object.keys(g.by_category)[0];
+    const by_category = Object.fromEntries(Object.entries(g.by_category).map(([k, c]) => [k, k === k0 ? c : { ...c, facts: undefined }]));
+    const html = renderToStaticMarkup(<ModelCard m={{ ...measuredModel, gate: { ...g, by_category } }} featured={false} />);
+    expect(html).toContain('strongest ');
+    expect(html).not.toMatch(/text-(success|warning)">–</);
+    expect(html).not.toMatch(/>\s*[–—-]\s*</);
+    // Null facts never reach the line through factCategories; if they ever do, measuredPct is what renders them.
+    expect(measuredPct(null)).toBe(NOT_MEASURED);
+  });
+
+  it('omits the line rather than showing dashes when no category has a facts rate', () => {
+    const g = measuredModel.gate!;
+    const by_category = Object.fromEntries(Object.entries(g.by_category).map(([k, c]) => [k, { ...c, facts: undefined }]));
+    const html = renderToStaticMarkup(<ModelCard m={{ ...measuredModel, gate: { ...g, by_category } }} featured={false} />);
+    expect(html).not.toContain('strongest ');
+    expect(html).not.toMatch(/>\s*[–—-]\s*</);
+  });
 });
