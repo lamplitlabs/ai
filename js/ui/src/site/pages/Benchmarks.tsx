@@ -9,6 +9,20 @@ const withGate = models.filter((m) => m.gate);
 const chronological = [...withGate].sort((a, b) => (a.gate!.created_at ?? '').localeCompare(b.gate!.created_at ?? ''));
 const latest = chronological.at(-1);
 
+/** Keys of the gates that failed, in the order the gate file lists them. */
+export function unmetGates(gates: Record<string, { ok: boolean }>): string[] {
+  return Object.entries(gates).filter(([, c]) => !c.ok).map(([k]) => k);
+}
+
+/** The release cell's text when an edition is not released: which gate is missing, by its label, so a reader learns
+ *  what still has to pass instead of an unexplained "not yet". */
+export function unmetLabel(gates: Record<string, { ok: boolean }>): string {
+  const unmet = unmetGates(gates).map((k) => GATE_LABELS[k] ?? k);
+  if (unmet.length === 0) return 'not yet released';
+  if (unmet.length === 1) return `not yet: ${unmet[0]}`;
+  return `not yet: ${unmet[0]} +${unmet.length - 1} more`;
+}
+
 function Progression() {
   return (
     <div className="glass overflow-x-auto rounded-2xl">
@@ -50,7 +64,15 @@ function Progression() {
                 <td className="px-5 py-3.5 font-mono text-xs">{pct(g.gates.not_truncated?.actual, 1)}</td>
                 <td className="px-5 py-3.5 font-mono text-xs">{pct(g.gates.language_follows?.actual, 1)}</td>
                 <td className="px-5 py-3.5 font-mono text-xs">{m.panel?.mean != null ? m.panel.mean.toFixed(2) : '–'}</td>
-                <td className="px-5 py-3.5">{g.release ? <Tag tone="success">passed</Tag> : <Tag>not yet</Tag>}</td>
+                <td className="px-5 py-3.5">
+                  {g.release ? (
+                    <Tag tone="success">passed</Tag>
+                  ) : (
+                    <Tag tone="warning">
+                      <span data-unmet-gates={unmetGates(g.gates).join(',')}>{unmetLabel(g.gates)}</span>
+                    </Tag>
+                  )}
+                </td>
               </tr>
             );
           })}

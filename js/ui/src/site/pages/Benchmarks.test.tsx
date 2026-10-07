@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { Benchmarks } from './Benchmarks';
+import { Benchmarks, unmetGates, unmetLabel } from './Benchmarks';
 import { GATE_DEFINITIONS, GATE_LABELS, models } from '../data';
 
 const withGate = models.filter((m) => m.gate);
@@ -50,5 +50,33 @@ describe('Benchmarks gate methodology help', () => {
       expect(html, `anchor #gate-${k} missing`).toContain(`id="gate-${k}"`);
     }
     expect(html).toContain('id="methodology"');
+  });
+});
+
+/** The progression table's release cell names the unmet gate instead of a bare "not yet", so a reader learns which
+ *  metric still has to pass. */
+describe('Benchmarks release cell names the unmet gate', () => {
+  const html = renderToStaticMarkup(<Benchmarks />);
+
+  it('never renders a bare "not yet" tag', () => {
+    expect(html).not.toMatch(/>not yet</);
+  });
+
+  it('every unreleased edition names its first failing gate by label', () => {
+    const unreleased = withGate.filter((m) => !m.gate!.release);
+    for (const m of unreleased) {
+      const keys = unmetGates(m.gate!.gates);
+      expect(keys.length, `${m.name} is unreleased but every gate is ok`).toBeGreaterThan(0);
+      const text = unmetLabel(m.gate!.gates);
+      expect(text).toContain(GATE_LABELS[keys[0]] ?? keys[0]);
+      expect(html).toContain(`data-unmet-gates="${keys.join(',')}"`);
+      expect(html).toContain(text.replace(/\+/g, '+'));
+    }
+  });
+
+  it('labels one, several and no failing gates', () => {
+    expect(unmetLabel({ facts: { ok: false }, shape: { ok: true } })).toBe(`not yet: ${GATE_LABELS.facts}`);
+    expect(unmetLabel({ facts: { ok: false }, shape: { ok: false } })).toBe(`not yet: ${GATE_LABELS.facts} +1 more`);
+    expect(unmetLabel({ facts: { ok: true } })).toBe('not yet released');
   });
 });
