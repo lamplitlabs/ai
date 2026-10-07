@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { titleFor } from './Site';
+import { descriptionFor, titleFor } from './Site';
 
 // vitest runs in the node environment (no DOM package is installed), so React effects never fire and the server
 // renderer always snapshots the '/' route. `titleFor` is the only value the Site effect assigns to document.title,
@@ -12,6 +12,18 @@ describe('document.title follows the route', () => {
     for (const path of ['/does-not-exist', '/models/typo', '/404']) {
       expect(titleFor(path)).toBe('Not found - Lamplit Labs AI');
       expect(titleFor(path)).not.toBe(titleFor('/'));
+    }
+  });
+});
+
+describe('meta description follows the route', () => {
+  it('describes the offerings on every known route', () => {
+    for (const path of ['/', '/models', '/benchmarks', '/try']) expect(descriptionFor(path)).toMatch(/host yourself/);
+  });
+  it('tells a visitor on a stale or mistyped link that the page is missing instead of repeating the home pitch', () => {
+    for (const path of ['/does-not-exist', '/models/typo', '/404']) {
+      expect(descriptionFor(path)).toMatch(/does not exist/);
+      expect(descriptionFor(path)).not.toBe(descriptionFor('/'));
     }
   });
 });

@@ -19,6 +19,27 @@ export function titleFor(route: string): string {
   return TITLES[route] ?? 'Not found - Lamplit Labs AI';
 }
 
+const HOME_DESCRIPTION =
+  'Lamplit Labs AI builds small, specialised models you host yourself - in a browser, on a laptop, on-prem, in your private cloud, in your app or on the edge. Your data never leaves.';
+const NOT_FOUND_DESCRIPTION =
+  'That page does not exist on Lamplit Labs AI. The home page lists the small, specialised models you can host yourself, with the numbers they were measured on.';
+
+/** Meta description for a route; an unknown path says the page is missing instead of repeating the home page's pitch. */
+export function descriptionFor(route: string): string {
+  return route in TITLES ? HOME_DESCRIPTION : NOT_FOUND_DESCRIPTION;
+}
+
+/** Keep `<meta name=description>` and the og:/twitter: mirrors in sync with the route, like document.title. */
+function setDescription(description: string): void {
+  for (const [attr, key] of [
+    ['name', 'description'],
+    ['property', 'og:description'],
+    ['name', 'twitter:description'],
+  ] as const) {
+    document.querySelector(`meta[${attr}="${key}"]`)?.setAttribute('content', description);
+  }
+}
+
 function NotFound() {
   return (
     <section className="hero-lamplight lab-grid pt-14">
@@ -61,6 +82,7 @@ export function Site() {
   const route = useRoute();
   useEffect(() => {
     document.title = titleFor(route);
+    setDescription(descriptionFor(route));
     document.body.dataset.route = route;
   }, [route]);
   return <SiteLayout>{route === '/' ? <Landing /> : route === '/models' ? <Models /> : route === '/benchmarks' ? <Benchmarks /> : route === '/try' ? <TryMoved /> : <NotFound />}</SiteLayout>;
