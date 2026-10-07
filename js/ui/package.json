@@ -6,6 +6,7 @@
   "description": "ai.lamplitlabs.com - the Lamplit Labs AI landing page (React 19 + Tailwind CSS 4, Vite). The models it shows are trained, measured and published elsewhere; a producer writes src/data/site.json and this package is the site's source and build.",
   "scripts": {
     "dev": "vite",
+    "prebuild": "node scripts/sitemap.mjs",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "test": "vitest run",

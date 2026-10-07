@@ -1,5 +1,5 @@
 // Writes public/sitemap.xml from src/data/site.json: <lastmod> is the data's generated_at date, never hand-typed.
-// Run `node scripts/sitemap.mjs` after site.json changes; src/site/sitemap.test.ts fails when the file drifts.
+// Runs as the `prebuild` npm script so every build regenerates it (or run `node scripts/sitemap.mjs` by hand); src/site/sitemap.test.ts fails when the file drifts.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
