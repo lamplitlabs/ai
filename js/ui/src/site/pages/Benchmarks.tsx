@@ -1,7 +1,7 @@
 import { Check, Info, X } from 'lucide-react';
 import { Reveal } from '../Reveal';
 import { Gauge, Index, Status, Tag } from '../lab';
-import { categoryLabel, EDITION_LABELS, factCategories, GATE_DEFINITIONS, GATE_LABELS, lines, measuredOn, models, pct, shortDate, siteData, type SiteModel } from '../data';
+import { categoryLabel, EDITION_LABELS, factCategories, GATE_DEFINITIONS, GATE_LABELS, lines, measuredOn, models, NOT_MEASURED, pct, shortDate, siteData, type SiteModel } from '../data';
 import { container } from '../cta';
 import { PageIntro } from './Models';
 
@@ -63,7 +63,7 @@ function Progression() {
                 </td>
                 <td className="px-5 py-3.5 font-mono text-xs">{pct(g.gates.not_truncated?.actual, 1)}</td>
                 <td className="px-5 py-3.5 font-mono text-xs">{pct(g.gates.language_follows?.actual, 1)}</td>
-                <td className="px-5 py-3.5 font-mono text-xs">{m.panel?.mean != null ? m.panel.mean.toFixed(2) : '–'}</td>
+                <td className="px-5 py-3.5 font-mono text-xs">{m.panel?.mean != null ? m.panel.mean.toFixed(2) : NOT_MEASURED}</td>
                 <td className="px-5 py-3.5">
                   {g.release ? (
                     <Tag tone="success">passed</Tag>
