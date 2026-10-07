@@ -5,7 +5,7 @@ import { Reveal } from '../Reveal';
 import { Link } from '../router';
 import { TryLink } from '../TryLink';
 import { Gauge, Index, Spec, Status, Tag } from '../lab';
-import { categoryLabel, licenceName, weightsAvailability, EDITION_LABELS, factCategories, gb, lines, measuredOn, models, pct, runsIn, runsInDetail, modelCta, shortDate, showcaseModels, weightsDetail, weightsFormat, defaultDtype, type SiteModel } from '../data';
+import { categoryLabel, licenceName, weightsAvailability, EDITION_LABELS, factCategories, gb, lines, measuredOn, measuredPct, models, pct, runsIn, runsInDetail, modelCta, shortDate, showcaseModels, weightsDetail, weightsFormat, defaultDtype, type SiteModel } from '../data';
 import { container, primaryCta, secondaryCta } from '../cta';
 
 /** The page head shared by /models and /benchmarks: index, eyebrow, a large title, the lead, an optional status chip. */
@@ -129,12 +129,12 @@ export function ModelCard({ m, featured }: { m: SiteModel; featured: boolean }) 
             </span>
           </div>
           <div className="mt-6 grid gap-6 sm:grid-cols-3">
-            <Number k="facts against the reference" v={pct(facts?.actual, 1)} sub={`gate ${pct(facts?.threshold)}`} ok={facts?.ok} value={facts?.actual ?? 0} threshold={facts?.threshold} />
+            <Number k="facts against the reference" v={measuredPct(facts?.actual, 1)} sub={`gate ${pct(facts?.threshold)}`} ok={facts?.ok} value={facts?.actual ?? 0} threshold={facts?.threshold} />
             <Number k="release gates" v={`${passed} / ${gates.length}`} sub={g.release ? 'every gate passed' : `${gates.length - passed} not passed yet`} ok={g.release} value={gates.length ? passed / gates.length : undefined} />
             {m.weights === 'pytorch' ? (
               <Number k="measured on" v="bf16 weights" sub="the trained weights themselves, in PyTorch - there is no quantised export to compare" />
             ) : (
-              <Number k="export fidelity" v={m.export_agreement?.q8 != null ? pct(m.export_agreement.q8) : '–'} sub={m.export_agreement?.q8 != null ? 'quantised export agrees with the trained weights' : 'not measured yet for this edition'} ok={m.export_agreement?.q8 != null ? m.export_agreement.q8 >= 0.95 : undefined} value={m.export_agreement?.q8 ?? undefined} threshold={0.95} />
+              <Number k="export fidelity" v={measuredPct(m.export_agreement?.q8)} sub={m.export_agreement?.q8 != null ? 'quantised export agrees with the trained weights' : 'no fidelity number for this edition yet'} ok={m.export_agreement?.q8 != null ? m.export_agreement.q8 >= 0.95 : undefined} value={m.export_agreement?.q8 ?? undefined} threshold={0.95} />
             )}
           </div>
           {strongest && weakest ? (

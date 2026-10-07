@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { OfferingCard } from './Offerings';
 import { models } from './data';
 import { primaryCta } from './cta';
+import { NOT_MEASURED } from './data';
 
 const PRIMARY_CLASS = `class="${primaryCta}"`;
 
@@ -44,6 +45,18 @@ describe('OfferingCard primary CTA', () => {
       const html = renderToStaticMarkup(<OfferingCard m={noSpace} featured={false} />);
       expectPrimaryCta(html, `${m.name} (browser, no space)`);
       expect(html).not.toContain('>Try it<');
+    });
+  }
+
+  // Every number a card shows is either measured or says so in words: a visitor cannot tell a bare dash from a failed
+  // check (the defects fixed in 1bee5ff, 2d18ab0, 6bc479d). The shared `measured` helper in data.ts is the only fallback.
+  for (const m of models) {
+    it(`${m.name} with an unmeasured facts gate says "${NOT_MEASURED}" instead of a bare dash`, () => {
+      const g = m.gate!;
+      const unmeasured = { ...m, gate: { ...g, gates: { ...g.gates, facts: { ...g.gates.facts!, actual: null } } } };
+      const html = renderToStaticMarkup(<OfferingCard m={unmeasured} featured={false} />);
+      expect(html).toContain(NOT_MEASURED);
+      expect(html).not.toMatch(/>\s*[–—-]\s*</);
     });
   }
 });

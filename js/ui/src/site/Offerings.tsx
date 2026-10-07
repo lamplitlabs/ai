@@ -3,7 +3,7 @@ import { commissionMailto } from './data';
 import { Link } from './router';
 import { TryLink } from './TryLink';
 import { Gauge, Spec, Tag } from './lab';
-import { EDITION_LABELS, modelCta, pct, runsIn, runsInDetail, shortDate, weightsAvailability, weightsSpec, type SiteModel } from './data';
+import { EDITION_LABELS, measuredPct, modelCta, runsIn, runsInDetail, shortDate, weightsAvailability, weightsSpec, type SiteModel } from './data';
 import { primaryCta, secondaryCta } from './cta';
 
 /**
@@ -61,7 +61,7 @@ export function OfferingCard({ m, featured = false }: { m: SiteModel; featured?:
           <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
             <div>
               <div className="mono-label text-muted-foreground">facts</div>
-              <div className={`datum-value mt-1.5 text-2xl font-semibold leading-none ${facts?.ok ? 'text-success' : 'text-warning'}`}>{pct(facts?.actual, 1)}</div>
+              <div className={`datum-value mt-1.5 text-2xl font-semibold leading-none ${facts?.ok ? 'text-success' : 'text-warning'}`}>{measuredPct(facts?.actual, 1)}</div>
               <Gauge className="mt-2" value={facts?.actual ?? 0} threshold={facts?.threshold} ok={facts?.ok} />
             </div>
             <div>
