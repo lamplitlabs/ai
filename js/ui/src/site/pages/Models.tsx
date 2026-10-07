@@ -134,7 +134,7 @@ export function ModelCard({ m, featured }: { m: SiteModel; featured: boolean }) 
             {m.weights === 'pytorch' ? (
               <Number k="measured on" v="bf16 weights" sub="the trained weights themselves, in PyTorch - there is no quantised export to compare" />
             ) : (
-              <Number k="export fidelity" v={m.export_agreement?.q8 != null ? pct(m.export_agreement.q8) : '–'} sub="quantised export agrees with the trained weights" ok={m.export_agreement?.q8 != null ? m.export_agreement.q8 >= 0.95 : undefined} value={m.export_agreement?.q8 ?? undefined} threshold={0.95} />
+              <Number k="export fidelity" v={m.export_agreement?.q8 != null ? pct(m.export_agreement.q8) : '–'} sub={m.export_agreement?.q8 != null ? 'quantised export agrees with the trained weights' : 'not measured yet for this edition'} ok={m.export_agreement?.q8 != null ? m.export_agreement.q8 >= 0.95 : undefined} value={m.export_agreement?.q8 ?? undefined} threshold={0.95} />
             )}
           </div>
           {strongest && weakest ? (
