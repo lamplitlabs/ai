@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { descriptionFor, titleFor } from './Site';
+import { descriptionFor, robotsFor, titleFor } from './Site';
 
 // vitest runs in the node environment (no DOM package is installed), so React effects never fire and the server
 // renderer always snapshots the '/' route. `titleFor` is the only value the Site effect assigns to document.title,
@@ -25,5 +25,14 @@ describe('meta description follows the route', () => {
       expect(descriptionFor(path)).toMatch(/does not exist/);
       expect(descriptionFor(path)).not.toBe(descriptionFor('/'));
     }
+  });
+});
+
+describe('robots meta follows the route', () => {
+  it('leaves every known route indexable', () => {
+    for (const path of ['/', '/models', '/benchmarks', '/try']) expect(robotsFor(path)).toBeNull();
+  });
+  it('marks a mistyped URL noindex so a crawler sees the missing page despite the SPA rewrite answering 200', () => {
+    for (const path of ['/does-not-exist', '/models/typo', '/404']) expect(robotsFor(path)).toBe('noindex');
   });
 });

@@ -29,6 +29,29 @@ export function descriptionFor(route: string): string {
   return route in TITLES ? HOME_DESCRIPTION : NOT_FOUND_DESCRIPTION;
 }
 
+/**
+ * `<meta name=robots>` for a route. The host answers every path with the app and HTTP 200 (vercel.json SPA rewrite),
+ * so an unknown path carries `noindex` to tell crawlers the page is missing; known routes carry no robots meta.
+ */
+export function robotsFor(route: string): string | null {
+  return route in TITLES ? null : 'noindex';
+}
+
+/** Add, update or remove `<meta name=robots>` so the DOM matches `robotsFor(route)`. */
+function setRobots(robots: string | null): void {
+  let el = document.querySelector('meta[name="robots"]');
+  if (robots === null) {
+    el?.remove();
+    return;
+  }
+  if (!el) {
+    el = document.createElement('meta');
+    el.setAttribute('name', 'robots');
+    document.head.appendChild(el);
+  }
+  el.setAttribute('content', robots);
+}
+
 /** Keep `<meta name=description>` and the og:/twitter: mirrors in sync with the route, like document.title. */
 function setDescription(description: string): void {
   for (const [attr, key] of [
@@ -83,6 +106,7 @@ export function Site() {
   useEffect(() => {
     document.title = titleFor(route);
     setDescription(descriptionFor(route));
+    setRobots(robotsFor(route));
     document.body.dataset.route = route;
   }, [route]);
   return <SiteLayout>{route === '/' ? <Landing /> : route === '/models' ? <Models /> : route === '/benchmarks' ? <Benchmarks /> : route === '/try' ? <TryMoved /> : <NotFound />}</SiteLayout>;
