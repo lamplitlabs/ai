@@ -128,10 +128,13 @@ export const licenceName = (m: SiteModel) => m.licence.split(' (')[0].trim() || 
 /** The weights-availability tag shown on /models and the offerings list: one copy so it cannot drift. */
 export const weightsAvailability = (m: SiteModel, publicWeights: boolean) => (publicWeights ? `public weights${m.hub.revision ? ` · ${m.hub.revision}` : ''}` : 'weights on request');
 /** The weights spec line of an offering card: dtype · size · licence for public weights, format · licence otherwise. */
+/** The export a visitor downloads by default: the smallest measured dtype (ties broken by dtype name), so the card's size is the one they actually fetch. */
+export const defaultDtype = (m: Pick<SiteModel, 'dtypes'>): DtypeSize | undefined =>
+  [...m.dtypes].sort((a, b) => a.size_mb - b.size_mb || a.dtype.localeCompare(b.dtype))[0];
 export function weightsSpec(m: SiteModel, publicWeights: boolean): string {
   const licence = licenceName(m);
   if (!publicWeights) return `${m.weights === 'pytorch' ? 'merged bf16' : 'export'} · ${licence}`;
-  const size = m.dtypes[0];
+  const size = defaultDtype(m);
   if (size) return `${size.dtype} · ${gb(size.size_mb)} · ${licence}`;
   if (m.weights_mb) return `bf16 · ${gb(m.weights_mb)} · ${licence}`;
   return licence;

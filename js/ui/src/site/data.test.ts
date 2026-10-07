@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { CATEGORY_LABELS, CONTACT, commissionMailto, contactMailto, EDITION_LABELS, mailtoFor, factCategories, flagship, latestMeasuredAt, licenceName, lines, models, runsIn, runsInDetail, showcaseModels, siteData, spaceUrl, tryLabel, tryUrl, weightsAvailability, weightsSpec } from './data';
+import { CATEGORY_LABELS, CONTACT, commissionMailto, contactMailto, defaultDtype, EDITION_LABELS, mailtoFor, factCategories, flagship, latestMeasuredAt, licenceName, lines, models, runsIn, runsInDetail, showcaseModels, siteData, spaceUrl, tryLabel, tryUrl, weightsAvailability, weightsSpec } from './data';
 
 describe('site data (site.json is generated outside this repo, ADR-001)', () => {
   it('leads with a browser-runnable flagship and offers one edition of each kind per line', () => {
@@ -121,6 +121,19 @@ describe('weights and licence copy (one helper for /models and the offerings lis
       expect(weightsSpec(m, false).endsWith(licenceName(m))).toBe(true);
     }
     expect(weightsSpec({ ...base, dtypes: [], weights_mb: null, licence: 'MIT (x)' }, true)).toBe('MIT');
+  });
+  it('shows the smallest measured dtype as the weight size, whatever order the producer listed them in', () => {
+    const q8 = { dtype: 'q8', size_mb: 3552, chunks: 2, max_chunk_mb: 1796, wasm: false };
+    const q4 = { dtype: 'q4', size_mb: 2086, chunks: 2, max_chunk_mb: 1808, wasm: false };
+    expect(defaultDtype({ dtypes: [q8, q4] })?.dtype).toBe('q4');
+    expect(defaultDtype({ dtypes: [q4, q8] })?.dtype).toBe('q4');
+    expect(defaultDtype({ dtypes: [] })).toBeUndefined();
+    expect(weightsSpec({ ...base, dtypes: [q8, q4], licence: 'MIT' }, true)).toBe(weightsSpec({ ...base, dtypes: [q4, q8], licence: 'MIT' }, true));
+    expect(weightsSpec({ ...base, dtypes: [q8, q4], licence: 'MIT' }, true).startsWith('q4 · ')).toBe(true);
+    for (const m of models) {
+      const smallest = Math.min(...m.dtypes.map((d) => d.size_mb));
+      if (m.dtypes.length) expect(defaultDtype(m)?.size_mb).toBe(smallest);
+    }
   });
 
   it('mailtoFor prefills a non-empty body naming the model so the draft is not blank', () => {
