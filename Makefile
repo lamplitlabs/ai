@@ -13,9 +13,10 @@ help: ## List the targets
 setup: ## Install the site's dependencies (js/ui/node_modules)
 	cd $(UI) && npm ci
 
-lint: ## Type-check the site (tsc -b) and syntax-check the scripts
+lint: ## Type-check the site (tsc -b), syntax-check the scripts, and check FEAT-001's vitest count
 	cd $(UI) && npm run typecheck
 	@for f in js/*.mjs $(UI)/scripts/*.mjs; do node --check "$$f" || exit 1; done
+	@sh scripts/check-test-count.sh
 
 test: ## Unit tests (vitest) and a production build
 	cd $(UI) && npm test && npm run build
