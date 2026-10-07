@@ -139,7 +139,7 @@ export function ModelCard({ m, featured }: { m: SiteModel; featured: boolean }) 
           </div>
           {strongest && weakest ? (
             <p className="mono-label mt-6 border-t border-border pt-4 text-muted-foreground">
-              strongest {categoryLabel(strongest[0])} <span className="text-success">{pct(strongest[1].facts)}</span> · weakest {categoryLabel(weakest[0])} <span className="text-warning">{pct(weakest[1].facts)}</span>
+              strongest {categoryLabel(strongest[0])} <span className="text-success">{measuredPct(strongest[1].facts)}</span> · weakest {categoryLabel(weakest[0])} <span className="text-warning">{measuredPct(weakest[1].facts)}</span>
               {m.grounding ? ' · grounded on a verified reference pack' : ''}
             </p>
           ) : null}

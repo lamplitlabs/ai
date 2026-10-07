@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import * as data from '../data';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { ModelCard } from './Models';
 import { models } from '../data';
@@ -70,4 +71,22 @@ describe('ModelCard primary CTA', () => {
       expect(html).not.toMatch(/>\s*[–—-]\s*</);
     });
   }
+
+  // The strongest/weakest category line must use measuredPct() like every other metric: even if factCategories'
+  // null-filter is loosened and a null-facts category reaches the card, the visitor sees NOT_MEASURED, never a dash.
+  it('strongest/weakest category line never renders a bare dash for a null-facts category', () => {
+    const m = models.find((x) => x.gate)!;
+    const spy = vi.spyOn(data, 'factCategories').mockReturnValue([
+      ['measured', { facts: 0.9 } as never],
+      ['unmeasured', { facts: null } as never],
+    ]);
+    try {
+      const html = renderToStaticMarkup(<ModelCard m={m} featured={false} />);
+      expect(html).toContain('strongest');
+      expect(html).toContain(NOT_MEASURED);
+      expect(html).not.toMatch(/>\s*[–—-]\s*</);
+    } finally {
+      spy.mockRestore();
+    }
+  });
 });
