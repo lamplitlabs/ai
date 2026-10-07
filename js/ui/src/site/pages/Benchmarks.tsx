@@ -23,6 +23,14 @@ export function unmetLabel(gates: Record<string, { ok: boolean }>): string {
   return `not yet: ${unmet[0]} +${unmet.length - 1} more`;
 }
 
+/** The release tag's tooltip: every unmet gate by label when more than one fails, so a reader sees the whole list
+ *  without leaving the row; undefined when the visible text already says it all. */
+export function unmetTitle(gates: Record<string, { ok: boolean }>): string | undefined {
+  const unmet = unmetGates(gates).map((k) => GATE_LABELS[k] ?? k);
+  if (unmet.length < 2) return undefined;
+  return `not yet: ${unmet.join(', ')}`;
+}
+
 function Progression() {
   return (
     <div className="glass overflow-x-auto rounded-2xl">
@@ -69,7 +77,7 @@ function Progression() {
                     <Tag tone="success">passed</Tag>
                   ) : (
                     <Tag tone="warning">
-                      <span data-unmet-gates={unmetGates(g.gates).join(',')}>{unmetLabel(g.gates)}</span>
+                      <span data-unmet-gates={unmetGates(g.gates).join(',')} title={unmetTitle(g.gates)}>{unmetLabel(g.gates)}</span>
                     </Tag>
                   )}
                 </td>
