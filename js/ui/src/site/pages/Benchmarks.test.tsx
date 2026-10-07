@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { Benchmarks, unmetGates, unmetLabel } from './Benchmarks';
+import { Benchmarks, lastUpdatedNote, STALE_AFTER_DAYS, unmetGates, unmetLabel } from './Benchmarks';
 import { GATE_DEFINITIONS, GATE_LABELS, models } from '../data';
 
 const withGate = models.filter((m) => m.gate);
@@ -80,5 +80,38 @@ describe('Benchmarks release cell names the unmet gate', () => {
     expect(unmetLabel({ facts: { ok: true } })).toBe('not yet released');
     expect(html).not.toMatch(/\+\d+ more/);
     expect(html).not.toMatch(/data-unmet-gates="[^"]*" title=/);
+  });
+});
+
+/** Above the Progression table sits a "last measured" note; when the newest gate run is older than STALE_AFTER_DAYS
+ *  it says so plainly, so a visitor does not mistake stale benchmark data for a current run. */
+describe('Benchmarks staleness note above Progression', () => {
+  const latestIso = newest.gate!.created_at!;
+  const latestDate = latestIso.slice(0, 10);
+
+  it('renders a stale banner when the newest gate is older than the threshold', () => {
+    const now = new Date(Date.parse(latestIso) + (STALE_AFTER_DAYS + 30) * 86_400_000);
+    const html = renderToStaticMarkup(<Benchmarks now={now} />);
+    const note = html.match(/<p data-last-updated="stale"[^>]*>([^<]*)<\/p>/);
+    expect(note, 'stale note missing').not.toBeNull();
+    expect(note![1]).toContain(`Last measured ${latestDate}`);
+    expect(note![1]).toContain(`${STALE_AFTER_DAYS + 30} days ago`);
+    expect(html.indexOf(note![0])).toBeLessThan(html.indexOf('<table'));
+  });
+
+  it('renders only a plain date when the newest gate is recent', () => {
+    const now = new Date(Date.parse(latestIso) + 5 * 86_400_000);
+    const html = renderToStaticMarkup(<Benchmarks now={now} />);
+    expect(html).not.toContain('data-last-updated="stale"');
+    expect(html).toMatch(new RegExp(`<p data-last-updated="fresh"[^>]*>Last measured ${latestDate}\\.</p>`));
+    expect(html).not.toContain('days ago');
+  });
+
+  it('computes the note from the date alone and tolerates a missing date', () => {
+    const now = new Date('2026-12-01T00:00:00Z');
+    expect(lastUpdatedNote('2026-09-15T06:19:17+00:00', now)?.stale).toBe(false);
+    expect(lastUpdatedNote('2026-06-01T00:00:00Z', now)?.stale).toBe(true);
+    expect(lastUpdatedNote(null, now)).toBeNull();
+    expect(lastUpdatedNote('garbage', now)).toBeNull();
   });
 });

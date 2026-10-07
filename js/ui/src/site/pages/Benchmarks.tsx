@@ -9,6 +9,29 @@ const withGate = models.filter((m) => m.gate);
 const chronological = [...withGate].sort((a, b) => (a.gate!.created_at ?? '').localeCompare(b.gate!.created_at ?? ''));
 const latest = chronological.at(-1);
 
+/** Days after which the newest gate run is called out as old above the Progression table. */
+export const STALE_AFTER_DAYS = 90;
+
+/** Whole days between the newest gate's `created_at` and `now`; null when no gate carries a parsable date. */
+export function daysSinceLatestGate(latestIso: string | null | undefined, now: Date): number | null {
+  if (!latestIso) return null;
+  const t = Date.parse(latestIso);
+  if (Number.isNaN(t)) return null;
+  return Math.floor((now.getTime() - t) / 86_400_000);
+}
+
+/** The "last updated" note shown above the Progression table: always names the newest run's date, and when that run
+ *  is older than STALE_AFTER_DAYS says so plainly, so a visitor does not mistake stale benchmark data for current. */
+export function lastUpdatedNote(latestIso: string | null | undefined, now: Date, staleAfterDays = STALE_AFTER_DAYS): { text: string; stale: boolean } | null {
+  const days = daysSinceLatestGate(latestIso, now);
+  if (days == null) return null;
+  const date = shortDate(latestIso);
+  if (days > staleAfterDays) {
+    return { stale: true, text: `Last measured ${date}, ${days} days ago. These numbers describe the editions as they were then, not a newer run.` };
+  }
+  return { stale: false, text: `Last measured ${date}.` };
+}
+
 /** Keys of the gates that failed, in the order the gate file lists them. */
 export function unmetGates(gates: Record<string, { ok: boolean }>): string[] {
   return Object.entries(gates).filter(([, c]) => !c.ok).map(([k]) => k);
@@ -238,8 +261,9 @@ function GateCard({ m }: { m: SiteModel }) {
   );
 }
 
-export function Benchmarks() {
+export function Benchmarks({ now = new Date() }: { now?: Date } = {}) {
   const gate = latest?.gate;
+  const updated = lastUpdatedNote(gate?.created_at, now);
   return (
     <>
       <PageIntro
@@ -256,6 +280,11 @@ export function Benchmarks() {
       <section className={`${container} space-y-10 py-16 lg:py-20`}>
         <Reveal>
           <Index n="01">Progression</Index>
+          {updated ? (
+            <p data-last-updated={updated.stale ? 'stale' : 'fresh'} className={`mt-4 text-sm ${updated.stale ? 'rounded-xl border border-warning/40 bg-warning/10 px-4 py-3 text-foreground' : 'text-muted-foreground'}`}>
+              {updated.text}
+            </p>
+          ) : null}
           <div className="mt-5">
             <Progression />
           </div>
