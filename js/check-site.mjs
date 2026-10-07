@@ -96,14 +96,24 @@ class CDP {
       } else if (msg.method) this.events.push(msg);
     });
     this.ready = new Promise((resolve, reject) => {
-      this.ws.addEventListener('open', resolve);
-      this.ws.addEventListener('error', reject);
+      const timer = setTimeout(() => reject(new Error('DevTools WebSocket did not open within 10s (CDP connect timed out)')), 10000);
+      this.ws.addEventListener('open', () => { clearTimeout(timer); resolve(); });
+      this.ws.addEventListener('error', (err) => { clearTimeout(timer); reject(err); });
     });
   }
   send(method, params = {}) {
     const id = ++this.id;
     this.ws.send(JSON.stringify({ id, method, params }));
-    return new Promise((resolve, reject) => this.pending.set(id, { resolve, reject }));
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        this.pending.delete(id);
+        reject(new Error(`CDP response for ${method} did not arrive within 15s`));
+      }, 15000);
+      this.pending.set(id, {
+        resolve: (v) => { clearTimeout(timer); resolve(v); },
+        reject: (e) => { clearTimeout(timer); reject(e); },
+      });
+    });
   }
   async eval(expression) {
     const r = await this.send('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true });
