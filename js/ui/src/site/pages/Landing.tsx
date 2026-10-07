@@ -7,12 +7,15 @@ import { CONTACT } from '../SiteLayout';
 import { Link } from '../router';
 import { TryLink } from '../TryLink';
 import { Datum, Index, SectionHead, Status } from '../lab';
-import { EDITION_LABELS, flagship, latestMeasuredAt, lines, pct, shortDate, showcaseModels, siteData } from '../data';
+import { EDITION_LABELS, STALE_AFTER_DAYS, dataAgeDays, flagship, latestMeasuredAt, lines, pct, shortDate, showcaseModels, siteData } from '../data';
 import { container, primaryCta, secondaryCta } from '../cta';
 
 export { container, primaryCta, secondaryCta };
 
-export function Landing() {
+/** `now` is injectable so tests can render a stale data set; the site always uses the real clock. */
+export function Landing({ now }: { now?: Date } = {}) {
+  const ageDays = dataAgeDays(siteData.generated_at, now);
+  const stale = ageDays > STALE_AFTER_DAYS;
   const m = flagship;
   const g = m?.gate ?? null;
   const facts = g?.gates.facts;
@@ -77,7 +80,9 @@ export function Landing() {
               <span className="hidden text-primary/60 sm:inline">·</span>
               <span>every number on this site is generated from a published measurement</span>
               <span className="hidden text-primary/60 sm:inline">·</span>
-              <span>data {siteData.generated_at.slice(0, 16).replace('T', ' ')} UTC</span>
+              <span className={stale ? 'text-primary' : undefined} data-testid="data-age">
+                data {siteData.generated_at.slice(0, 16).replace('T', ' ')} UTC{stale ? ` · ${ageDays} days old - may be stale` : ''}
+              </span>
               <Link to="/benchmarks" className="ml-auto inline-flex items-center gap-1 text-primary hover:underline">
                 read the numbers <ArrowRight className="size-3" />
               </Link>

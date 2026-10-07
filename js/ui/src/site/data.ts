@@ -239,4 +239,7 @@ export const factCategories = (g: GateSummary) => Object.entries(g.by_category).
 
 export const pct = (x: number | null | undefined, digits = 0) => (x == null ? '–' : `${(x * 100).toFixed(digits)}%`);
 export const gb = (mb: number) => (mb >= 1000 ? `${(mb / 1000).toFixed(1)} GB` : `${Math.round(mb)} MB`);
+/** Days a measurement data set has been generated for; the site shows a warning past STALE_AFTER_DAYS so a visitor can tell old numbers from current ones. */
+export const STALE_AFTER_DAYS = 14;
+export const dataAgeDays = (generatedAt: string, now: Date = new Date()) => Math.max(0, Math.floor((now.getTime() - new Date(generatedAt).getTime()) / 86_400_000));
 export const shortDate = (iso: string | null | undefined) => (iso ? iso.slice(0, 10) : '–');
