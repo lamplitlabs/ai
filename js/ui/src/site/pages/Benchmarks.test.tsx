@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { Benchmarks, lastUpdatedNote, STALE_AFTER_DAYS, unmetGates, unmetLabel } from './Benchmarks';
-import { GATE_DEFINITIONS, GATE_LABELS, models } from '../data';
+import { Benchmarks, GateCard, lastUpdatedNote, STALE_AFTER_DAYS, unmetGates, unmetLabel } from './Benchmarks';
+import { GATE_DEFINITIONS, GATE_LABELS, models, NOT_MEASURED } from '../data';
 
 const withGate = models.filter((m) => m.gate);
 const newest = withGate.reduce((best, m) => ((m.gate!.created_at ?? '') > (best.gate!.created_at ?? '') ? m : best));
@@ -113,5 +113,23 @@ describe('Benchmarks staleness note above Progression', () => {
     expect(lastUpdatedNote('2026-06-01T00:00:00Z', now)?.stale).toBe(true);
     expect(lastUpdatedNote(null, now)).toBeNull();
     expect(lastUpdatedNote('garbage', now)).toBeNull();
+  });
+});
+
+/** A judge panel whose mean is not yet computed says "not measured yet" - the same wording Models/Offerings and the
+ *  progression table use - instead of a bare dash the reader has to interpret. */
+describe('GateCard null panel/judge mean', () => {
+  const base = withGate[0];
+  const m = {
+    ...base,
+    panel: { round: null, mean: null, means: {}, judges: [{ judge: 'judge-x', mean: null, means: {} }] },
+  } as unknown as typeof base;
+  const html = renderToStaticMarkup(<GateCard m={m} />);
+
+  it('renders NOT_MEASURED for the panel mean and each judge mean, never a bare dash', () => {
+    expect(html).toContain(`mean ${NOT_MEASURED} / 5`);
+    expect(html).toContain(`>${NOT_MEASURED}</div>`);
+    expect(html).not.toMatch(/mean – \/ 5/);
+    expect(html).not.toContain('>–</div>');
   });
 });

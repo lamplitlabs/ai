@@ -140,7 +140,7 @@ function Methodology() {
   );
 }
 
-function GateCard({ m }: { m: SiteModel }) {
+export function GateCard({ m }: { m: SiteModel }) {
   const g = m.gate!;
   const gates = Object.entries(g.gates);
   const passed = gates.filter(([, v]) => v.ok).length;
@@ -209,7 +209,7 @@ function GateCard({ m }: { m: SiteModel }) {
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <Index n="c">Independent judges</Index>
             <span className="mono-label tnum text-muted-foreground">
-              round {m.panel.round ?? '–'} · {m.panel.judges.length} judges · mean {m.panel.mean?.toFixed(2) ?? '–'} / 5 · a signal beside the gates, not a gate
+              round {m.panel.round ?? '–'} · {m.panel.judges.length} judges · mean {m.panel.mean != null ? m.panel.mean.toFixed(2) : NOT_MEASURED} / 5 · a signal beside the gates, not a gate
             </span>
           </div>
           <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fit,minmax(10rem,1fr))]">
@@ -219,7 +219,7 @@ function GateCard({ m }: { m: SiteModel }) {
                   <span className="font-medium">{j.judge}</span>
                   <span className="mono-label text-muted-foreground/70">mean / 5</span>
                 </div>
-                <div className="datum-value mt-4 text-3xl font-semibold leading-none">{j.mean?.toFixed(2) ?? '–'}</div>
+                <div className="datum-value mt-4 text-3xl font-semibold leading-none">{j.mean != null ? j.mean.toFixed(2) : NOT_MEASURED}</div>
                 <Gauge className="mt-3" value={(j.mean ?? 0) / 5} />
                 <dl className="mt-4 grid gap-x-4 gap-y-1.5 text-xs text-muted-foreground @3xs:grid-cols-2">
                   {Object.entries(j.means).map(([k, v]) => (
