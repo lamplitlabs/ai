@@ -126,9 +126,11 @@ describe('GateCard null panel/judge mean', () => {
   } as unknown as typeof base;
   const html = renderToStaticMarkup(<GateCard m={m} />);
 
-  it('renders NOT_MEASURED for the panel mean and each judge mean, never a bare dash', () => {
+  it('renders NOT_MEASURED for the panel round, panel mean and each judge mean, never a bare dash', () => {
+    expect(html).toContain(`round ${NOT_MEASURED} ·`);
     expect(html).toContain(`mean ${NOT_MEASURED} / 5`);
     expect(html).toContain(`>${NOT_MEASURED}</div>`);
+    expect(html).not.toMatch(/round – ·/);
     expect(html).not.toMatch(/mean – \/ 5/);
     expect(html).not.toContain('>–</div>');
   });

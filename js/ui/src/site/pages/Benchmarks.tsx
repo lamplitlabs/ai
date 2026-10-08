@@ -209,7 +209,7 @@ export function GateCard({ m }: { m: SiteModel }) {
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <Index n="c">Independent judges</Index>
             <span className="mono-label tnum text-muted-foreground">
-              round {m.panel.round ?? '–'} · {m.panel.judges.length} judges · mean {m.panel.mean != null ? m.panel.mean.toFixed(2) : NOT_MEASURED} / 5 · a signal beside the gates, not a gate
+              round {m.panel.round ?? NOT_MEASURED} · {m.panel.judges.length} judges · mean {m.panel.mean != null ? m.panel.mean.toFixed(2) : NOT_MEASURED} / 5 · a signal beside the gates, not a gate
             </span>
           </div>
           <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fit,minmax(10rem,1fr))]">
