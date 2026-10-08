@@ -18,8 +18,10 @@ describe('index.html social meta tags', () => {
   const description = meta('name', 'description');
 
   it('has the page title and description to mirror', () => {
-    expect(title).toBeTruthy();
-    expect(description).toBeTruthy();
+    expect(title).toBe('Lamplit Labs AI - models you can host yourself');
+    expect(description).toBe(
+      'Lamplit Labs AI builds small, specialised models you host yourself - in a browser, on a laptop, on-prem, in your private cloud, in your app or on the edge. Your data never leaves.',
+    );
   });
 
   it('og:title / og:description match the page title and description', () => {
