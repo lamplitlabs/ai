@@ -122,7 +122,7 @@ export const EDITION_LABELS: Record<Edition, string> = { browser: 'browser editi
 export const runsIn = (m: SiteModel) => (m.weights === 'pytorch' ? 'GPU server · workstation' : m.browser ? 'browser · desktop · server' : 'desktop · server');
 export const runsInDetail = (m: SiteModel) => (m.weights === 'pytorch' ? `${m.memory_gb ? `about ${m.memory_gb} GB of memory` : 'a GPU'} · PyTorch` : m.browser ? (m.wasm ? 'WebGPU / WASM' : 'WebGPU (Chrome, Edge)') : 'ONNX Runtime (desktop · server)');
 export const weightsFormat = (m: SiteModel) => (m.weights === 'pytorch' ? 'safetensors' : 'ONNX');
-export const weightsDetail = (m: SiteModel) => (m.weights === 'pytorch' ? 'merged weights · bf16' : `opset ${m.opset ?? '–'} · ORT ${m.runtime.onnxruntime ?? '–'}`);
+export const weightsDetail = (m: SiteModel) => (m.weights === 'pytorch' ? 'merged weights · bf16' : `opset ${m.opset ?? NOT_MEASURED} · ORT ${m.runtime.onnxruntime ?? NOT_MEASURED}`);
 /** The licence name without its parenthetical ("Apache-2.0 (inherited from X)" -> "Apache-2.0"); a licence with no parenthetical is returned whole. */
 export const licenceName = (m: SiteModel) => m.licence.split(' (')[0].trim() || m.licence;
 /** The weights-availability tag shown on /models and the offerings list: one copy so it cannot drift. */
