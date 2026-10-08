@@ -5,6 +5,11 @@
 //
 //   node js/check-site.mjs [--base http://127.0.0.1:8787] [--routes /,/models,/benchmarks]
 //                          [--theme dark|light] [--shots <dir>] [--width 1280] [--browser <path>] [--reduced-motion]
+//                          [--route-timeout 10000]
+//
+// Every route runs under a hard timeout (--route-timeout ms, default 10s): a host where headless Chromium accepts
+// the navigation but never answers the CDP evaluate fails fast with a message naming the stuck route instead of
+// hanging `make ui-check`.
 import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { spawn } from 'node:child_process';
@@ -20,6 +25,7 @@ const base = (args.base || 'http://127.0.0.1:8787').replace(/\/$/, '');
 const routes = (args.routes || '/,/models,/benchmarks,/nothing-here').split(',');
 const theme = args.theme || 'dark';
 const width = Number(args.width || 1280);
+const routeTimeout = Number(args['route-timeout'] || process.env.CHECK_SITE_ROUTE_TIMEOUT_MS || 10000);
 const candidates = [
   args.browser,
   process.env.BROWSER_PATH,
@@ -127,8 +133,28 @@ let failed = false;
 try {
   await waitForDevtools();
   for (const route of routes) {
-    const target = await (await fetch(`http://127.0.0.1:${port}/json/new?about:blank`, { method: 'PUT' })).json();
-    const cdp = new CDP(target.webSocketDebuggerUrl);
+    // the whole route (new target, navigate, render wait, snapshot, screenshot) must finish within routeTimeout
+    let timer;
+    const deadline = new Promise((_, reject) => {
+      timer = setTimeout(() => reject(new Error(`route ${route} did not finish within ${routeTimeout}ms (headless navigation or CDP evaluate stuck)`)), routeTimeout);
+    });
+    const entry = await Promise.race([checkRoute(route), deadline]).finally(() => clearTimeout(timer));
+    if (entry.failed) failed = true;
+    delete entry.failed;
+    results.push(entry);
+  }
+} catch (err) {
+  failed = true;
+  results.push({ error: err.message });
+} finally {
+  proc?.kill();
+}
+
+async function checkRoute(route) {
+  let target, cdp;
+  try {
+    target = await (await fetch(`http://127.0.0.1:${port}/json/new?about:blank`, { method: 'PUT' })).json();
+    cdp = new CDP(target.webSocketDebuggerUrl);
     await cdp.ready;
     await cdp.send('Runtime.enable');
     await cdp.send('Log.enable');
@@ -140,7 +166,7 @@ try {
     await cdp.send('Page.navigate', { url });
     const start = Date.now();
     let rendered = '';
-    while (Date.now() - start < 20000) {
+    while (Date.now() - start < routeTimeout) {
       await sleep(250);
       rendered = await cdp.eval('document.body ? (document.body.dataset.route || "") : ""').catch(() => '');
       if (rendered) break;
@@ -177,16 +203,12 @@ try {
       writeFileSync(join(args.shots, name), Buffer.from(shot.data, 'base64'));
       entry.screenshot = join(args.shots, name);
     }
-    if (!rendered || errors.length || bad.length || snapshot.h1 == null) failed = true;
-    results.push(entry);
-    cdp.ws.close();
-    await fetch(`http://127.0.0.1:${port}/json/close/${target.id}`).catch(() => undefined);
+    entry.failed = !rendered || errors.length > 0 || bad.length > 0 || snapshot.h1 == null;
+    return entry;
+  } finally {
+    cdp?.ws.close();
+    if (target) await fetch(`http://127.0.0.1:${port}/json/close/${target.id}`).catch(() => undefined);
   }
-} catch (err) {
-  failed = true;
-  results.push({ error: err.message });
-} finally {
-  proc?.kill();
 }
 console.log(JSON.stringify({ base, theme, ok: !failed, pages: results }, null, 2));
 process.exit(failed ? 1 : 0);
