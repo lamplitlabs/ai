@@ -87,6 +87,9 @@ describe('try links', () => {
     expect(tryLabel()).toBe(`Try the ${flagship.line}`);
     expect(tryLabel(undefined)).toBe(`Try the ${flagship.line}`);
     expect(tryLabel({ ...flagship, line: 'Contract reviewer' })).toBe('Try the Contract reviewer');
+    // No try-able model at all: the copy must not promise an interactive demo.
+    expect(tryLabel(null)).toBe('See the model');
+    expect(tryLabel(null)).not.toMatch(/^Try/);
   });
   it('redirects /try (vercel.json) to the same Space the data names, so config cannot drift from data', () => {
     const vercel = JSON.parse(readFileSync(new URL('../../vercel.json', import.meta.url), 'utf8')) as { redirects?: { source: string; destination: string }[] };

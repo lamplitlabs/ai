@@ -183,8 +183,11 @@ export function modelCta(m: SiteModel): ModelCta {
   const href = kind === 'try' ? (tryHref as string) : kind === 'hub' ? (hub as string) : mailtoFor(m);
   return { kind, href, hubUrl: hub, tryHref, publicWeights: hub != null, secondaryHub: canTry && hub ? hub : null };
 }
-/** The label of a "try" link, from the line's name ("Try the <line>"); "Try it" when nothing is on offer. */
-export const tryLabel = (m: SiteModel | undefined = flagship) => (m ? `Try the ${m.line}` : 'Try it');
+/**
+ * The label of a "try" link, from the line's name ("Try the <line>"). With no model on offer (pass `null`; `undefined`
+ * falls back to the flagship) the copy names the destination rather than promising a demo it cannot deliver.
+ */
+export const tryLabel = (m: SiteModel | null | undefined = flagship) => (m ? `Try the ${m.line}` : 'See the model');
 
 export const GATE_LABELS: Record<string, string> = {
   no_loop: 'never loops',
