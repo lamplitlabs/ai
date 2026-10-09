@@ -150,6 +150,24 @@ describe('weights and licence copy (one helper for /models and the offerings lis
     expect(body).toContain('self-hosting');
   });
 
+  it('mailtoFor names the specific edition when two editions of one line differ in weights availability', () => {
+    const line = 'Receipt Reader';
+    const browserEd: typeof base = { ...base, line, label: 'receipt-reader-0.5b', edition: 'browser', weights: 'onnx', browser: true, hub: { repo: 'lamplit/receipt-reader-0.5b', public: true } };
+    const mediumEd: typeof base = { ...base, line, label: 'receipt-reader-3b', edition: 'medium', weights: 'pytorch', browser: false, hub: { repo: null, public: false } };
+    const params = (href: string) => new URLSearchParams(href.slice(href.indexOf('?') + 1));
+    const onRequest = params(mailtoFor(mediumEd));
+    const subject = onRequest.get('subject') ?? '';
+    const body = onRequest.get('body') ?? '';
+    for (const text of [subject, body]) {
+      expect(text).toContain(line);
+      expect(text).toContain(EDITION_LABELS.medium);
+      expect(text).toContain(mediumEd.label);
+      expect(text).not.toContain(EDITION_LABELS.browser);
+      expect(text).not.toContain(browserEd.label);
+    }
+    expect(params(mailtoFor(browserEd)).get('subject')).not.toBe(subject);
+  });
+
   it('contactMailto targets CONTACT with an encoded subject', () => {
     expect(contactMailto()).toBe(`mailto:${CONTACT}?subject=Hello%20from%20lamplitlabs.com`);
   });
