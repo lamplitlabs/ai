@@ -50,12 +50,34 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const tmp = process.env.TMPDIR || '/tmp';
 let port = 0;
 let proc = null;
+let profile = '';
+
+// Shut the browser down and wait for it: SIGTERM first so Chromium can tear down its renderer/GPU children itself,
+// then SIGKILL if it has not exited within `graceMs`. Without the wait `process.exit` ran while the browser was
+// still alive, leaving a tree of orphaned renderers (and a profile directory) behind every `make ui-check`.
+async function closeBrowser(graceMs = 5000) {
+  const p = proc;
+  proc = null;
+  if (p && p.exitCode === null && p.signalCode === null) {
+    const exited = new Promise((resolve) => p.once('exit', resolve));
+    p.kill('SIGTERM');
+    let timer;
+    const grace = new Promise((resolve) => { timer = setTimeout(resolve, graceMs); });
+    await Promise.race([exited, grace]);
+    clearTimeout(timer);
+    if (p.exitCode === null && p.signalCode === null) {
+      p.kill('SIGKILL');
+      await exited;
+    }
+  }
+  if (profile) rmSync(profile, { recursive: true, force: true });
+}
 
 // One launch attempt: a fresh random DevTools port and profile directory each time, so a port already taken or a
 // profile left by a killed run cannot wedge the check. Resolves with /json/version once the browser answers.
 async function launchOnce() {
   port = 9300 + Math.floor(Math.random() * 500);
-  const profile = join(tmp, `check-site-${process.pid}-${port}`);
+  profile = join(tmp, `check-site-${process.pid}-${port}`);
   rmSync(profile, { recursive: true, force: true });
   proc = spawn(browser, [`--headless=new`, `--remote-debugging-port=${port}`, `--user-data-dir=${profile}`, '--no-first-run', '--disable-gpu', '--hide-scrollbars', `--window-size=${width},900`, 'about:blank'], { stdio: 'ignore' });
   let exited = false;
@@ -80,7 +102,7 @@ async function waitForDevtools(attempts = 3) {
       return await launchOnce();
     } catch (err) {
       lastErr = err;
-      proc?.kill();
+      await closeBrowser();
       console.error(`browser launch attempt ${attempt}/${attempts} failed: ${err.message}`);
       if (attempt < attempts) await sleep(500 * attempt);
     }
@@ -151,7 +173,7 @@ try {
   failed = true;
   results.push({ error: err.message });
 } finally {
-  proc?.kill();
+  await closeBrowser();
 }
 
 async function checkRoute(route) {
