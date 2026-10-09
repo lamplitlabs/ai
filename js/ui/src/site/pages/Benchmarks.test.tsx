@@ -134,6 +134,13 @@ describe('GateCard null panel/judge mean', () => {
     expect(html).not.toMatch(/mean – \/ 5/);
     expect(html).not.toContain('>–</div>');
   });
+
+  it('does not render a Gauge bar for an unmeasured judge, which would read as a real score of zero', () => {
+    const judgeCard = html.slice(html.indexOf('judge-x'));
+    expect(judgeCard).toContain(`>${NOT_MEASURED}</div>`);
+    expect(judgeCard).not.toContain('rounded-full bg-muted');
+    expect(judgeCard).not.toMatch(/style="width:/);
+  });
 });
 
 /** A release gate without a measured value and without a note falls back to the shared NOT_MEASURED wording, the

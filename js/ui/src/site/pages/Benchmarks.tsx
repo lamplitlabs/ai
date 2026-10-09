@@ -220,7 +220,7 @@ export function GateCard({ m }: { m: SiteModel }) {
                   <span className="mono-label text-muted-foreground/70">mean / 5</span>
                 </div>
                 <div className="datum-value mt-4 text-3xl font-semibold leading-none">{j.mean != null ? j.mean.toFixed(2) : NOT_MEASURED}</div>
-                <Gauge className="mt-3" value={(j.mean ?? 0) / 5} />
+                {j.mean != null ? <Gauge className="mt-3" value={j.mean / 5} /> : null}
                 <dl className="mt-4 grid gap-x-4 gap-y-1.5 text-xs text-muted-foreground @3xs:grid-cols-2">
                   {Object.entries(j.means).map(([k, v]) => (
                     <div key={k} className="flex justify-between">
