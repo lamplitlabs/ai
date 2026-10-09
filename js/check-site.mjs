@@ -73,6 +73,17 @@ async function closeBrowser(graceMs = 5000) {
   if (profile) rmSync(profile, { recursive: true, force: true });
 }
 
+// When a harness (an outer CI timeout, Ctrl-C in `make ui-check`) kills this process directly, the `finally` block
+// below never runs, so reap the browser here too before exiting with the conventional 128+signal status.
+let reaping = false;
+for (const [signal, code] of [['SIGINT', 130], ['SIGTERM', 143]]) {
+  process.on(signal, () => {
+    if (reaping) return;
+    reaping = true;
+    closeBrowser().finally(() => process.exit(code));
+  });
+}
+
 // One launch attempt: a fresh random DevTools port and profile directory each time, so a port already taken or a
 // profile left by a killed run cannot wedge the check. Resolves with /json/version once the browser answers.
 async function launchOnce() {
