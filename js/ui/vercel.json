@@ -21,6 +21,7 @@
   "redirects": [{ "source": "/try", "destination": "https://huggingface.co/spaces/lamplitlabs/licht-german-tutor", "permanent": false }],
   "rewrites": [
     { "source": "/models", "destination": "/index.html" },
-    { "source": "/benchmarks", "destination": "/index.html" }
+    { "source": "/benchmarks", "destination": "/index.html" },
+    { "source": "/(.*)", "destination": "/404.html", "statusCode": 404 }
   ]
 }

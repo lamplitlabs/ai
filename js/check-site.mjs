@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Smoke check for the site pages (js/ui): opens every route in a headless Chromium-based browser, waits for the
 // page to render (body[data-route]), records console errors and failed requests, and optionally saves a full-page
-// screenshot per route. Zero console errors and every route rendered = exit 0.
+// screenshot per route. Zero console errors and every route rendered = exit 0. A route outside the three SPA routes
+// (/, /models, /benchmarks) must instead answer with HTTP 404 and the static 404.html page, as vercel.json serves it.
 //
 //   node js/check-site.mjs [--base http://127.0.0.1:8787] [--routes /,/models,/benchmarks]
 //                          [--theme dark|light] [--shots <dir>] [--width 1280] [--browser <path>] [--reduced-motion]
@@ -128,6 +129,9 @@ class CDP {
   }
 }
 
+// the only paths vercel.json rewrites to index.html; everything else must be a real 404
+const SPA_ROUTES = new Set(['/', '/models', '/benchmarks']);
+
 const results = [];
 let failed = false;
 try {
@@ -163,12 +167,16 @@ async function checkRoute(route) {
     const url = `${base}${route}${route.includes('?') ? '&' : '?'}theme=${theme}`;
     // --reduced-motion: the pages must read the same with animation off (static hero, numbers shown at their value)
     if (args['reduced-motion']) await cdp.send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] });
+    const expectNotFound = !SPA_ROUTES.has(route.split('?')[0]);
     await cdp.send('Page.navigate', { url });
     const start = Date.now();
     let rendered = '';
     while (Date.now() - start < routeTimeout) {
       await sleep(250);
-      rendered = await cdp.eval('document.body ? (document.body.dataset.route || "") : ""').catch(() => '');
+      // the SPA sets body[data-route]; the static 404 page is rendered once its <h1> is in the document
+      rendered = await cdp
+        .eval(expectNotFound ? 'document.querySelector("h1") ? "404" : ""' : 'document.body ? (document.body.dataset.route || "") : ""')
+        .catch(() => '');
       if (rendered) break;
     }
     // let reveal transitions settle
@@ -188,10 +196,19 @@ async function checkRoute(route) {
     // the site makes no request beyond its own files: any 4xx fails
     const errors = cdp.events
       .filter((e) => e.method === 'Runtime.exceptionThrown' || (e.method === 'Log.entryAdded' && e.params.entry.level === 'error'))
+      // the browser logs the intended 404 of the unknown route's own document; that one is the point, not an error
+      .filter((e) => !(expectNotFound && e.method === 'Log.entryAdded' && e.params.entry.url === url && /status of 404/.test(e.params.entry.text)))
       .map((e) => e.params.entry?.text || e.params.exceptionDetails?.exception?.description || JSON.stringify(e.params));
     const failedRequests = cdp.events.filter((e) => e.method === 'Network.loadingFailed').map((e) => e.params.errorText);
-    const bad = cdp.events.filter((e) => e.method === 'Network.responseReceived' && e.params.response.status >= 400).map((e) => `${e.params.response.status} ${e.params.response.url}`);
-    const entry = { route, rendered: rendered || null, ...snapshot, console_errors: errors, failed_requests: failedRequests, http_errors: bad };
+    const responses = cdp.events.filter((e) => e.method === 'Network.responseReceived');
+    const document = responses.find((e) => e.params.type === 'Document');
+    const status = document?.params.response.status ?? null;
+    // an unknown route must be the one 4xx: the document itself, served as 404.html with a real 404 status
+    const bad = responses
+      .filter((e) => e.params.response.status >= 400 && !(expectNotFound && e === document && e.params.response.status === 404))
+      .map((e) => `${e.params.response.status} ${e.params.response.url}`);
+    const entry = { route, status, rendered: rendered || null, ...snapshot, console_errors: errors, failed_requests: failedRequests, http_errors: bad };
+    if (expectNotFound && status !== 404) entry.http_errors.push(`expected 404 for unknown route ${route}, got ${status}`);
     if (args.shots) {
       const height = Math.min(snapshot.height, 8000);
       await cdp.send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: false });
@@ -203,7 +220,7 @@ async function checkRoute(route) {
       writeFileSync(join(args.shots, name), Buffer.from(shot.data, 'base64'));
       entry.screenshot = join(args.shots, name);
     }
-    entry.failed = !rendered || errors.length > 0 || bad.length > 0 || snapshot.h1 == null;
+    entry.failed = !rendered || errors.length > 0 || entry.http_errors.length > 0 || snapshot.h1 == null;
     return entry;
   } finally {
     cdp?.ws.close();
