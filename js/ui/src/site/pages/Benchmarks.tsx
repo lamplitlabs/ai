@@ -9,6 +9,9 @@ const withGate = models.filter((m) => m.gate);
 const chronological = [...withGate].sort((a, b) => (a.gate!.created_at ?? '').localeCompare(b.gate!.created_at ?? ''));
 const latest = chronological.at(-1);
 
+/** Shown in place of the Progression table when no model has a release-gate run yet. */
+export const NO_RUNS_YET = 'No benchmark run has been published yet. Each edition is measured on the fixed suite before release, and its gates and judge scores will appear here.';
+
 /** Days after which the newest gate run is called out as old above the Progression table. */
 export const STALE_AFTER_DAYS = 90;
 
@@ -286,7 +289,13 @@ export function Benchmarks({ now = new Date() }: { now?: Date } = {}) {
             </p>
           ) : null}
           <div className="mt-5">
-            <Progression />
+            {latest ? (
+              <Progression />
+            ) : (
+              <p data-benchmarks-empty className="glass rounded-2xl px-5 py-6 text-sm text-muted-foreground">
+                {NO_RUNS_YET}
+              </p>
+            )}
           </div>
           <p className="mt-4 max-w-4xl text-sm leading-relaxed text-muted-foreground">
             {`We show the newest version of each edition, measured with one suite${lines.length ? ` (${lines.map((l) => `${l.line}: ${l.editions.map((e) => e.edition).join(' and ')}`).join('; ')})` : ''}; earlier rounds were retired with their exports and their reports stay in the project's decision records. `}
