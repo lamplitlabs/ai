@@ -135,3 +135,20 @@ describe('GateCard null panel/judge mean', () => {
     expect(html).not.toContain('>–</div>');
   });
 });
+
+/** A release gate without a measured value and without a note falls back to the shared NOT_MEASURED wording, the
+ *  same phrase every other unmeasured datum on this page uses - never the bare literal "not measured". */
+describe('GateCard unmeasured gate without a note', () => {
+  const base = withGate[0];
+  const [firstKey, firstGate] = Object.entries(base.gate!.gates)[0];
+  const m = {
+    ...base,
+    gate: { ...base.gate!, gates: { ...base.gate!.gates, [firstKey]: { ...firstGate, actual: null, ok: false, note: undefined } } },
+  } as unknown as typeof base;
+  const html = renderToStaticMarkup(<GateCard m={m} />);
+
+  it('renders NOT_MEASURED, not the literal "not measured"', () => {
+    expect(html).toContain(`<span>${NOT_MEASURED}</span>`);
+    expect(html).not.toContain('<span>not measured</span>');
+  });
+});

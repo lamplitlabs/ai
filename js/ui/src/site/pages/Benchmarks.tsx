@@ -174,7 +174,7 @@ export function GateCard({ m }: { m: SiteModel }) {
                   </span>
                   <span className="mono-label tnum text-muted-foreground">
                     {v.actual == null ? (
-                      <span>{v.note ?? 'not measured'}</span>
+                      <span>{v.note ?? NOT_MEASURED}</span>
                     ) : (
                       <>
                         <span className="text-foreground">{pct(v.actual, 1)}</span> / gate {pct(v.threshold)}
