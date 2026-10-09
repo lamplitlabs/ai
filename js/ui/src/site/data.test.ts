@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { CATEGORY_LABELS, CONTACT, commissionMailto, contactMailto, defaultDtype, EDITION_LABELS, mailtoFor, factCategories, flagship, latestMeasuredAt, licenceName, lines, models, runsIn, runsInDetail, showcaseModels, siteData, spaceUrl, tryLabel, tryUrl, weightsAvailability, weightsSpec } from './data';
+import { CATEGORY_LABELS, CONTACT, commissionMailto, contactMailto, defaultDtype, EDITION_LABELS, mailtoFor, factCategories, flagship, latestMeasuredAt, licenceName, lines, models, NOT_MEASURED, pct, runsIn, runsInDetail, showcaseModels, siteData, spaceUrl, tryLabel, tryUrl, weightsAvailability, weightsSpec } from './data';
 
 describe('site data (site.json is generated outside this repo, ADR-001)', () => {
   it('leads with a browser-runnable flagship and offers one edition of each kind per line', () => {
@@ -158,5 +158,13 @@ describe('weights and licence copy (one helper for /models and the offerings lis
     expect(params.get('subject')).toBe('A model for our job');
     const body = params.get('body') ?? '';
     expect(body.length).toBeGreaterThan(0);
+  });
+});
+
+describe('pct', () => {
+  it('says NOT_MEASURED for a missing value, never a bare dash a visitor cannot tell from a failed check', () => {
+    expect(pct(null)).toBe(NOT_MEASURED);
+    expect(pct(undefined)).toBe(NOT_MEASURED);
+    expect(pct(0.5)).toBe('50%');
   });
 });

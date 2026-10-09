@@ -240,7 +240,7 @@ export const categoryLabel = (k: string) => CATEGORY_LABELS[k] ?? k.replace(/-/g
 /** Categories with a facts rate, best first. */
 export const factCategories = (g: GateSummary) => Object.entries(g.by_category).filter((e): e is [string, CategoryRates & { facts: number }] => e[1].facts != null).sort((a, b) => b[1].facts - a[1].facts);
 
-export const pct = (x: number | null | undefined, digits = 0) => (x == null ? '–' : `${(x * 100).toFixed(digits)}%`);
+export const pct = (x: number | null | undefined, digits = 0) => (x == null ? NOT_MEASURED : `${(x * 100).toFixed(digits)}%`);
 /** What a card shows in place of a number nobody measured yet. One phrase for every field, so no card falls back to a bare dash
  *  that a visitor cannot tell from a failed check (the Models/Offerings tests assert cards never render `–` for a null metric). */
 export const NOT_MEASURED = 'not measured yet';
