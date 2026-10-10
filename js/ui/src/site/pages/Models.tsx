@@ -5,7 +5,7 @@ import { Reveal } from '../Reveal';
 import { Link } from '../router';
 import { TryLink } from '../TryLink';
 import { Gauge, Index, Spec, Status, Tag } from '../lab';
-import { categoryLabel, licenceName, weightsAvailability, EDITION_LABELS, factCategories, gb, lines, measuredOn, measuredPct, models, pct, runsIn, runsInDetail, modelCta, shortDate, showcaseModels, weightsDetail, weightsFormat, defaultDtype, type SiteModel } from '../data';
+import { categoryLabel, licenceName, weightsAvailability, EDITION_LABELS, factCategories, gb, lines, measuredOn, measuredPct, models, pct, runsIn, runsInDetail, modelCta, shortDate, showcaseModels, weightsDetail, weightsFormat, defaultDtype, selfHostCommand, type SiteModel } from '../data';
 import { container, primaryCta, secondaryCta } from '../cta';
 
 /** The page head shared by /models and /benchmarks: index, eyebrow, a large title, the lead, an optional status chip. */
@@ -52,6 +52,7 @@ export function ModelCard({ m, featured }: { m: SiteModel; featured: boolean }) 
   const passed = gates.filter((x) => x.ok).length;
   const cta = modelCta(m);
   const { publicWeights } = cta;
+  const selfHost = selfHostCommand(m);
   return (
     <article className={`glass card-glow corner-marks scroll-mt-20 rounded-3xl p-6 sm:p-8 lg:p-10 ${featured ? 'glow-border' : ''}`} id={m.name}>
       <div className="flex flex-wrap items-center gap-2">
@@ -104,6 +105,14 @@ export function ModelCard({ m, featured }: { m: SiteModel; featured: boolean }) 
         <p className="mt-4 text-xs leading-relaxed text-muted-foreground" data-testid="non-public-note">
           Not yet public: there is nothing to try here and no Hub page. Ask by mail and the weights come as a Hugging Face repository or as files, with the export the runtime loads and the report.
         </p>
+      ) : null}
+      {selfHost ? (
+        <div className="mt-4" data-testid="self-host-snippet">
+          <div className="mono-label text-muted-foreground">self-host · pull the weights</div>
+          <pre className="mt-2 overflow-x-auto rounded-xl border border-border bg-background/50 p-3 text-xs leading-relaxed">
+            <code>{selfHost}</code>
+          </pre>
+        </div>
       ) : null}
 
       <dl className="mt-8 grid grid-cols-2 gap-x-6 gap-y-6 border-t border-border pt-8 sm:grid-cols-3 lg:grid-cols-6">

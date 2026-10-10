@@ -175,6 +175,16 @@ export const mailtoFor = (m: SiteModel) => {
   const body = `I'm interested in ${what} - can you tell me about self-hosting it?`;
   return `mailto:${CONTACT}?subject=${encodeURIComponent(what)}&body=${encodeURIComponent(body)}`;
 };
+/**
+ * The one-line command that pulls a model's public weights to a machine of your own - the actionable next step for a
+ * visitor evaluating self-hosting, beside the Hub link. Pins the edition's revision when the data names one; null
+ * while the weights are not public (there is nothing to download yet - the mailto CTA stands in).
+ */
+export const selfHostCommand = (m: SiteModel) => {
+  if (!m.hub.public || !m.hub.repo) return null;
+  const rev = m.hub.revision ? ` --revision ${m.hub.revision}` : '';
+  return `huggingface-cli download ${m.hub.repo}${rev} --local-dir ./${m.name}`;
+};
 export function modelCta(m: SiteModel): ModelCta {
   const hub = hubUrl(m);
   const tryHref = tryUrl(m);

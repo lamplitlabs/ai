@@ -118,3 +118,22 @@ describe('ModelCard strongest/weakest category line', () => {
     expect(html).not.toMatch(/>\s*[–—-]\s*</);
   });
 });
+
+// A visitor evaluating self-hosting gets a copyable command on the card itself - not only a mailto or a Hub page:
+// every public edition shows a huggingface-cli download pinned to its revision; a non-public one shows none.
+describe('ModelCard self-host snippet', () => {
+  for (const m of models.filter((x) => x.hub.public)) {
+    it(`${m.name} shows a huggingface-cli download command for its repo`, () => {
+      const html = renderToStaticMarkup(<ModelCard m={m} featured={false} />);
+      expect(html).toContain('data-testid="self-host-snippet"');
+      expect(html).toContain(`huggingface-cli download ${m.hub.repo}`);
+      if (m.hub.revision) expect(html).toContain(`--revision ${m.hub.revision}`);
+    });
+  }
+  it('shows no snippet when the weights are not public', () => {
+    const v22 = models.find((m) => m.name === 'light-german-tutor-pro-v22')!;
+    const html = renderToStaticMarkup(<ModelCard m={{ ...v22, hub: { ...v22.hub, public: false } }} featured={false} />);
+    expect(html).not.toContain('huggingface-cli download');
+    expect(html).not.toContain('data-testid="self-host-snippet"');
+  });
+});
