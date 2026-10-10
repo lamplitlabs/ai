@@ -19,3 +19,14 @@ describe('public/sitemap.xml', () => {
     for (const u of urls) expect(u.lastmod, u.loc).toBe(expected);
   });
 });
+
+// robots.txt is how crawlers discover the sitemap. Its Sitemap line used to be hand-typed; a SITE_URL change (domain
+// move) would have left it pointing at the old host. scripts/sitemap.mjs writes it from data.ts's SITE_URL.
+describe('public/robots.txt', () => {
+  const txt = readFileSync(fileURLToPath(new URL('../../public/robots.txt', import.meta.url)), 'utf8');
+
+  it('points crawlers at SITE_URL/sitemap.xml', () => {
+    const lines = txt.split('\n').filter((l) => l.startsWith('Sitemap:'));
+    expect(lines).toEqual([`Sitemap: ${SITE_URL}sitemap.xml`]);
+  });
+});
