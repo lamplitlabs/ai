@@ -12,8 +12,9 @@ const latest = chronological.at(-1);
 /** Shown in place of the Progression table when no model has a release-gate run yet. */
 export const NO_RUNS_YET = 'No benchmark run has been published yet. Each edition is measured on the fixed suite before release, and its gates and judge scores will appear here.';
 
-/** Days after which the newest gate run is called out as old above the Progression table. */
-export const STALE_AFTER_DAYS = 90;
+/** Days after which the newest gate run is called out as old above the Progression table.
+ *  Distinct from `STALE_AFTER_DAYS` in ../data (14 days, the measurement data set age on the landing page). */
+export const GATE_STALE_AFTER_DAYS = 90;
 
 /** Whole days between the newest gate's `created_at` and `now`; null when no gate carries a parsable date. */
 export function daysSinceLatestGate(latestIso: string | null | undefined, now: Date): number | null {
@@ -24,8 +25,8 @@ export function daysSinceLatestGate(latestIso: string | null | undefined, now: D
 }
 
 /** The "last updated" note shown above the Progression table: always names the newest run's date, and when that run
- *  is older than STALE_AFTER_DAYS says so plainly, so a visitor does not mistake stale benchmark data for current. */
-export function lastUpdatedNote(latestIso: string | null | undefined, now: Date, staleAfterDays = STALE_AFTER_DAYS): { text: string; stale: boolean } | null {
+ *  is older than GATE_STALE_AFTER_DAYS says so plainly, so a visitor does not mistake stale benchmark data for current. */
+export function lastUpdatedNote(latestIso: string | null | undefined, now: Date, staleAfterDays = GATE_STALE_AFTER_DAYS): { text: string; stale: boolean } | null {
   const days = daysSinceLatestGate(latestIso, now);
   if (days == null) return null;
   const date = shortDate(latestIso);
