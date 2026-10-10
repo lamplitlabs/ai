@@ -1,111 +1,16 @@
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { act, type ReactElement } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
+import { FakeNode, clickHandlerOf, installFakeDom } from './testDom';
 
 /**
  * The header's menu button is the only way onto the other pages on a phone. vitest runs in node here (no jsdom /
  * @testing-library in the lockfile, dependencies are Tier 2), so - as in LampToggle.test.tsx - a minimal DOM stand-in
  * lets the real React tree mount and the real click handler and route subscription run.
  */
-class FakeNode {
-  nodeType = 1;
-  nodeName: string;
-  children: FakeNode[] = [];
-  parentNode: FakeNode | null = null;
-  attrs: Record<string, string> = {};
-  style: Record<string, unknown> = { setProperty: (k: string, v: string) => void (this.style[k] = v) };
-  textContent = '';
-  ownerDocument: unknown;
-  namespaceURI = 'http://www.w3.org/1999/xhtml';
-  onclick: ((e: unknown) => void) | null = null;
-  constructor(name: string, doc: unknown) {
-    this.nodeName = name.toUpperCase();
-    this.ownerDocument = doc;
-  }
-  appendChild(c: FakeNode) {
-    c.parentNode = this;
-    this.children.push(c);
-    return c;
-  }
-  insertBefore(c: FakeNode, ref: FakeNode | null) {
-    c.parentNode = this;
-    const i = ref ? this.children.indexOf(ref) : -1;
-    if (i < 0) this.children.push(c);
-    else this.children.splice(i, 0, c);
-    return c;
-  }
-  removeChild(c: FakeNode) {
-    this.children = this.children.filter((x) => x !== c);
-    return c;
-  }
-  setAttribute(k: string, v: string) {
-    this.attrs[k] = String(v);
-  }
-  removeAttribute(k: string) {
-    delete this.attrs[k];
-  }
-  getAttribute(k: string) {
-    return this.attrs[k] ?? null;
-  }
-  addEventListener() {}
-  removeEventListener() {}
-  get firstChild() {
-    return this.children[0] ?? null;
-  }
-  get nextSibling(): FakeNode | null {
-    const p = this.parentNode;
-    if (!p) return null;
-    return p.children[p.children.indexOf(this) + 1] ?? null;
-  }
-  get tagName() {
-    return this.nodeName;
-  }
-  /** All text under this node, in document order. */
-  get text(): string {
-    return this.children.length ? this.children.map((c) => c.text).join('') : this.textContent;
-  }
-  find(pred: (n: FakeNode) => boolean): FakeNode | null {
-    if (pred(this)) return this;
-    for (const c of this.children) {
-      const r = c.find(pred);
-      if (r) return r;
-    }
-    return null;
-  }
-  findAll(pred: (n: FakeNode) => boolean, out: FakeNode[] = []): FakeNode[] {
-    if (pred(this)) out.push(this);
-    for (const c of this.children) c.findAll(pred, out);
-    return out;
-  }
-}
-
 const storage = new Map<string, string>();
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const doc: any = {
-  nodeType: 9,
-  createElement: (t: string) => new FakeNode(t, doc),
-  createElementNS: (_ns: string, t: string) => new FakeNode(t, doc),
-  createTextNode: (s: string) => {
-    const n = new FakeNode('#text', doc);
-    n.nodeType = 3;
-    n.textContent = s;
-    return n;
-  },
-  getElementById: () => null,
-  addEventListener() {},
-  removeEventListener() {},
-};
-doc.documentElement = Object.assign(new FakeNode('html', doc), {
-  scrollHeight: 0,
-  classList: { toggle() {}, contains: () => false },
-});
 
-// Find the React props object react-dom attaches to a host node, so a click can be dispatched without a real event system.
-function clickHandlerOf(node: FakeNode): ((e?: unknown) => void) | undefined {
-  const key = Object.keys(node).find((k) => k.startsWith('__reactProps$'));
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return key ? (node as any)[key]?.onClick : undefined;
-}
+const doc = installFakeDom();
 
 let root: Root | null = null;
 let container: FakeNode;
@@ -115,8 +20,6 @@ let navigate: (to: string) => void;
 beforeAll(async () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const g = globalThis as any;
-  g.document = doc;
-  g.window = globalThis;
   // a minimal history-API stand-in so the site's own router (useRoute / navigate) works in node
   g.location = new URL('http://localhost/');
   g.history = {
@@ -136,11 +39,6 @@ beforeAll(async () => {
     removeItem: (k: string) => void storage.delete(k),
   };
   g.matchMedia = () => ({ matches: false });
-  g.HTMLIFrameElement = class {};
-  doc.body = new FakeNode('body', doc);
-  doc.activeElement = doc.body;
-  doc.defaultView = globalThis;
-  g.IS_REACT_ACT_ENVIRONMENT = true;
   // theme.ts and router.tsx read window at import time, so import after the stand-in is in place.
   ({ navigate } = await import('./router'));
   ({ SiteHeader } = await import('./SiteLayout'));
