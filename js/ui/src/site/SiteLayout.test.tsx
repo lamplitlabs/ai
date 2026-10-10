@@ -1,5 +1,5 @@
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
-import { act, type ReactElement } from 'react';
+import React, { act, type ReactElement } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { FakeNode, clickHandlerOf, installFakeDom } from './testDom';
 
@@ -15,6 +15,7 @@ const doc = installFakeDom();
 let root: Root | null = null;
 let container: FakeNode;
 let SiteHeader: () => ReactElement;
+let SiteLayout: (p: { children: React.ReactNode }) => ReactElement;
 let navigate: (to: string) => void;
 
 beforeAll(async () => {
@@ -41,7 +42,7 @@ beforeAll(async () => {
   g.matchMedia = () => ({ matches: false });
   // theme.ts and router.tsx read window at import time, so import after the stand-in is in place.
   ({ navigate } = await import('./router'));
-  ({ SiteHeader } = await import('./SiteLayout'));
+  ({ SiteHeader, SiteLayout } = await import('./SiteLayout'));
 });
 
 afterEach(() => {
@@ -113,5 +114,50 @@ describe('SiteHeader (the mobile menu button opens and closes the page list)', (
     expect(mobilePanel()).toBeNull();
     expect(button.attrs['aria-expanded']).toBe('false');
     expect(button.attrs['aria-label']).toBe('Open menu');
+  });
+});
+
+describe('SiteLayout (a "Skip to content" link lets keyboard users bypass the header)', () => {
+  it('renders the skip link as the first focusable element, targeting #main-content', () => {
+    container = new FakeNode('div', doc);
+    root = createRoot(container as unknown as Element);
+    act(() => root!.render(<SiteLayout>page body</SiteLayout>));
+    const focusable = container.findAll((n) => n.nodeName === 'A' || n.nodeName === 'BUTTON');
+    expect(focusable.length).toBeGreaterThan(1);
+    const skip = focusable[0];
+    expect(skip.nodeName).toBe('A');
+    expect(skip.text.trim()).toBe('Skip to content');
+    expect(skip.attrs.href).toBe('#main-content');
+    // hidden until focused: Tailwind's sr-only pattern
+    expect(skip.attrs.class).toContain('sr-only');
+    expect(skip.attrs.class).toContain('focus:not-sr-only');
+    const main = container.find((n) => n.nodeName === 'MAIN');
+    expect(main?.attrs.id).toBe('main-content');
+    expect(main?.attrs.tabindex).toBe('-1');
+  });
+
+  it('clicking the skip link focuses and scrolls to <main id="main-content">', () => {
+    container = new FakeNode('div', doc);
+    root = createRoot(container as unknown as Element);
+    act(() => root!.render(<SiteLayout>page body</SiteLayout>));
+    const main = container.find((n) => n.nodeName === 'MAIN')!;
+    const calls: string[] = [];
+    Object.assign(main, {
+      focus: () => calls.push('focus'),
+      scrollIntoView: () => calls.push('scroll'),
+    });
+    const prev = doc.getElementById;
+    doc.getElementById = (id: string) => (id === 'main-content' ? main : null);
+    try {
+      const skip = container.find((n) => n.nodeName === 'A' && n.attrs.href === '#main-content')!;
+      const onClick = clickHandlerOf(skip);
+      expect(onClick).toBeTypeOf('function');
+      let prevented = false;
+      act(() => onClick!({ preventDefault: () => (prevented = true) }));
+      expect(prevented).toBe(true);
+      expect(calls).toEqual(['focus', 'scroll']);
+    } finally {
+      doc.getElementById = prev;
+    }
   });
 });

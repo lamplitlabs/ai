@@ -191,11 +191,35 @@ export function SiteFooter() {
   );
 }
 
+/**
+ * "Skip to content": the first focusable element on every page, visually hidden until it receives keyboard focus, so a
+ * keyboard or screen-reader visitor reaches the page content without tabbing through the whole header first. The
+ * click handler moves focus itself (the <main> has tabIndex -1) rather than relying on the hash navigation alone.
+ */
+export const MAIN_CONTENT_ID = 'main-content';
+
+export function skipToContent(e?: { preventDefault(): void }) {
+  const main = document.getElementById(MAIN_CONTENT_ID);
+  if (!main) return;
+  e?.preventDefault();
+  main.focus({ preventScroll: true });
+  main.scrollIntoView();
+}
+
 export function SiteLayout({ children }: { children: ReactNode }) {
   return (
     <div className="lab-grain flex min-h-dvh flex-col">
+      <a
+        href={`#${MAIN_CONTENT_ID}`}
+        onClick={skipToContent}
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-primary-foreground focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-ring"
+      >
+        Skip to content
+      </a>
       <SiteHeader />
-      <main className="flex-1">{children}</main>
+      <main id={MAIN_CONTENT_ID} tabIndex={-1} className="flex-1 outline-none">
+        {children}
+      </main>
       <SiteFooter />
     </div>
   );
