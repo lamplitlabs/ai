@@ -26,6 +26,13 @@ Node.js >= 20 and npm. `make ui-check` also needs a Chromium-based browser
 (`BROWSER_PATH` names it); the verification the evaluators require is
 `make lint && make test`, which does not.
 
+## Working in this environment
+
+Commit incremental progress about every 20 minutes (each piece verified with
+`make test`) rather than only at the end: a run that hits its minute budget
+then still lands something instead of finishing with "no result"
+(MEM-failure-pattern-6fdfc5c1).
+
 ## Acceptance and rollback
 
 Accepted when `make test` passes after setup on a clean checkout. Rollback:
