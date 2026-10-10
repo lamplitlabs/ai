@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { CATEGORY_LABELS, CONTACT, commissionMailto, contactMailto, defaultDtype, EDITION_LABELS, mailtoFor, factCategories, flagship, latestMeasuredAt, licenceName, lines, models, NOT_MEASURED, pct, runsIn, runsInDetail, showcaseModels, siteData, spaceUrl, tryLabel, tryUrl, weightsAvailability, weightsSpec } from './data';
+import { CATEGORY_LABELS, CONTACT, commissionMailto, contactMailto, dataAgeDays, defaultDtype, EDITION_LABELS, gb, mailtoFor, factCategories, flagship, latestMeasuredAt, licenceName, lines, models, NOT_MEASURED, pct, runsIn, runsInDetail, selfHostCommand, shortDate, showcaseModels, siteData, spaceUrl, tryLabel, tryUrl, weightsAvailability, weightsSpec } from './data';
 
 describe('site data (site.json is generated outside this repo, ADR-001)', () => {
   it('leads with a browser-runnable flagship and offers one edition of each kind per line', () => {
@@ -187,5 +187,43 @@ describe('pct', () => {
     expect(pct(null)).toBe(NOT_MEASURED);
     expect(pct(undefined)).toBe(NOT_MEASURED);
     expect(pct(0.5)).toBe('50%');
+  });
+});
+
+describe('small formatting helpers shown on model cards and /benchmarks', () => {
+  it('gb() shows megabytes below 1000 MB and one-decimal gigabytes from 1000 MB', () => {
+    expect(gb(0)).toBe('0 MB');
+    expect(gb(87.4)).toBe('87 MB');
+    expect(gb(87.6)).toBe('88 MB');
+    expect(gb(999)).toBe('999 MB');
+    expect(gb(1000)).toBe('1.0 GB');
+    expect(gb(1234)).toBe('1.2 GB');
+    expect(gb(1250)).toBe('1.3 GB');
+    expect(gb(15_900)).toBe('15.9 GB');
+  });
+  it('dataAgeDays() counts whole days between generated_at and now and never goes negative', () => {
+    const generated = '2026-01-01T12:00:00Z';
+    expect(dataAgeDays(generated, new Date('2026-01-01T12:00:00Z'))).toBe(0);
+    expect(dataAgeDays(generated, new Date('2026-01-02T11:59:59Z'))).toBe(0);
+    expect(dataAgeDays(generated, new Date('2026-01-02T12:00:00Z'))).toBe(1);
+    expect(dataAgeDays(generated, new Date('2026-01-15T12:00:00Z'))).toBe(14);
+    expect(dataAgeDays(generated, new Date('2026-02-01T00:00:00Z'))).toBe(30);
+    expect(dataAgeDays(generated, new Date('2025-12-25T00:00:00Z'))).toBe(0);
+  });
+  it('shortDate() keeps the calendar day of an ISO string and shows a dash for missing dates', () => {
+    expect(shortDate('2026-03-04T05:06:07.000Z')).toBe('2026-03-04');
+    expect(shortDate('2026-03-04')).toBe('2026-03-04');
+    expect(shortDate(null)).toBe('–');
+    expect(shortDate(undefined)).toBe('–');
+    expect(shortDate('')).toBe('–');
+  });
+  it('selfHostCommand() prints the exact huggingface-cli line, pinning --revision only when the hub has one', () => {
+    const base = { ...models[0], name: 'tiny-ocr' };
+    const withRev = { ...base, hub: { repo: 'lamplit/tiny-ocr', public: true, revision: 'v1.2.0' } };
+    expect(selfHostCommand(withRev)).toBe('huggingface-cli download lamplit/tiny-ocr --revision v1.2.0 --local-dir ./tiny-ocr');
+    const noRev = { ...base, hub: { repo: 'lamplit/tiny-ocr', public: true } };
+    expect(selfHostCommand(noRev)).toBe('huggingface-cli download lamplit/tiny-ocr --local-dir ./tiny-ocr');
+    expect(selfHostCommand({ ...base, hub: { repo: 'lamplit/tiny-ocr', public: false, revision: 'v1.2.0' } })).toBeNull();
+    expect(selfHostCommand({ ...base, hub: { repo: null, public: true } })).toBeNull();
   });
 });
