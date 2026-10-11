@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { Benchmarks, GateCard, lastUpdatedNote, GATE_STALE_AFTER_DAYS, unmetGates, unmetLabel } from './Benchmarks';
+import { Benchmarks, GateCard, gateAge, lastUpdatedNote, GATE_STALE_AFTER_DAYS, unmetGates, unmetLabel } from './Benchmarks';
 import { GATE_DEFINITIONS, GATE_LABELS, models, NOT_MEASURED } from '../data';
 
 const withGate = models.filter((m) => m.gate);
@@ -104,7 +104,8 @@ describe('Benchmarks staleness note above Progression', () => {
     const html = renderToStaticMarkup(<Benchmarks now={now} />);
     expect(html).not.toContain('data-last-updated="stale"');
     expect(html).toMatch(new RegExp(`<p data-last-updated="fresh"[^>]*>Last measured ${latestDate}\\.</p>`));
-    expect(html).not.toContain('days ago');
+    const note = html.match(/<p data-last-updated="fresh"[^>]*>([^<]*)<\/p>/);
+    expect(note![1]).not.toContain('days ago');
   });
 
   it('computes the note from the date alone and tolerates a missing date', () => {
@@ -157,5 +158,29 @@ describe('GateCard unmeasured gate without a note', () => {
   it('renders NOT_MEASURED, not the literal "not measured"', () => {
     expect(html).toContain(`<span>${NOT_MEASURED}</span>`);
     expect(html).not.toContain('<span>not measured</span>');
+  });
+});
+
+/** Each Progression row says how long ago its own gate was measured, so a visitor sees per-gate staleness at a glance
+ *  rather than only the newest run's date above the table. */
+describe('Progression per-gate freshness', () => {
+  it('renders "measured N days ago" for every gated row', () => {
+    const now = new Date(Date.parse(newest.gate!.created_at!) + 12 * 86_400_000);
+    const html = renderToStaticMarkup(<Benchmarks now={now} />);
+    const ages = html.match(/<span data-gate-age[^>]*>([^<]*)<\/span>/g) ?? [];
+    expect(ages.length).toBe(withGate.length);
+    expect(html).toContain('>measured 12 days ago</span>');
+    for (const m of withGate) {
+      expect(html).toContain(`>${gateAge(m.gate!.created_at, now)}</span>`);
+    }
+  });
+
+  it('counts whole days and tolerates a missing date', () => {
+    const now = new Date('2026-10-11T12:00:00Z');
+    expect(gateAge('2026-10-11T01:00:00Z', now)).toBe('measured today');
+    expect(gateAge('2026-10-10T01:00:00Z', now)).toBe('measured 1 day ago');
+    expect(gateAge('2026-09-11T01:00:00Z', now)).toBe('measured 30 days ago');
+    expect(gateAge(null, now)).toBeNull();
+    expect(gateAge('garbage', now)).toBeNull();
   });
 });

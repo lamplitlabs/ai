@@ -1,7 +1,7 @@
 import { Check, Info, X } from 'lucide-react';
 import { Reveal } from '../Reveal';
 import { Gauge, Index, Status, Tag } from '../lab';
-import { categoryLabel, EDITION_LABELS, factCategories, GATE_DEFINITIONS, GATE_LABELS, lines, measuredOn, models, NOT_MEASURED, pct, shortDate, siteData, type SiteModel } from '../data';
+import { categoryLabel, dataAgeDays, EDITION_LABELS, factCategories, GATE_DEFINITIONS, GATE_LABELS, lines, measuredOn, models, NOT_MEASURED, pct, shortDate, siteData, type SiteModel } from '../data';
 import { container } from '../cta';
 import { PageIntro } from './Models';
 
@@ -50,7 +50,16 @@ export function unmetLabel(gates: Record<string, { ok: boolean }>): string {
   return `not yet: ${unmet.join(', ')}`;
 }
 
-function Progression() {
+/** Relative age of one gate run for the Progression table: "measured today", "measured 1 day ago", "measured N days ago";
+ *  null when the gate carries no parsable date. Built on the shared dataAgeDays so every age on the site counts the same. */
+export function gateAge(createdAt: string | null | undefined, now: Date): string | null {
+  if (!createdAt || Number.isNaN(Date.parse(createdAt))) return null;
+  const days = dataAgeDays(createdAt, now);
+  if (days === 0) return 'measured today';
+  return `measured ${days} day${days === 1 ? '' : 's'} ago`;
+}
+
+function Progression({ now }: { now: Date }) {
   return (
     <div className="glass overflow-x-auto rounded-2xl">
       <table className="lab-table w-full text-sm">
@@ -79,7 +88,10 @@ function Progression() {
                 </td>
                 <td className="px-5 py-3.5 text-muted-foreground">{m.edition}</td>
                 <td className="px-5 py-3.5 text-muted-foreground">{m.params_b}B</td>
-                <td className="px-5 py-3.5 font-mono text-xs text-muted-foreground">{shortDate(g.created_at)}</td>
+                <td className="px-5 py-3.5 font-mono text-xs text-muted-foreground">
+                  {shortDate(g.created_at)}
+                  {gateAge(g.created_at, now) ? <span data-gate-age className="mt-0.5 block text-[0.65rem] text-muted-foreground/80">{gateAge(g.created_at, now)}</span> : null}
+                </td>
                 <td className="px-5 py-3.5">
                   <div className="flex items-center gap-3">
                     <span className="w-14 font-mono text-xs">{pct(g.gates.facts?.actual, 1)}</span>
@@ -291,7 +303,7 @@ export function Benchmarks({ now = new Date() }: { now?: Date } = {}) {
           ) : null}
           <div className="mt-5">
             {latest ? (
-              <Progression />
+              <Progression now={now} />
             ) : (
               <p data-benchmarks-empty className="glass rounded-2xl px-5 py-6 text-sm text-muted-foreground">
                 {NO_RUNS_YET}
