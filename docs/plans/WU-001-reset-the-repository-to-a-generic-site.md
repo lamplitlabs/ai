@@ -54,7 +54,7 @@ None.
 ### Edge Cases
 
 - No showcase browser model in the data: `/try` shows "Nothing to try yet" and links to the offerings; `tryLabel()`
-  returns "Try it".
+  returns "See the model".
 - The `vercel.json` redirect drifting from the data: `data.test.ts` fails.
 
 ## Steps
