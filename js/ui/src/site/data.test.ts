@@ -123,7 +123,11 @@ describe('weights and licence copy (one helper for /models and the offerings lis
       expect(weightsSpec(m, true).endsWith(licenceName(m))).toBe(true);
       expect(weightsSpec(m, false).endsWith(licenceName(m))).toBe(true);
     }
-    expect(weightsSpec({ ...base, dtypes: [], weights_mb: null, licence: 'MIT (x)' }, true)).toBe('MIT');
+    expect(weightsSpec({ ...base, dtypes: [], weights_mb: null, licence: 'MIT (x)' }, true)).toBe('size unmeasured · MIT');
+  });
+  it('never reduces a public-weights spec line to a bare licence tag: an unmeasured size says so', () => {
+    for (const m of models) expect(weightsSpec(m, true)).not.toBe(licenceName(m));
+    expect(weightsSpec({ ...base, dtypes: [], weights_mb: null, licence: 'MIT' }, true)).toContain(' · ');
   });
   it('shows the smallest measured dtype as the weight size, whatever order the producer listed them in', () => {
     const q8 = { dtype: 'q8', size_mb: 3552, chunks: 2, max_chunk_mb: 1796, wasm: false };

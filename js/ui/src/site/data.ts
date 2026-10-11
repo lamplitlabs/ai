@@ -137,7 +137,7 @@ export function weightsSpec(m: SiteModel, publicWeights: boolean): string {
   const size = defaultDtype(m);
   if (size) return `${size.dtype} · ${gb(size.size_mb)} · ${licence}`;
   if (m.weights_mb) return `bf16 · ${gb(m.weights_mb)} · ${licence}`;
-  return licence;
+  return `size unmeasured · ${licence}`;
 }
 /** How the gate answered: the export the browser runs, or the trained weights themselves. */
 export const measuredOn = (g: GateSummary) => (g.runtime === 'pytorch' ? 'trained weights · bf16' : g.dtype ? `${g.dtype} export` : 'export');
