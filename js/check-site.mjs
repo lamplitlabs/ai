@@ -8,11 +8,18 @@
 //                          [--theme dark|light] [--shots <dir>] [--width 1280] [--browser <path>] [--reduced-motion]
 //                          [--route-timeout 10000]
 //
+// Opt-in hub link check (CHECK_SITE_HUB_LINKS=fail|warn, off by default so `make test`/`make ui-check` never need the
+// network): for every showcase model in js/ui/src/data/site.json the Hugging Face URLs the site derives from
+// hub.repo (public weights) and hub.space (the demo) get a HEAD request. An HTTP error (404, 401, 5xx) is reported
+// under `hub_links` in the JSON report and fails the check (`fail`) or only warns (`warn`); a network error (offline,
+// DNS, timeout) is reported as `skipped` and never fails, so an offline machine is not mistaken for a dead link.
+//
 // Every route runs under a hard timeout (--route-timeout ms, default 10s): a host where headless Chromium accepts
 // the navigation but never answers the CDP evaluate fails fast with a message naming the stuck route instead of
 // hanging `make ui-check`.
-import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
 
 const args = Object.fromEntries(
@@ -260,5 +267,59 @@ async function checkRoute(route) {
     if (target) await fetch(`http://127.0.0.1:${port}/json/close/${target.id}`).catch(() => undefined);
   }
 }
-console.log(JSON.stringify({ base, theme, ok: !failed, pages: results }, null, 2));
+// --- opt-in hub link reachability (see the header) ---------------------------------------------------------------
+const HUB_HOST = 'https://huggingface.co'; // mirrors js/ui/src/site/data.ts (hubRepoUrl/spaceUrl)
+const hubMode = (process.env.CHECK_SITE_HUB_LINKS || '').trim().toLowerCase();
+const hubEnabled = ['1', 'true', 'yes', 'fail', 'warn'].includes(hubMode);
+const hubWarnOnly = hubMode === 'warn';
+
+/** The hub URLs the site shows for its showcase models: repo page when the weights are public, Space when there is one. */
+function showcaseHubUrls(sitePath) {
+  const site = JSON.parse(readFileSync(sitePath, 'utf8'));
+  const urls = [];
+  for (const m of site.models || []) {
+    if (!m.showcase || !m.hub) continue;
+    if (m.hub.public && m.hub.repo) urls.push({ model: m.id || m.name || m.hub.repo, kind: 'repo', url: `${HUB_HOST}/${m.hub.repo}` });
+    if (m.hub.space) urls.push({ model: m.id || m.name || m.hub.space, kind: 'space', url: `${HUB_HOST}/spaces/${m.hub.space}` });
+  }
+  return urls;
+}
+
+/** HEAD one URL: `{ ok, status }` on an HTTP answer, `{ skipped, error }` when the network itself failed. */
+async function headLink(url, timeoutMs) {
+  try {
+    const res = await fetch(url, { method: 'HEAD', redirect: 'follow', signal: AbortSignal.timeout(timeoutMs) });
+    return { ok: res.ok, status: res.status };
+  } catch (err) {
+    const cause = err?.cause?.code || err?.name || '';
+    return { skipped: true, error: `${err.message}${cause ? ` (${cause})` : ''}` };
+  }
+}
+
+async function checkHubLinks() {
+  const sitePath = process.env.CHECK_SITE_SITE_JSON || join(dirname(fileURLToPath(import.meta.url)), 'ui', 'src', 'data', 'site.json');
+  const timeoutMs = Number(process.env.CHECK_SITE_HUB_TIMEOUT_MS || 10000);
+  const links = showcaseHubUrls(sitePath);
+  const checked = await Promise.all(links.map(async (l) => ({ ...l, ...(await headLink(l.url, timeoutMs)) })));
+  const dead = checked.filter((l) => !l.skipped && !l.ok);
+  const skipped = checked.filter((l) => l.skipped);
+  const report = { mode: hubWarnOnly ? 'warn' : 'fail', checked: checked.length, dead: dead.length, skipped: skipped.length, links: checked };
+  for (const l of dead) console.error(`hub link ${hubWarnOnly ? 'warning' : 'failure'}: ${l.model} ${l.kind} ${l.url} answered HTTP ${l.status}`);
+  for (const l of skipped) console.error(`hub link skipped (no network?): ${l.model} ${l.kind} ${l.url}: ${l.error}`);
+  return { report, failed: dead.length > 0 && !hubWarnOnly };
+}
+
+let hubLinks;
+if (hubEnabled) {
+  try {
+    const r = await checkHubLinks();
+    hubLinks = r.report;
+    if (r.failed) failed = true;
+  } catch (err) {
+    hubLinks = { error: err.message };
+    failed = true;
+  }
+}
+
+console.log(JSON.stringify({ base, theme, ok: !failed, pages: results, ...(hubLinks ? { hub_links: hubLinks } : {}) }, null, 2));
 process.exit(failed ? 1 : 0);
