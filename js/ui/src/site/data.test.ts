@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { CATEGORY_LABELS, CONTACT, commissionMailto, contactMailto, dataAgeDays, defaultDtype, EDITION_LABELS, gb, mailtoFor, factCategories, flagship, latestMeasuredAt, licenceName, lines, models, NOT_MEASURED, pct, runsIn, runsInDetail, selfHostCommand, shortDate, showcaseModels, siteData, spaceUrl, tryLabel, tryUrl, weightsAvailability, weightsSpec } from './data';
+import { CATEGORY_LABELS, CONTACT, commissionMailto, contactMailto, dataAgeDays, defaultDtype, EDITION_LABELS, gb, mailtoFor, modelCta, factCategories, flagship, latestMeasuredAt, licenceName, lines, models, NOT_MEASURED, pct, runsIn, runsInDetail, selfHostCommand, shortDate, showcaseModels, siteData, spaceUrl, tryLabel, tryUrl, weightsAvailability, weightsSpec } from './data';
 
 describe('site data (site.json is generated outside this repo, ADR-001)', () => {
   it('leads with a browser-runnable flagship and offers one edition of each kind per line', () => {
@@ -166,6 +166,25 @@ describe('weights and licence copy (one helper for /models and the offerings lis
       expect(text).not.toContain(browserEd.label);
     }
     expect(params(mailtoFor(browserEd)).get('subject')).not.toBe(subject);
+  });
+
+  it('modelCta falls back to a mailto CTA when a model has neither public weights nor a browser demo', () => {
+    const noHubNoTry: typeof base = { ...base, browser: false, hub: { repo: null, public: false } };
+    const cta = modelCta(noHubNoTry);
+    expect(cta.kind).toBe('mail');
+    expect(cta.href).toBe(mailtoFor(noHubNoTry));
+    expect(cta.href.startsWith(`mailto:${CONTACT}?`)).toBe(true);
+    const params = new URLSearchParams(cta.href.slice(cta.href.indexOf('?') + 1));
+    expect(params.get('subject')).toContain(noHubNoTry.line);
+    expect((params.get('body') ?? '').length).toBeGreaterThan(0);
+    expect(cta.hubUrl).toBeNull();
+    expect(cta.tryHref).toBeNull();
+    expect(cta.publicWeights).toBe(false);
+    expect(cta.secondaryHub).toBeNull();
+    // A private repo name alone must not surface as a Hub link.
+    expect(modelCta({ ...noHubNoTry, hub: { repo: 'lamplit/private', public: false } }).kind).toBe('mail');
+    // Every shipped model resolves to a non-empty CTA href, whatever its kind.
+    for (const m of models) expect(modelCta(m).href.length).toBeGreaterThan(0);
   });
 
   it('contactMailto targets CONTACT with an encoded subject', () => {
