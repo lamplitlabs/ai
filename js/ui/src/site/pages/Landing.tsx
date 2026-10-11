@@ -80,7 +80,12 @@ export function Landing({ now }: { now?: Date } = {}) {
               <span className="hidden text-primary/60 sm:inline">·</span>
               <span>every number on this site is generated from a published measurement</span>
               <span className="hidden text-primary/60 sm:inline">·</span>
-              <span className={stale ? 'text-primary' : undefined} data-testid="data-age">
+              <span
+                className={stale ? 'text-primary' : undefined}
+                data-testid="data-age"
+                role={stale ? 'status' : undefined}
+                aria-live={stale ? 'polite' : undefined}
+              >
                 data {siteData.generated_at.slice(0, 16).replace('T', ' ')} UTC{stale ? ` · ${ageDays} days old - may be stale` : ''}
               </span>
               <Link to="/benchmarks" className="ml-auto inline-flex items-center gap-1 text-primary hover:underline">

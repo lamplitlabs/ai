@@ -24,6 +24,22 @@ describe('Landing data freshness', () => {
     const html = renderToStaticMarkup(<Landing now={now} />);
     expect(html).toContain(`${STALE_AFTER_DAYS + 30} days old - may be stale`);
   });
+  it('announces the stale warning to screen readers via a polite live region', () => {
+    const now = new Date(generated.getTime() + (STALE_AFTER_DAYS + 30) * 86_400_000);
+    const html = renderToStaticMarkup(<Landing now={now} />);
+    const span = html.match(/<span[^>]*data-testid="data-age"[^>]*>/);
+    expect(span, 'data-age span missing').not.toBeNull();
+    expect(span![0]).toContain('aria-live="polite"');
+    expect(span![0]).toContain('role="status"');
+  });
+  it('adds no live region when the data is fresh', () => {
+    const now = new Date(generated.getTime() + 2 * 86_400_000);
+    const html = renderToStaticMarkup(<Landing now={now} />);
+    const span = html.match(/<span[^>]*data-testid="data-age"[^>]*>/);
+    expect(span, 'data-age span missing').not.toBeNull();
+    expect(span![0]).not.toContain('aria-live');
+    expect(span![0]).not.toContain('role=');
+  });
   it('shows no warning when the data is fresh', () => {
     const now = new Date(generated.getTime() + 2 * 86_400_000);
     const html = renderToStaticMarkup(<Landing now={now} />);
