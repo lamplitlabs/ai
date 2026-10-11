@@ -24,6 +24,7 @@ make ui-dev     # Vite dev server, http://127.0.0.1:5173
 make lint       # tsc -b, node --check on the scripts, FEAT-001 vitest count, README routes vs check-site defaults
 make test       # vitest and a production build
 make ui-check   # every route headless in dark 1280 and light 390 on the built site (a Chromium-based browser; BROWSER_PATH to choose)
+make hub-links  # ui-check plus a HEAD request to every showcase hub link (Try it / View weights); a 404 fails (needs network)
 node js/check-site.mjs --base http://127.0.0.1:4174 --shots /tmp/site   # screenshots per route
 ```
 

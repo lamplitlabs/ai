@@ -2,7 +2,7 @@
 # repository is the site's source and its deploy. Targets are what the evaluators name (`make lint && make test`,
 # `make ui-check`), mapped to the site's own checks.
 .DEFAULT_GOAL := help
-.PHONY: help setup lint test build ui-check ui-dev clean
+.PHONY: help setup lint test build ui-check hub-links ui-dev clean
 
 UI := js/ui
 PORT ?= 4174
@@ -25,7 +25,8 @@ test: ## Unit tests (vitest) and a production build
 build: ## Production build only (js/ui/dist)
 	cd $(UI) && npm run build
 
-ui-check: ## Every route headless on the built site (needs Chrome/Edge; BROWSER_PATH to point at one), dark 1280 and light 390
+# Serve js/ui/dist on $(PORT) and run check-site.mjs against it with the arguments in $(1); the server is stopped afterwards.
+define with_preview
 	@test -f $(UI)/dist/index.html || (echo "build first: make build" && exit 1)
 	@node $(UI)/scripts/preview-static.mjs $(PORT) & pid=$$!; \
 	  for i in $$(seq 1 50); do \
@@ -33,8 +34,15 @@ ui-check: ## Every route headless on the built site (needs Chrome/Edge; BROWSER_
 	    curl -sf -o /dev/null http://127.0.0.1:$(PORT)/ && break; sleep 0.2; \
 	  done; \
 	  curl -sf -o /dev/null http://127.0.0.1:$(PORT)/ || { echo "preview server not reachable on port $(PORT)"; kill $$pid; exit 1; }; \
-	  node js/check-site.mjs --base http://127.0.0.1:$(PORT) --theme dark --width 1280 && \
-	  node js/check-site.mjs --base http://127.0.0.1:$(PORT) --theme light --width 390; status=$$?; kill $$pid; exit $$status
+	  $(1); status=$$?; kill $$pid; exit $$status
+endef
+
+ui-check: ## Every route headless on the built site (needs Chrome/Edge; BROWSER_PATH to point at one), dark 1280 and light 390
+	$(call with_preview,node js/check-site.mjs --base http://127.0.0.1:$(PORT) --theme dark --width 1280 && \
+	  node js/check-site.mjs --base http://127.0.0.1:$(PORT) --theme light --width 390)
+
+hub-links: ## ui-check (dark 1280) plus a HEAD request to every showcase "Try it"/"View weights" hub link; a 404 fails (needs network; CHECK_SITE_HUB_LINKS=warn to only warn)
+	$(call with_preview,CHECK_SITE_HUB_LINKS=$${CHECK_SITE_HUB_LINKS:-fail} node js/check-site.mjs --base http://127.0.0.1:$(PORT) --theme dark --width 1280)
 
 ui-dev: ## Vite dev server with hot reload
 	cd $(UI) && npm run dev
