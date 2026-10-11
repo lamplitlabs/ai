@@ -1,5 +1,5 @@
 #!/bin/sh
-# Fail when the routes README.md documents drift from the default --routes list in js/check-site.mjs.
+# Fail when the routes README.md documents drift from the default --routes list in js/check-site.mjs. Also fail when a hub repo/space id in js/ui/src/data/site.json is not a lamplitlabs/* slug.
 # Usage: scripts/check-routes-doc.sh  (run from the repository root; used by `make lint`)
 #
 # README.md names the site's pages in its layout line: "pages (/ , /models, /benchmarks, /try, 404)".
@@ -37,3 +37,20 @@ if [ "$readme_routes" != "$check_routes" ]; then
   exit 1
 fi
 echo "check-routes-doc: $README routes match $CHECK defaults ($(printf '%s' "$readme_routes" | tr '\n' ' '))"
+
+# Hub repo slugs: every "repo" / "space" id in site.json must be a lamplitlabs/<name> slug, since
+# js/ui/src/site/data.ts turns them straight into https://huggingface.co/<slug> links (hubRepoUrl/spaceUrl).
+# A typo'd or foreign-org slug would ship as a dead or wrong link; fail here instead.
+SITE="js/ui/src/data/site.json"
+slugs=$(grep -oE '"(repo|space)": *"[^"]*"' "$SITE" | sed -E 's/^"(repo|space)": *"//; s/"$//')
+if [ -z "$slugs" ]; then
+  echo "check-routes-doc: no \"repo\"/\"space\" hub ids found in $SITE" >&2
+  exit 1
+fi
+bad=$(printf '%s\n' "$slugs" | grep -v -E '^lamplitlabs/[A-Za-z0-9._-]+$' || true)
+if [ -n "$bad" ]; then
+  echo "check-routes-doc: hub ids in $SITE must match lamplitlabs/<name> (letters, digits, . _ -); offending:" >&2
+  printf '%s\n' "$bad" | sed 's/^/  /' >&2
+  exit 1
+fi
+echo "check-routes-doc: $SITE hub ids are well-formed lamplitlabs/* slugs ($(printf '%s\n' "$slugs" | sort -u | tr '\n' ' '))"
