@@ -115,6 +115,17 @@ describe('SiteHeader (the mobile menu button opens and closes the page list)', (
     expect(button.attrs['aria-expanded']).toBe('false');
     expect(button.attrs['aria-label']).toBe('Open menu');
   });
+
+  it('marks the current page link with aria-current="page" in the mobile panel too (not just the desktop nav)', () => {
+    act(() => navigate('/models'));
+    const button = mount();
+    act(() => clickHandlerOf(button)!());
+    const panel = mobilePanel()!;
+    const current = panel.find((n) => n.nodeName === 'A' && n.attrs.href === '/models');
+    expect(current?.attrs['aria-current']).toBe('page');
+    const other = panel.find((n) => n.nodeName === 'A' && n.attrs.href === '/');
+    expect(other?.attrs['aria-current']).toBeUndefined();
+  });
 });
 
 describe('SiteLayout (a "Skip to content" link lets keyboard users bypass the header)', () => {

@@ -92,7 +92,7 @@ export function SiteHeader() {
       {open ? (
         <nav className="border-t border-border bg-background/95 px-5 py-3 md:hidden animate-in" aria-label="Main">
           {NAV.map((n) => (
-            <Link key={n.to} to={n.to} className={`block rounded-md px-3 py-2 text-sm ${route === n.to ? 'bg-accent text-foreground' : 'text-muted-foreground'}`}>
+            <Link key={n.to} to={n.to} aria-current={route === n.to ? 'page' : undefined} className={`block rounded-md px-3 py-2 text-sm ${route === n.to ? 'bg-accent text-foreground' : 'text-muted-foreground'}`}>
               {n.label}
             </Link>
           ))}
