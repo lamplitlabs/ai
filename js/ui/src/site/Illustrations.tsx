@@ -97,7 +97,7 @@ export const RUNTIMES = [
   { icon: Radio, title: 'On the edge and IoT', text: 'Small enough for gateways, kiosks and industrial controllers where the round trip to a cloud is the problem.' },
 ];
 
-export const STAGES = [
+const STAGES = [
   {
     key: 'define',
     icon: Target,

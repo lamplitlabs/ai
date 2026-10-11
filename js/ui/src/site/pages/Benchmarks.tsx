@@ -17,7 +17,7 @@ export const NO_RUNS_YET = 'No benchmark run has been published yet. Each editio
 export const GATE_STALE_AFTER_DAYS = 90;
 
 /** Whole days between the newest gate's `created_at` and `now`; null when no gate carries a parsable date. */
-export function daysSinceLatestGate(latestIso: string | null | undefined, now: Date): number | null {
+function daysSinceLatestGate(latestIso: string | null | undefined, now: Date): number | null {
   if (!latestIso) return null;
   const t = Date.parse(latestIso);
   if (Number.isNaN(t)) return null;

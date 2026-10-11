@@ -25,7 +25,7 @@ const hsla = ([h, s, l]: Hsl, a: number) => `hsla(${h.toFixed(0)}, ${s.toFixed(0
 const mix = (a: Hsl, b: Hsl, t: number): Hsl => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
 const easeIn = (t: number) => t * t * (1.6 - 0.6 * t);
 
-export function DistillationField({ className = '' }: { className?: string }) {
+function DistillationField({ className = '' }: { className?: string }) {
   const ref = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {

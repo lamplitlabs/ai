@@ -13,8 +13,8 @@ help: ## List the targets
 setup: ## Install the site's dependencies (js/ui/node_modules)
 	cd $(UI) && npm ci
 
-lint: ## Type-check the site (tsc -b), syntax-check the scripts, check FEAT-001's vitest count and README routes vs check-site defaults, site.json hub slugs
-	cd $(UI) && npm run typecheck
+lint: ## Type-check the site (tsc -b), flag unused exports (lint:js), syntax-check the scripts, check FEAT-001's vitest count and README routes vs check-site defaults, site.json hub slugs
+	cd $(UI) && npm run typecheck && npm run lint:js
 	@for f in js/*.mjs $(UI)/scripts/*.mjs; do node --check "$$f" || exit 1; done
 	@sh scripts/check-test-count.sh
 	@sh scripts/check-routes-doc.sh

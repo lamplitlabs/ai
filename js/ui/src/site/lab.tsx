@@ -88,7 +88,7 @@ export function useCountUp(target: number, on: boolean, duration = 1400): number
   return value;
 }
 
-export type DatumProps = {
+type DatumProps = {
   k: string;
   /** the number the display counts up to; omit for a text-only datum */
   value?: number;

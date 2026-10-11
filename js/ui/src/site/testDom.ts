@@ -85,7 +85,7 @@ export class FakeNode {
 }
 
 /** A document stand-in whose `documentElement.classList` really records classes, so theme.ts can be observed. */
-export function createFakeDocument(): any {
+function createFakeDocument(): any {
   const htmlClasses = new Set<string>();
   const doc: any = {
     nodeType: 9,

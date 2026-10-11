@@ -10,7 +10,7 @@ import { Datum, Index, SectionHead, Status } from '../lab';
 import { EDITION_LABELS, NOT_MEASURED, STALE_AFTER_DAYS, commissionMailto, dataAgeDays, flagship, latestMeasuredAt, lines, measured, pct, shortDate, showcaseModels, siteData } from '../data';
 import { container, primaryCta, secondaryCta } from '../cta';
 
-export { container, primaryCta, secondaryCta };
+export { primaryCta };
 
 /** `now` is injectable so tests can render a stale data set; the site always uses the real clock. */
 export function Landing({ now }: { now?: Date } = {}) {

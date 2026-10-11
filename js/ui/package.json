@@ -11,6 +11,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "typecheck": "tsc -b",
+    "lint:js": "node scripts/check-unused-exports.mjs",
     "preview:static": "node scripts/preview-static.mjs"
   },
   "dependencies": {
