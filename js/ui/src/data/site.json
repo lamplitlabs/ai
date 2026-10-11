@@ -335,7 +335,6 @@
         "repo": "lamplitlabs/licht-german-tutor",
         "public": true,
         "revision": "v16",
-        "student": "light-german-tutor-v16",
         "space": "lamplitlabs/licht-german-tutor"
       },
       "base_model": "HuggingFaceTB/SmolLM3-3B",
@@ -687,8 +686,7 @@
       "hub": {
         "repo": "lamplitlabs/licht-german-tutor-medium",
         "public": true,
-        "revision": "v22-preview",
-        "student": "light-german-tutor-pro-v22"
+        "revision": "v22-preview"
       },
       "base_model": "Qwen/Qwen3-8B",
       "weights_mb": 15618,

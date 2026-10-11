@@ -94,10 +94,10 @@ export interface SiteModel {
   panel: PanelSummary | null;
   measured: Measured[];
   /**
-   * the Hub repo the weights live in; `revision` (a release tag) and `student` (the export it holds) once public;
+   * the Hub repo the weights live in; `revision` (a release tag) once public;
    * `space` the Hugging Face Space that runs the model - the site links there instead of shipping a runtime (ADR-001)
    */
-  hub: { repo: string | null; public: boolean; revision?: string; student?: string; space?: string };
+  hub: { repo: string | null; public: boolean; revision?: string; space?: string };
   /** the prompt the model was trained under (from its export manifest); a demo sends exactly this */
   system_prompt: string | null;
 }
