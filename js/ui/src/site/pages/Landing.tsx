@@ -54,6 +54,11 @@ export function Landing({ now }: { now?: Date } = {}) {
               </a>
               <TryLink className={secondaryCta} />
             </div>
+            {stale ? (
+              <p data-testid="hero-data-age" className="hero-entrance-4 mx-auto mt-5 max-w-xl rounded-xl border border-warning/40 bg-warning/10 px-4 py-3 text-sm text-foreground lg:mx-0">
+                The numbers on this site were measured {ageDays} days ago ({shortDate(siteData.generated_at)}). They describe the editions as they were then, not a newer run.
+              </p>
+            ) : null}
             <p className="hero-entrance-4 mono-label mt-6 text-muted-foreground/80">take a model home today, or have one built for your job · no sign-up · the browser edition runs on your machine, hosted as a Hugging Face Space</p>
           </div>
           <div className="hero-entrance-3">

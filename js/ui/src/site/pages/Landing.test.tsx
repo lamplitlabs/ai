@@ -40,6 +40,19 @@ describe('Landing data freshness', () => {
     expect(span![0]).not.toContain('aria-live');
     expect(span![0]).not.toContain('role=');
   });
+  it('repeats the stale warning next to the hero CTA so a visitor sees it before clicking through', () => {
+    const now = new Date(generated.getTime() + (STALE_AFTER_DAYS + 30) * 86_400_000);
+    const html = renderToStaticMarkup(<Landing now={now} />);
+    const hero = html.match(/<p[^>]*data-testid="hero-data-age"[^>]*>([^<]*)<\/p>/);
+    expect(hero, 'hero-data-age note missing').not.toBeNull();
+    expect(hero![1]).toContain(`measured ${STALE_AFTER_DAYS + 30} days ago`);
+    expect(html.indexOf('data-testid="hero-data-age"')).toBeLessThan(html.indexOf('data-testid="data-age"'));
+  });
+  it('shows no hero warning when the data is fresh', () => {
+    const now = new Date(generated.getTime() + 2 * 86_400_000);
+    const html = renderToStaticMarkup(<Landing now={now} />);
+    expect(html).not.toContain('hero-data-age');
+  });
   it('shows no warning when the data is fresh', () => {
     const now = new Date(generated.getTime() + 2 * 86_400_000);
     const html = renderToStaticMarkup(<Landing now={now} />);
