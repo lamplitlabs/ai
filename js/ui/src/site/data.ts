@@ -126,7 +126,7 @@ export const weightsDetail = (m: SiteModel) => (m.weights === 'pytorch' ? 'merge
 /** The licence name without its parenthetical ("Apache-2.0 (inherited from X)" -> "Apache-2.0"); a licence with no parenthetical is returned whole. */
 export const licenceName = (m: SiteModel) => m.licence.split(' (')[0].trim() || m.licence;
 /** The weights-availability tag shown on /models and the offerings list: one copy so it cannot drift. */
-export const weightsAvailability = (m: SiteModel, publicWeights: boolean) => (publicWeights ? `public weights${m.hub.revision ? ` · ${m.hub.revision}` : ''}` : 'weights on request');
+export const weightsAvailability = (m: SiteModel, publicWeights: boolean) => (publicWeights ? `public weights${m.hub.revision ? ` · ${m.hub.revision}` : ''}` : `weights on request · ${CONTACT}`);
 /** The weights spec line of an offering card: dtype · size · licence for public weights, format · licence otherwise. */
 /** The export a visitor downloads by default: the smallest measured dtype (ties broken by dtype name), so the card's size is the one they actually fetch. */
 export const defaultDtype = (m: Pick<SiteModel, 'dtypes'>): DtypeSize | undefined =>

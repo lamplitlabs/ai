@@ -116,7 +116,7 @@ describe('weights and licence copy (one helper for /models and the offerings lis
   it('says the same "public weights" / "weights on request" words for both pages', () => {
     expect(weightsAvailability({ ...base, hub: { ...base.hub, revision: undefined } }, true)).toBe('public weights');
     expect(weightsAvailability({ ...base, hub: { ...base.hub, revision: 'v3' } }, true)).toBe('public weights · v3');
-    expect(weightsAvailability(base, false)).toBe('weights on request');
+    expect(weightsAvailability(base, false)).toBe(`weights on request · ${CONTACT}`);
   });
   it('ends every weights spec line with the licence name, with or without a measured size', () => {
     for (const m of models) {

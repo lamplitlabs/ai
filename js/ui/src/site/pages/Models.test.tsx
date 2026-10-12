@@ -136,4 +136,10 @@ describe('ModelCard self-host snippet', () => {
     expect(html).not.toContain('huggingface-cli download');
     expect(html).not.toContain('data-testid="self-host-snippet"');
   });
+  it('names the contact address on the card when weights are on request, so the reader need not hunt the footer', () => {
+    const v22 = models.find((m) => m.name === 'light-german-tutor-pro-v22')!;
+    const html = renderToStaticMarkup(<ModelCard m={{ ...v22, hub: { ...v22.hub, public: false } }} featured={false} />);
+    expect(html).toContain('weights on request');
+    expect(html).toContain(data.CONTACT);
+  });
 });
