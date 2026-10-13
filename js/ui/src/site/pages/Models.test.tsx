@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import * as data from '../data';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { CopyButton, ModelCard, copyText } from './Models';
+import { CopyButton, CopyButtonView, ModelCard, copyStateFor, copyText } from './Models';
 import { models } from '../data';
 import { primaryCta } from '../cta';
 import { NOT_MEASURED, measuredPct } from '../data';
@@ -148,6 +148,29 @@ describe('ModelCard self-host snippet', () => {
     } finally {
       vi.unstubAllGlobals();
     }
+  });
+  it('tells the visitor to select the command manually when the browser refuses the clipboard', async () => {
+    // A missing or rejecting clipboard API must not end in a silent no-op: the button turns into a failed state with a visible message.
+    vi.stubGlobal('navigator', { clipboard: { writeText: vi.fn().mockRejectedValue(new Error('denied')) } });
+    try {
+      expect(copyStateFor(await copyText('x'))).toBe('failed');
+    } finally {
+      vi.unstubAllGlobals();
+    }
+    expect(copyStateFor(true)).toBe('copied');
+    const failed = renderToStaticMarkup(<CopyButtonView state="failed" label="Copy" />);
+    expect(failed).toContain('data-copy-state="failed"');
+    expect(failed).toContain('data-testid="copy-failed"');
+    expect(failed).toContain('role="status"');
+    expect(failed).toContain('select the command');
+    expect(failed).toContain('retry');
+    // The idle and copied states carry no failure message.
+    expect(renderToStaticMarkup(<CopyButtonView state="idle" label="Copy" />)).not.toContain('copy-failed');
+    expect(renderToStaticMarkup(<CopyButtonView state="copied" label="Copy" />)).not.toContain('copy-failed');
+    const m = models.find((x) => x.hub.public)!;
+    const html = renderToStaticMarkup(<ModelCard m={m} featured={false} />);
+    // The command itself is still rendered as selectable text for the manual fallback.
+    expect(html).toContain(data.selfHostCommand(m)!.replace(/&/g, '&amp;'));
   });
   it('shows no snippet when the weights are not public', () => {
     const v22 = models.find((m) => m.name === 'light-german-tutor-pro-v22')!;
