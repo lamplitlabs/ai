@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { Landing } from './Landing';
 import { CONTACT } from '../SiteLayout';
@@ -57,5 +57,31 @@ describe('Landing data freshness', () => {
     const now = new Date(generated.getTime() + 2 * 86_400_000);
     const html = renderToStaticMarkup(<Landing now={now} />);
     expect(html).not.toContain('may be stale');
+  });
+});
+
+/** A visitor requests a non-public edition straight from the landing, as /models already allows, instead of
+ *  opening the datasheet first: every non-public offering card carries a prefilled "Request this edition" mailto. */
+describe('Landing non-public offerings', () => {
+  it('server-renders a "Request this edition" mailto on each non-public card and none on public ones', async () => {
+    vi.resetModules();
+    vi.doMock('../data', async () => {
+      const real = await vi.importActual<typeof import('../data')>('../data');
+      const showcase = real.showcaseModels.map((m, i) => (i === 0 ? { ...m, hub: { ...m.hub, public: false } } : m));
+      const lines = [...new Set(showcase.map((m) => m.line))].map((line) => ({ line, editions: showcase.filter((m) => m.line === line) }));
+      return { ...real, showcaseModels: showcase, lines };
+    });
+    const { Landing: MockedLanding } = await import('./Landing');
+    const { lines, mailtoFor } = await import('../data');
+    const html = renderToStaticMarkup(<MockedLanding />);
+    const privates = lines.flatMap((l) => l.editions).filter((m) => !m.hub.public);
+    expect(privates.length).toBeGreaterThan(0);
+    expect(html.match(/data-testid="request-edition"/g)?.length).toBe(privates.length);
+    for (const m of privates) {
+      expect(html).toContain(`href="${mailtoFor(m).split('&')[0]}&amp;body=`);
+    }
+    expect(html).toContain('Request this edition');
+    vi.doUnmock('../data');
+    vi.resetModules();
   });
 });

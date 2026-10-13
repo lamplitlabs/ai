@@ -21,11 +21,11 @@ function expectPrimaryCta(html: string, name: string) {
   expect(anchor).toMatch(/href="(https?:\/\/|mailto:)[^"]+"/);
   expect(anchor).not.toMatch(/href=""/);
   expect(anchor!.replace(/<[^>]+>/g, '').trim()).not.toBe('');
-  expect(anchor).toMatch(/Try it|Weights on Hugging Face|Ask for the weights/);
+  expect(anchor).toMatch(/Try it|Weights on Hugging Face|Request this edition/);
 }
 
 /** Every offering on the landing must carry a primary call to action with a real href - Try it, Weights on
- *  Hugging Face, or Ask for the weights - so no edition ever ships with an empty or href-less CTA slot. */
+ *  Hugging Face, or Request this edition - so no edition ever ships with an empty or href-less CTA slot. */
 describe('OfferingCard primary CTA', () => {
   it('has at least one model in site.json', () => {
     expect(models.length).toBeGreaterThan(0);

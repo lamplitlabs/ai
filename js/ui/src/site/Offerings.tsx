@@ -4,7 +4,7 @@ import { Link } from './router';
 import { TryLink } from './TryLink';
 import { CopyButton } from './CopyButton';
 import { Gauge, Spec, Tag } from './lab';
-import { defaultDtype, EDITION_LABELS, gb, measuredPct, modelCta, NOT_MEASURED, runsIn, runsInDetail, selfHostCommand, shortDate, weightsAvailability, weightsSpec, type SiteModel } from './data';
+import { defaultDtype, EDITION_LABELS, gb, mailtoFor, measuredPct, modelCta, NOT_MEASURED, runsIn, runsInDetail, selfHostCommand, shortDate, weightsAvailability, weightsSpec, type SiteModel } from './data';
 import { primaryCta, secondaryCta } from './cta';
 
 /**
@@ -31,8 +31,8 @@ export function OfferingCard({ m, featured = false }: { m: SiteModel; featured?:
       <ArrowUpRight className="size-4" aria-hidden="true" /> Weights on Hugging Face
     </a>
   ) : (
-    <a href={cta.href} className={primaryCta}>
-      <Mail className="size-4" aria-hidden="true" /> Ask for the weights
+    <a href={cta.href} className={primaryCta} data-testid="request-edition">
+      <Mail className="size-4" aria-hidden="true" /> Request this edition
     </a>
   );
   return (
@@ -93,6 +93,12 @@ export function OfferingCard({ m, featured = false }: { m: SiteModel; featured?:
 
       <div className="mt-6 flex flex-wrap items-center gap-3 pt-1">
         {primary}
+        {!publicWeights && cta.kind !== 'mail' ? (
+          /* A browser-only edition whose weights are not public: ask for them from the landing, as /models allows. */
+          <a href={mailtoFor(m)} className={secondaryCta} data-testid="request-edition">
+            <Mail className="size-4" aria-hidden="true" /> Request this edition
+          </a>
+        ) : null}
         <Link to={`/models#${m.name}`} className={secondaryCta}>
           Datasheet
         </Link>
