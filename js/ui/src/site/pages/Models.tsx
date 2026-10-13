@@ -1,6 +1,6 @@
 import { ArrowUpRight, Check, Copy, Cpu, FileDown, Globe, Mail, Scale, Server, Sparkles } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { CommissionCard } from '../Offerings';
+import { CommissionCard, OfferingComparison } from '../Offerings';
 import { Reveal } from '../Reveal';
 import { Link } from '../router';
 import { TryLink } from '../TryLink';
@@ -245,6 +245,15 @@ export function Models() {
         }
       />
       <section className={`${container} space-y-6 py-16 lg:py-20`}>
+        {showcaseModels.length > 1 ? (
+          <Reveal>
+            <div className="mb-5 flex flex-wrap items-baseline justify-between gap-2">
+              <Index n="compare">Every edition side by side</Index>
+              <span className="mono-label text-muted-foreground">each row links to its datasheet below</span>
+            </div>
+            <OfferingComparison models={showcaseModels} />
+          </Reveal>
+        ) : null}
         {lines.map((l) => (
           <Reveal key={l.line}>
             <div className="mb-5 flex flex-wrap items-baseline justify-between gap-2">

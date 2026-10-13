@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import * as data from '../data';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { CopyButton, CopyButtonView, ModelCard, copyStateFor, copyText } from './Models';
+import { CopyButton, CopyButtonView, ModelCard, Models, copyStateFor, copyText } from './Models';
 import { models } from '../data';
 import { primaryCta } from '../cta';
 import { NOT_MEASURED, measuredPct } from '../data';
@@ -183,5 +183,21 @@ describe('ModelCard self-host snippet', () => {
     const html = renderToStaticMarkup(<ModelCard m={{ ...v22, hub: { ...v22.hub, public: false } }} featured={false} />);
     expect(html).toContain('weights on request');
     expect(html).toContain(data.CONTACT);
+  });
+});
+
+/** A visitor landing directly on /models from a search compares the editions' measured numbers before scrolling the datasheets. */
+describe('/models comparison table', () => {
+  it('renders the OfferingComparison table above the first datasheet when more than one edition is listed', () => {
+    const page = renderToStaticMarkup(<Models />);
+    const table = page.indexOf('data-testid="offering-comparison"');
+    const firstCard = page.indexOf(`id="${data.showcaseModels[0].name}"`);
+    if (data.showcaseModels.length > 1) {
+      expect(table).toBeGreaterThan(0);
+      expect(firstCard).toBeGreaterThan(table);
+      for (const m of data.showcaseModels) expect(page).toContain(`data-testid="compare-${m.name}"`);
+    } else {
+      expect(table).toBe(-1);
+    }
   });
 });
