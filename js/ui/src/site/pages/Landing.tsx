@@ -1,7 +1,7 @@
 import { ArrowRight, Check, Database, Gauge as GaugeIcon, KeyRound, Lock, PlugZap, Repeat, Scale, ShieldCheck, Unplug } from 'lucide-react';
 import { HeroLab } from '../DistillationField';
 import { ProcessAnimation, RUNTIMES } from '../Illustrations';
-import { CommissionCard, OfferingCard } from '../Offerings';
+import { CommissionCard, OfferingCard, OfferingComparison } from '../Offerings';
 import { Reveal } from '../Reveal';
 import { CONTACT } from '../SiteLayout';
 import { Link } from '../router';
@@ -239,6 +239,7 @@ export function Landing({ now }: { now?: Date } = {}) {
             lead={`${lines.map((l) => `${l.editions.length === 1 ? 'One edition' : `${l.editions.length === 2 ? 'Two' : l.editions.length} editions`} of the ${l.line}`).join('; ')} - built with this process, measured with these gates, judged by this panel - and the same process for a job of yours. Every card links to its datasheet and its full report.`}
             aside={<Status ok={allGatesPassed}>{offered} {offered === 1 ? 'model' : 'models'} · newest version of each edition</Status>}
           />
+          <OfferingComparison models={showcaseModels} />
           <Reveal stagger className="grid gap-4 lg:grid-cols-2">
             {showcaseModels.map((x, i) => (
               <OfferingCard key={x.name} m={x} featured={i === 0} />

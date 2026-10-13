@@ -3,7 +3,7 @@ import { commissionMailto } from './data';
 import { Link } from './router';
 import { TryLink } from './TryLink';
 import { Gauge, Spec, Tag } from './lab';
-import { EDITION_LABELS, measuredPct, modelCta, runsIn, runsInDetail, shortDate, weightsAvailability, weightsSpec, type SiteModel } from './data';
+import { defaultDtype, EDITION_LABELS, gb, measuredPct, modelCta, NOT_MEASURED, runsIn, runsInDetail, selfHostCommand, shortDate, weightsAvailability, weightsSpec, type SiteModel } from './data';
 import { primaryCta, secondaryCta } from './cta';
 
 /**
@@ -132,5 +132,78 @@ export function CommissionCard({ wide = false }: { wide?: boolean }) {
         </div>
       </div>
     </article>
+  );
+}
+
+/**
+ * The offerings' measured numbers side by side, so a visitor choosing between editions compares them in one view
+ * instead of scrolling between cards. Every cell comes from `site.json` through the same helpers the cards use; an
+ * unmeasured value says so in words (`NOT_MEASURED`), never a bare dash. The last column links to the edition's
+ * pull command on its datasheet when the weights are public, or to the mail CTA when they are not.
+ */
+export function OfferingComparison({ models: ms }: { models: SiteModel[] }) {
+  if (ms.length < 2) return null;
+  const th = 'mono-label px-3 py-2 text-left font-normal text-muted-foreground first:pl-0 last:pr-0';
+  const td = 'tnum px-3 py-3 align-top first:pl-0 last:pr-0';
+  return (
+    <div className="glass corner-marks mb-4 overflow-x-auto rounded-3xl p-6 sm:p-8" data-testid="offering-comparison">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h3 id="compare-offerings" className="font-display text-lg font-semibold tracking-tight">
+          Side by side
+        </h3>
+        <span className="mono-label text-muted-foreground">measured numbers · newest version of each edition</span>
+      </div>
+      <table className="mt-4 w-full min-w-[40rem] border-collapse text-sm" aria-labelledby="compare-offerings">
+        <thead>
+          <tr className="border-b border-border">
+            <th scope="col" className={th}>edition</th>
+            <th scope="col" className={th}>size</th>
+            <th scope="col" className={th}>runs in</th>
+            <th scope="col" className={th}>facts</th>
+            <th scope="col" className={th}>release gates</th>
+            <th scope="col" className={th}>download</th>
+            <th scope="col" className={th}>measured</th>
+            <th scope="col" className={th}>get it</th>
+          </tr>
+        </thead>
+        <tbody>
+          {ms.map((m) => {
+            const g = m.gate;
+            const facts = g?.gates.facts;
+            const gates = g ? Object.values(g.gates) : [];
+            const passed = gates.filter((x) => x.ok).length;
+            const pull = selfHostCommand(m);
+            const size = defaultDtype(m);
+            return (
+              <tr key={m.name} className="border-b border-border/60 last:border-b-0" data-testid={`compare-${m.name}`}>
+                <th scope="row" className={`${td} text-left font-medium`}>
+                  <Link to={`/models#${m.name}`} className="hover:underline">
+                    {m.line} <span className="text-lamp">· {m.edition}</span>
+                  </Link>
+                  <div className="mono-label mt-1 font-normal text-muted-foreground">{m.label}</div>
+                </th>
+                <td className={td}>{m.params_b}B</td>
+                <td className={td}>{runsIn(m)}</td>
+                <td className={`${td} font-semibold ${facts?.ok ? 'text-success' : facts ? 'text-warning' : ''}`}>{measuredPct(facts?.actual, 1)}</td>
+                <td className={`${td} ${g ? (g.release ? 'text-success' : 'text-warning') : ''}`}>{g ? `${passed} / ${gates.length}` : NOT_MEASURED}</td>
+                <td className={td}>{size ? gb(size.size_mb) : NOT_MEASURED}</td>
+                <td className={`${td} text-muted-foreground`}>{g?.created_at ? shortDate(g.created_at) : NOT_MEASURED}</td>
+                <td className={td}>
+                  {pull ? (
+                    <Link to={`/models#${m.name}`} className="inline-flex items-center gap-1 text-primary hover:underline" title={pull}>
+                      pull command <ArrowRight className="size-3" aria-hidden="true" />
+                    </Link>
+                  ) : (
+                    <a href={modelCta(m).href} className="inline-flex items-center gap-1 text-primary hover:underline">
+                      ask by mail <ArrowRight className="size-3" aria-hidden="true" />
+                    </a>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
   );
 }
