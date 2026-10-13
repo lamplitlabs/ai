@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import * as data from '../data';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { CopyButton, CopyButtonView, ModelCard, Models, copyStateFor, copyText } from './Models';
+import { ModelCard, Models } from './Models';
+import { CopyButton, CopyButtonView, copyStateFor, copyText } from '../CopyButton';
 import { models } from '../data';
 import { primaryCta } from '../cta';
 import { NOT_MEASURED, measuredPct } from '../data';

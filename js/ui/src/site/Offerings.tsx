@@ -2,6 +2,7 @@ import { ArrowRight, ArrowUpRight, Cpu, Globe, KeyRound, Mail, Wrench } from 'lu
 import { commissionMailto } from './data';
 import { Link } from './router';
 import { TryLink } from './TryLink';
+import { CopyButton } from './CopyButton';
 import { Gauge, Spec, Tag } from './lab';
 import { defaultDtype, EDITION_LABELS, gb, measuredPct, modelCta, NOT_MEASURED, runsIn, runsInDetail, selfHostCommand, shortDate, weightsAvailability, weightsSpec, type SiteModel } from './data';
 import { primaryCta, secondaryCta } from './cta';
@@ -20,6 +21,7 @@ export function OfferingCard({ m, featured = false }: { m: SiteModel; featured?:
   const passed = gates.filter((x) => x.ok).length;
   const cta = modelCta(m);
   const { publicWeights } = cta;
+  const pull = selfHostCommand(m);
   const primary = cta.kind === 'try' ? (
     <TryLink href={cta.href} className={primaryCta}>
       Try it
@@ -77,6 +79,15 @@ export function OfferingCard({ m, featured = false }: { m: SiteModel; featured?:
               <div className="mt-1 text-xs text-muted-foreground">{g.runtime === 'pytorch' ? 'PyTorch · bf16 · no export' : 'transformers.js · ONNX'}</div>
             </div>
           </div>
+        </div>
+      ) : null}
+
+      {pull ? (
+        <div className="mt-6 flex items-center justify-between gap-2" data-testid="offer-pull">
+          <code className="mono-label truncate text-xs text-muted-foreground" title={pull}>
+            {pull}
+          </code>
+          <CopyButton text={pull} label={`Copy the pull command for ${m.label}`} />
         </div>
       ) : null}
 

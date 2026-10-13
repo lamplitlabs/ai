@@ -3,7 +3,8 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { OfferingCard } from './Offerings';
 import { models } from './data';
 import { primaryCta } from './cta';
-import { NOT_MEASURED } from './data';
+import { NOT_MEASURED, selfHostCommand } from './data';
+import { CopyButtonView } from './CopyButton';
 
 const PRIMARY_CLASS = `class="${primaryCta}"`;
 
@@ -59,4 +60,32 @@ describe('OfferingCard primary CTA', () => {
       expect(html).not.toMatch(/>\s*[–—-]\s*</);
     });
   }
+});
+
+/** A visitor copies an offering's pull command from the landing without opening /models: public-weights cards
+ *  render the command with a copy button in its idle state; cards without public weights show neither. */
+describe('OfferingCard pull command', () => {
+  it('renders a copy button in its idle state next to the pull command of every public-weights offering', () => {
+    const publicModels = models.filter((m) => selfHostCommand(m) != null);
+    expect(publicModels.length).toBeGreaterThan(0);
+    for (const m of publicModels) {
+      const html = renderToStaticMarkup(<OfferingCard m={m} />);
+      const i = html.indexOf('data-testid="offer-pull"');
+      expect(i, `${m.name} has no pull snippet`).toBeGreaterThan(-1);
+      const snippet = html.slice(i, html.indexOf('</button>', i));
+      expect(snippet).toContain(selfHostCommand(m)!);
+      expect(snippet).toContain('data-testid="copy-button"');
+      expect(snippet).toContain(`aria-label="Copy the pull command for ${m.label}"`);
+      expect(snippet).toContain('data-copy-state="idle"');
+    }
+  });
+  it('shows the copied and failed states the button moves through after a click', () => {
+    expect(renderToStaticMarkup(<CopyButtonView state="copied" label="Copy" onCopy={() => {}} />)).toContain('data-copied="true"');
+    expect(renderToStaticMarkup(<CopyButtonView state="failed" label="Copy" onCopy={() => {}} />)).toContain('data-testid="copy-failed"');
+  });
+  it('omits the pull command on offerings without public weights', () => {
+    for (const m of models.filter((x) => selfHostCommand(x) == null)) {
+      expect(renderToStaticMarkup(<OfferingCard m={m} />)).not.toContain('data-testid="offer-pull"');
+    }
+  });
 });
