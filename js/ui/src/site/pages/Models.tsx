@@ -20,7 +20,7 @@ export async function copyText(text: string): Promise<boolean> {
   }
 }
 
-export type CopyState = 'idle' | 'copied' | 'failed';
+type CopyState = 'idle' | 'copied' | 'failed';
 
 /** Pick the next button state from the clipboard result: a refused or missing clipboard API becomes `failed`, never a silent no-op. */
 export function copyStateFor(accepted: boolean): CopyState {
