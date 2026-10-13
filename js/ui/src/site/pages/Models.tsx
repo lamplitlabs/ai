@@ -1,5 +1,5 @@
-import { ArrowUpRight, Cpu, FileDown, Globe, Mail, Scale, Server, Sparkles } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { ArrowUpRight, Check, Copy, Cpu, FileDown, Globe, Mail, Scale, Server, Sparkles } from 'lucide-react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { CommissionCard } from '../Offerings';
 import { Reveal } from '../Reveal';
 import { Link } from '../router';
@@ -7,6 +7,45 @@ import { TryLink } from '../TryLink';
 import { Gauge, Index, Spec, Status, Tag } from '../lab';
 import { categoryLabel, licenceName, weightsAvailability, EDITION_LABELS, factCategories, gb, lines, measuredOn, measuredPct, models, pct, runsIn, runsInDetail, modelCta, shortDate, showcaseModels, weightsDetail, weightsFormat, defaultDtype, selfHostCommand, type SiteModel } from '../data';
 import { container, primaryCta, secondaryCta } from '../cta';
+
+/** Write `text` to the clipboard; resolves true when the browser accepted it, false when the API is missing or refused. */
+export async function copyText(text: string): Promise<boolean> {
+  const clipboard = typeof navigator === 'undefined' ? undefined : navigator.clipboard;
+  if (!clipboard?.writeText) return false;
+  try {
+    await clipboard.writeText(text);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** One-click copy for a command snippet: shows "copied" for two seconds, and stays a plain button when the clipboard API is unavailable. */
+export function CopyButton({ text, label }: { text: string; label: string }) {
+  const [copied, setCopied] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => () => clearTimeout(timer.current), []);
+  const copy = async () => {
+    if (!(await copyText(text))) return;
+    setCopied(true);
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => setCopied(false), 2000);
+  };
+  return (
+    <button
+      type="button"
+      onClick={copy}
+      aria-label={label}
+      title={label}
+      data-testid="copy-button"
+      data-copied={copied ? 'true' : 'false'}
+      className="mono-label inline-flex items-center gap-1 rounded-md border border-border bg-background/50 px-2 py-1 text-muted-foreground transition-colors hover:text-foreground"
+    >
+      {copied ? <Check className="size-3" aria-hidden="true" /> : <Copy className="size-3" aria-hidden="true" />}
+      {copied ? 'copied' : 'copy'}
+    </button>
+  );
+}
 
 /** The page head shared by /models and /benchmarks: index, eyebrow, a large title, the lead, an optional status chip. */
 export function PageIntro({ n, eyebrow, title, lead, aside }: { n: string; eyebrow: string; title: ReactNode; lead: ReactNode; aside?: ReactNode }) {
@@ -108,7 +147,10 @@ export function ModelCard({ m, featured }: { m: SiteModel; featured: boolean }) 
       ) : null}
       {selfHost ? (
         <div className="mt-4" data-testid="self-host-snippet">
-          <div className="mono-label text-muted-foreground">self-host · pull the weights</div>
+          <div className="flex items-center justify-between gap-2">
+            <div className="mono-label text-muted-foreground">self-host · pull the weights</div>
+            <CopyButton text={selfHost} label="Copy the pull command" />
+          </div>
           <pre className="mt-2 overflow-x-auto rounded-xl border border-border bg-background/50 p-3 text-xs leading-relaxed">
             <code>{selfHost}</code>
           </pre>

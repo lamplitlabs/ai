@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import * as data from '../data';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { ModelCard } from './Models';
+import { CopyButton, ModelCard, copyText } from './Models';
 import { models } from '../data';
 import { primaryCta } from '../cta';
 import { NOT_MEASURED, measuredPct } from '../data';
@@ -130,6 +130,25 @@ describe('ModelCard self-host snippet', () => {
       if (m.hub.revision) expect(html).toContain(`--revision ${m.hub.revision}`);
     });
   }
+  it('offers a one-click copy button for the pull command instead of hand-selecting it', async () => {
+    const m = models.find((x) => x.hub.public)!;
+    const html = renderToStaticMarkup(<ModelCard m={m} featured={false} />);
+    const snippet = html.slice(html.indexOf('data-testid="self-host-snippet"'), html.indexOf('</pre>'));
+    expect(snippet).toContain('data-testid="copy-button"');
+    expect(snippet).toContain('aria-label="Copy the pull command"');
+    expect(renderToStaticMarkup(<CopyButton text="x" label="Copy" />)).toContain('data-copied="false"');
+    // The handler writes the exact command through the clipboard API and reports whether it was accepted.
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal('navigator', { clipboard: { writeText } });
+    try {
+      expect(await copyText(data.selfHostCommand(m)!)).toBe(true);
+      expect(writeText).toHaveBeenCalledWith(data.selfHostCommand(m));
+      vi.stubGlobal('navigator', {});
+      expect(await copyText('x')).toBe(false);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
   it('shows no snippet when the weights are not public', () => {
     const v22 = models.find((m) => m.name === 'light-german-tutor-pro-v22')!;
     const html = renderToStaticMarkup(<ModelCard m={{ ...v22, hub: { ...v22.hub, public: false } }} featured={false} />);
