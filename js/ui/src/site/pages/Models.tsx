@@ -6,7 +6,7 @@ import { Reveal } from '../Reveal';
 import { Link } from '../router';
 import { TryLink } from '../TryLink';
 import { Gauge, Index, Spec, Status, Tag } from '../lab';
-import { categoryLabel, licenceName, weightsAvailability, EDITION_LABELS, factCategories, gb, lines, measuredOn, measuredPct, models, pct, runsIn, runsInDetail, modelCta, shortDate, showcaseModels, weightsDetail, weightsFormat, defaultDtype, selfHostCommand, type SiteModel } from '../data';
+import { categoryLabel, licenceName, weightsAvailability, EDITION_LABELS, factCategories, gb, lines, measuredOn, measuredPct, models, pct, runsIn, runsInDetail, mailtoFor, modelCta, shortDate, showcaseModels, weightsDetail, weightsFormat, defaultDtype, selfHostCommand, type SiteModel } from '../data';
 import { container, primaryCta, secondaryCta } from '../cta';
 
 /** The page head shared by /models and /benchmarks: index, eyebrow, a large title, the lead, an optional status chip. */
@@ -88,10 +88,16 @@ export function ModelCard({ m, featured }: { m: SiteModel; featured: boolean }) 
               <ArrowUpRight className="size-4" aria-hidden="true" /> Weights on Hugging Face
             </a>
           ) : (
-            <a href={cta.href} className={primaryCta}>
-              <Mail className="size-4" aria-hidden="true" /> Ask for the weights
+            <a href={cta.href} className={primaryCta} data-testid="request-edition">
+              <Mail className="size-4" aria-hidden="true" /> Request this edition
             </a>
           )}
+          {!publicWeights && cta.kind !== 'mail' ? (
+            /* A browser-only edition whose weights are not public still needs a one-click way to ask for them. */
+            <a href={mailtoFor(m)} className={secondaryCta} data-testid="request-edition">
+              <Mail className="size-4" aria-hidden="true" /> Request this edition
+            </a>
+          ) : null}
           {cta.secondaryHub ? (
             <a href={cta.secondaryHub} target="_blank" rel="noopener noreferrer" className={secondaryCta}>
               Hugging Face <ArrowUpRight className="size-4" aria-hidden="true" />

@@ -21,7 +21,7 @@ function expectPrimaryCta(html: string, name: string) {
   expect(anchor, `${name} has no primary CTA`).not.toBeNull();
   expect(anchor).toMatch(/href="(https?:\/\/|mailto:)[^"]+"/);
   expect(anchor!.replace(/<[^>]+>/g, '').trim()).not.toBe('');
-  expect(anchor).toMatch(/Try|Weights on Hugging Face|Ask for the weights/);
+  expect(anchor).toMatch(/Try|Weights on Hugging Face|Request this edition/);
 }
 
 /** Every datasheet on /models must offer a primary call to action - Try, Weights on Hugging Face, or Ask for the
@@ -58,6 +58,27 @@ describe('ModelCard primary CTA', () => {
     expect(primaryAnchor(privateHtml)).toMatch(/href="mailto:/);
     for (const m of models.filter((x) => x.hub.public)) {
       expect(renderToStaticMarkup(<ModelCard m={m} featured={false} />)).not.toContain('data-testid="non-public-note"');
+    }
+  });
+
+  // A visitor requests a non-public edition in one click: a "Request this edition" mailto, prefilled with the
+  // edition's name, instead of working out the delivery steps from the licence paragraph. Public editions show none.
+  it('renders a prefilled "Request this edition" mailto for non-public editions only', () => {
+    const v22 = models.find((m) => m.name === 'light-german-tutor-pro-v22')!;
+    const priv = { ...v22, hub: { ...v22.hub, public: false } };
+    const privateHtml = renderToStaticMarkup(<ModelCard m={priv} featured={false} />);
+    expect(privateHtml).toContain('data-testid="request-edition"');
+    expect(privateHtml).toContain('Request this edition');
+    const subject = data.mailtoFor(priv).split('&')[0];
+    expect(privateHtml).toContain(`href="${subject}&amp;body=`);
+    expect(decodeURIComponent(data.mailtoFor(priv))).toContain(priv.label);
+    // A browser-only edition (Try as primary) whose weights are not public still gets the request link.
+    const browserPriv = { ...priv, browser: true };
+    if (data.tryUrl(browserPriv)) {
+      expect(renderToStaticMarkup(<ModelCard m={browserPriv} featured={false} />)).toContain('data-testid="request-edition"');
+    }
+    for (const m of models.filter((x) => x.hub.public)) {
+      expect(renderToStaticMarkup(<ModelCard m={m} featured={false} />)).not.toContain('data-testid="request-edition"');
     }
   });
 
