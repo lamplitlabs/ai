@@ -10,6 +10,18 @@
 set -eu
 cd "$(dirname "$0")/.."
 
+# The scheduled run (SCHED-011) works in a bare checkout: when js/ui/node_modules
+# has no tsc (3 runs failed with "sh: tsc: command not found"), install the
+# locked dependencies first via `make setup` (npm ci from the committed
+# lockfile), as scripts/verify.sh does for SCHED-005.
+if [ ! -x js/ui/node_modules/.bin/tsc ]; then
+  if ! setup_out="$(make setup 2>&1)"; then
+    echo "hub-links watcher: make setup (npm ci) failed; the hub link check did not run"
+    printf '%s\n' "$setup_out" | tail -20
+    exit 1
+  fi
+fi
+
 if ! build_out="$(make build 2>&1)"; then
   echo "hub-links watcher: build failed; the hub link check did not run"
   printf '%s\n' "$build_out" | tail -20

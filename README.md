@@ -13,7 +13,7 @@ js/ui/            the site - React 19, Tailwind CSS 4, Vite; one build, index.ht
   scripts/preview-static.mjs   serves dist/ the way the host does, for the headless check
 js/check-site.mjs every route headless: <h1>, fonts, console errors, failed requests; screenshots on request
 scripts/verify.sh            the full check in one command: `make lint && make test` (runs `make setup` first when node_modules lacks tsc)
-scripts/watch-hub-links.sh   builds, then runs `make hub-links`; prints only when a showcased hub link is dead or the check could not run
+scripts/watch-hub-links.sh   runs `make setup` if node_modules lacks tsc, builds, then runs `make hub-links`; prints only when a showcased hub link is dead or the check could not run
 .github/workflows/deploy-site.yml   build and test on GitHub, then `vercel deploy --prebuilt` (the host never sees the source)
 docs/             the PULSE control plane and the site's records (ADR-001, FEAT-001, WU-001, MEM-001)
 ```
