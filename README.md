@@ -12,6 +12,8 @@ js/ui/            the site - React 19, Tailwind CSS 4, Vite; one build, index.ht
   vercel.json     the host's rules: named-route rewrites for /models and /benchmarks (unknown paths get a real 404), /try -> the flagship's demo, Cross-Origin headers
   scripts/preview-static.mjs   serves dist/ the way the host does, for the headless check
 js/check-site.mjs every route headless: <h1>, fonts, console errors, failed requests; screenshots on request
+scripts/verify.sh            the full check in one command: `make lint && make test` (runs `make setup` first when node_modules lacks tsc)
+scripts/watch-hub-links.sh   builds, then runs `make hub-links`; prints only when a showcased hub link is dead or the check could not run
 .github/workflows/deploy-site.yml   build and test on GitHub, then `vercel deploy --prebuilt` (the host never sees the source)
 docs/             the PULSE control plane and the site's records (ADR-001, FEAT-001, WU-001, MEM-001)
 ```
@@ -27,6 +29,8 @@ make clean      # rm -rf js/ui/dist
 make ui-check   # every route headless in dark 1280 and light 390 on the built site (a Chromium-based browser; BROWSER_PATH to choose)
 make hub-links  # ui-check plus a HEAD request to every showcase hub link (Try it / View weights); a 404 fails (needs network)
 node js/check-site.mjs --base http://127.0.0.1:4174 --shots /tmp/site   # screenshots per route
+sh scripts/verify.sh           # make lint && make test in one go (installs deps first if node_modules lacks tsc)
+sh scripts/watch-hub-links.sh  # build + make hub-links; silent when every hub link answers, prints the dead ones otherwise (needs network)
 ```
 
 Light and dark share one store (`localStorage['lamplit.theme']`, the pendant lamp in the header;
