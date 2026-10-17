@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { OfferingCard } from './Offerings';
 import { models } from './data';
 import { primaryCta } from './cta';
-import { NOT_MEASURED, selfHostCommand } from './data';
+import { mailtoFor, modelCta, NOT_MEASURED, requestBody, selfHostCommand } from './data';
 import { CopyButtonView } from './CopyButton';
 
 const PRIMARY_CLASS = `class="${primaryCta}"`;
@@ -86,6 +86,28 @@ describe('OfferingCard pull command', () => {
   it('omits the pull command on offerings without public weights', () => {
     for (const m of models.filter((x) => selfHostCommand(x) == null)) {
       expect(renderToStaticMarkup(<OfferingCard m={m} />)).not.toContain('data-testid="offer-pull"');
+    }
+  });
+});
+
+/** A landing visitor without a mail handler still sends the request with the measured numbers: every non-public
+ *  offering card carries a Copy-the-request button whose text is the same body the mailto CTA prefills. */
+describe('OfferingCard request copy', () => {
+  it('offers to copy the prefilled request on every non-public offering, matching the mailto body', () => {
+    const v22 = models.find((m) => m.name === 'light-german-tutor-pro-v22')!;
+    const nonPublic = [{ ...v22, hub: { ...v22.hub, public: false } }, ...models.filter((m) => !modelCta(m).publicWeights)];
+    for (const m of nonPublic) {
+      const html = renderToStaticMarkup(<OfferingCard m={m} />);
+      expect(html, `${m.name} has no request copy button`).toContain('aria-label="Copy the request"');
+      expect(html).toContain('href="mailto:');
+      const href = mailtoFor(m);
+      expect(new URLSearchParams(href.slice(href.indexOf('?') + 1)).get('body')).toBe(requestBody(m));
+      if (m.gate) expect(requestBody(m)).toContain(`on ${m.gate.suite_size} scenarios`);
+    }
+  });
+  it('omits the request copy button on public-weights offerings', () => {
+    for (const m of models.filter((x) => modelCta(x).publicWeights)) {
+      expect(renderToStaticMarkup(<OfferingCard m={m} />)).not.toContain('aria-label="Copy the request"');
     }
   });
 });

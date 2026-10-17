@@ -4,7 +4,7 @@ import { Link } from './router';
 import { TryLink } from './TryLink';
 import { CopyButton } from './CopyButton';
 import { Gauge, Spec, Tag } from './lab';
-import { defaultDtype, EDITION_LABELS, gb, mailtoFor, measuredPct, modelCta, NOT_MEASURED, runsIn, runsInDetail, selfHostCommand, shortDate, weightsAvailability, weightsSpec, type SiteModel } from './data';
+import { defaultDtype, EDITION_LABELS, gb, mailtoFor, measuredPct, modelCta, NOT_MEASURED, requestBody, runsIn, runsInDetail, selfHostCommand, shortDate, weightsAvailability, weightsSpec, type SiteModel } from './data';
 import { primaryCta, secondaryCta } from './cta';
 
 /**
@@ -98,6 +98,10 @@ export function OfferingCard({ m, featured = false }: { m: SiteModel; featured?:
           <a href={mailtoFor(m)} className={secondaryCta} data-testid="request-edition">
             <Mail className="size-4" aria-hidden="true" /> Request this edition
           </a>
+        ) : null}
+        {!publicWeights ? (
+          /* The same request as the mailto, for a visitor whose browser has no mail handler: copy it and paste it anywhere. */
+          <CopyButton text={requestBody(m)} label="Copy the request" />
         ) : null}
         <Link to={`/models#${m.name}`} className={secondaryCta}>
           Datasheet
