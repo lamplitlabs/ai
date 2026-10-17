@@ -170,11 +170,21 @@ export interface ModelCta {
 export const contactMailto = () => `mailto:${CONTACT}?subject=${encodeURIComponent('Hello from lamplitlabs.com')}`;
 /** The commission offer's mailto ("A model for your job"): subject plus a prefilled body so the draft opens with the job already named, not blank. */
 export const commissionMailto = () => `mailto:${CONTACT}?subject=${encodeURIComponent('A model for our job')}&body=${encodeURIComponent("We have a job for a small model - here's the task, where it needs to run, and what a right answer looks like:")}`;
-export const mailtoFor = (m: SiteModel) => {
-  const what = `${m.line} - ${EDITION_LABELS[m.edition]} (${m.label})`;
-  const body = `I'm interested in ${what} - can you tell me about self-hosting it?`;
-  return `mailto:${CONTACT}?subject=${encodeURIComponent(what)}&body=${encodeURIComponent(body)}`;
+const requestSubject = (m: SiteModel) => `${m.line} - ${EDITION_LABELS[m.edition]} (${m.label})`;
+/**
+ * The body of a "Request this edition" mail: names the edition and the numbers it was measured on, so the request
+ * arrives with the context the visitor saw on the card (which edition, which gate result) and nothing to retype.
+ * Also shown as copyable text in the non-public note for a visitor whose browser has no mail handler.
+ */
+export const requestBody = (m: SiteModel) => {
+  const g = m.gate;
+  const facts = g?.gates.facts;
+  const numbers = g
+    ? `Measured ${shortDate(g.created_at)} on ${g.suite_size} scenarios (${measuredOn(g)}): facts against the reference ${pct(facts?.actual, 1)} (gate ${pct(facts?.threshold)}), release gate ${g.release ? 'passed' : 'not passed yet'}.`
+    : 'No measured numbers are published for this edition yet.';
+  return `I'm interested in ${requestSubject(m)} (${m.name}, ${m.params_b}B parameters) - can you tell me about self-hosting it?\n\n${numbers}`;
 };
+export const mailtoFor = (m: SiteModel) => `mailto:${CONTACT}?subject=${encodeURIComponent(requestSubject(m))}&body=${encodeURIComponent(requestBody(m))}`;
 /**
  * The one-line command that pulls a model's public weights to a machine of your own - the actionable next step for a
  * visitor evaluating self-hosting, beside the Hub link. Pins the edition's revision when the data names one; null

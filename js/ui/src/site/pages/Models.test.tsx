@@ -82,6 +82,27 @@ describe('ModelCard primary CTA', () => {
     }
   });
 
+  // The request mail carries the context the visitor saw: edition, model name and the measured numbers, so the
+  // mailto CTA and the copyable body in the note agree and nothing has to be retyped.
+  it('prefills the request mail body with the edition and its measured numbers, and offers it to copy', () => {
+    const v22 = models.find((m) => m.name === 'light-german-tutor-pro-v22')!;
+    const m = { ...v22, hub: { ...v22.hub, public: false } };
+    const body = data.requestBody(m);
+    expect(body).toContain(v22.name);
+    expect(body).toContain(`${v22.line} - ${data.EDITION_LABELS[v22.edition]} (${v22.label})`);
+    const facts = v22.gate!.gates.facts;
+    expect(body).toContain(`on ${v22.gate!.suite_size} scenarios`);
+    expect(body).toContain(`facts against the reference ${data.pct(facts.actual, 1)}`);
+    expect(body).toContain(`release gate ${v22.gate!.release ? 'passed' : 'not passed yet'}`);
+    const href = data.mailtoFor(m);
+    expect(new URLSearchParams(href.slice(href.indexOf('?') + 1)).get('body')).toBe(body);
+    const html = renderToStaticMarkup(<ModelCard m={m} featured={false} />);
+    expect(primaryAnchor(html)).toContain(`href="${href.replace(/&/g, '&amp;').replace(/'/g, '&#x27;')}"`);
+    expect(html).toContain('data-testid="request-body"');
+    expect(html).toContain('Copy the request');
+    expect(data.requestBody({ ...m, gate: null })).toContain('No measured numbers are published for this edition yet.');
+  });
+
   // Same contract as Offerings: a null metric (facts gate or export fidelity) renders the shared NOT_MEASURED phrase,
   // never a bare dash, on every edition's datasheet.
   for (const m of models) {

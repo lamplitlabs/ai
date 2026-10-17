@@ -6,7 +6,7 @@ import { Reveal } from '../Reveal';
 import { Link } from '../router';
 import { TryLink } from '../TryLink';
 import { Gauge, Index, Spec, Status, Tag } from '../lab';
-import { categoryLabel, licenceName, weightsAvailability, EDITION_LABELS, factCategories, gb, lines, measuredOn, measuredPct, models, pct, runsIn, runsInDetail, mailtoFor, modelCta, shortDate, showcaseModels, weightsDetail, weightsFormat, defaultDtype, selfHostCommand, type SiteModel } from '../data';
+import { categoryLabel, licenceName, weightsAvailability, EDITION_LABELS, factCategories, gb, lines, measuredOn, measuredPct, models, pct, runsIn, runsInDetail, mailtoFor, modelCta, requestBody, shortDate, showcaseModels, weightsDetail, weightsFormat, defaultDtype, selfHostCommand, type SiteModel } from '../data';
 import { container, primaryCta, secondaryCta } from '../cta';
 
 /** The page head shared by /models and /benchmarks: index, eyebrow, a large title, the lead, an optional status chip. */
@@ -111,6 +111,11 @@ export function ModelCard({ m, featured }: { m: SiteModel; featured: boolean }) 
       {cta.kind === 'mail' ? (
         <p className="mt-4 text-xs leading-relaxed text-muted-foreground" data-testid="non-public-note">
           Not yet public: there is nothing to try here and no Hub page. Ask by mail and the weights come as a Hugging Face repository or as files, with the export the runtime loads and the report.
+          <span className="mt-2 flex items-center justify-between gap-2">
+            <span className="mono-label">the request, prefilled with the numbers above</span>
+            <CopyButton text={requestBody(m)} label="Copy the request" />
+          </span>
+          <span className="mt-2 block whitespace-pre-line rounded-xl border border-border bg-background/50 p-3" data-testid="request-body">{requestBody(m)}</span>
         </p>
       ) : null}
       {selfHost ? (
