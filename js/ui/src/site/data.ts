@@ -169,7 +169,9 @@ export interface ModelCta {
 /** The site's general contact link (header and footer): one subject so the two can't drift apart. */
 export const contactMailto = () => `mailto:${CONTACT}?subject=${encodeURIComponent('Hello from lamplitlabs.com')}`;
 /** The commission offer's mailto ("A model for your job"): subject plus a prefilled body so the draft opens with the job already named, not blank. */
-export const commissionMailto = () => `mailto:${CONTACT}?subject=${encodeURIComponent('A model for our job')}&body=${encodeURIComponent("We have a job for a small model - here's the task, where it needs to run, and what a right answer looks like:")}`;
+/** The body of the commission mail; also offered as copyable text for a visitor whose browser has no mail handler. */
+export const commissionBody = () => "We have a job for a small model - here's the task, where it needs to run, and what a right answer looks like:";
+export const commissionMailto = () => `mailto:${CONTACT}?subject=${encodeURIComponent('A model for our job')}&body=${encodeURIComponent(commissionBody())}`;
 const requestSubject = (m: SiteModel) => `${m.line} - ${EDITION_LABELS[m.edition]} (${m.label})`;
 /**
  * The body of a "Request this edition" mail: names the edition and the numbers it was measured on, so the request

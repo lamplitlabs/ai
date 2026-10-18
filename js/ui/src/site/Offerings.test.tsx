@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { OfferingCard } from './Offerings';
+import { CommissionCard, OfferingCard } from './Offerings';
 import { models } from './data';
 import { primaryCta } from './cta';
-import { mailtoFor, modelCta, NOT_MEASURED, requestBody, selfHostCommand } from './data';
+import { commissionBody, commissionMailto, mailtoFor, modelCta, NOT_MEASURED, requestBody, selfHostCommand } from './data';
 import { CopyButtonView } from './CopyButton';
 
 const PRIMARY_CLASS = `class="${primaryCta}"`;
@@ -109,5 +109,18 @@ describe('OfferingCard request copy', () => {
     for (const m of models.filter((x) => modelCta(x).publicWeights)) {
       expect(renderToStaticMarkup(<OfferingCard m={m} />)).not.toContain('aria-label="Copy the request"');
     }
+  });
+});
+
+/** A visitor without a mail handler can still send the commission request: the card carries a copy button whose
+ *  text is the same body the mailto CTA prefills. */
+describe('CommissionCard request copy', () => {
+  it('offers to copy the commission request, matching the mailto body', () => {
+    const html = renderToStaticMarkup(<CommissionCard />);
+    expect(html).toContain('aria-label="Copy the commission request"');
+    expect(html).toContain('href="mailto:');
+    const href = commissionMailto();
+    expect(new URLSearchParams(href.slice(href.indexOf('?') + 1)).get('body')).toBe(commissionBody());
+    expect(renderToStaticMarkup(<CopyButtonView label="Copy the commission request" state="idle" onCopy={() => {}} />)).toContain('Copy the commission request');
   });
 });

@@ -1,10 +1,9 @@
 import { ArrowRight, ArrowUpRight, Cpu, Globe, KeyRound, Mail, Wrench } from 'lucide-react';
-import { commissionMailto } from './data';
 import { Link } from './router';
 import { TryLink } from './TryLink';
 import { CopyButton } from './CopyButton';
 import { Gauge, Spec, Tag } from './lab';
-import { defaultDtype, EDITION_LABELS, gb, mailtoFor, measuredPct, modelCta, NOT_MEASURED, requestBody, runsIn, runsInDetail, selfHostCommand, shortDate, weightsAvailability, weightsSpec, type SiteModel } from './data';
+import { commissionBody, commissionMailto, defaultDtype, EDITION_LABELS, gb, mailtoFor, measuredPct, modelCta, NOT_MEASURED, requestBody, runsIn, runsInDetail, selfHostCommand, shortDate, weightsAvailability, weightsSpec, type SiteModel } from './data';
 import { primaryCta, secondaryCta } from './cta';
 
 /**
@@ -147,6 +146,8 @@ export function CommissionCard({ wide = false }: { wide?: boolean }) {
           <a href={commissionMailto()} className={primaryCta}>
             <Mail className="size-4" aria-hidden="true" /> Start with a measurement
           </a>
+          {/* The same request as the mailto, for a visitor whose browser has no mail handler: copy it and paste it anywhere. */}
+          <CopyButton text={commissionBody()} label="Copy the commission request" />
           <Link to="/#how" className={secondaryCta}>
             How we build
           </Link>
