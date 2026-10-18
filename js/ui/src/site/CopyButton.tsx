@@ -20,10 +20,13 @@ export function copyStateFor(accepted: boolean): CopyState {
   return accepted ? 'copied' : 'failed';
 }
 
-/** Stateless rendering of the copy button so each state (idle, copied, failed) can be checked by server rendering. */
-export function CopyButtonView({ state, label, onCopy }: { state: CopyState; label: string; onCopy?: () => void }) {
+/** Stateless rendering of the copy button so each state (idle, copied, failed) can be checked by server rendering.
+ *  `fallbackText` is the text to show for hand-copying when the clipboard refuses and the text is not already on
+ *  the page (the request bodies on the landing cards); without it the failed state points at the visible snippet. */
+export function CopyButtonView({ state, label, onCopy, fallbackText }: { state: CopyState; label: string; onCopy?: () => void; fallbackText?: string }) {
+  const failed = state === 'failed';
   return (
-    <span className="inline-flex items-center gap-2">
+    <span className={`inline-flex flex-wrap items-center gap-2 ${failed && fallbackText ? 'basis-full' : ''}`}>
       <button
         type="button"
         onClick={onCopy}
@@ -37,17 +40,28 @@ export function CopyButtonView({ state, label, onCopy }: { state: CopyState; lab
         {state === 'copied' ? <Check className="size-3" aria-hidden="true" /> : <Copy className="size-3" aria-hidden="true" />}
         {state === 'copied' ? 'copied' : state === 'failed' ? 'retry' : 'copy'}
       </button>
-      {state === 'failed' && (
+      {failed && (
         <span role="status" data-testid="copy-failed" className="mono-label text-xs text-muted-foreground">
-          copy failed - select the command and copy it manually
+          {fallbackText ? 'copy failed - select the text below and copy it manually' : 'copy failed - select the command and copy it manually'}
         </span>
       )}
+      {failed && fallbackText ? (
+        <textarea
+          readOnly
+          value={fallbackText}
+          rows={Math.min(8, fallbackText.split('\n').length)}
+          aria-label={`${label} by hand`}
+          data-testid="copy-fallback"
+          onFocus={(e) => e.currentTarget.select()}
+          className="mono-label basis-full rounded-md border border-border bg-background/50 p-2 text-xs text-foreground"
+        />
+      ) : null}
     </span>
   );
 }
 
 /** One-click copy for a command snippet: shows "copied" for two seconds; when the clipboard API is missing or refused it says so and points the reader at the text to select by hand. */
-export function CopyButton({ text, label }: { text: string; label: string }) {
+export function CopyButton({ text, label, fallback = false }: { text: string; label: string; fallback?: boolean }) {
   const [state, setState] = useState<CopyState>('idle');
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   useEffect(() => () => clearTimeout(timer.current), []);
@@ -57,5 +71,5 @@ export function CopyButton({ text, label }: { text: string; label: string }) {
     clearTimeout(timer.current);
     if (next === 'copied') timer.current = setTimeout(() => setState('idle'), 2000);
   };
-  return <CopyButtonView state={state} label={label} onCopy={copy} />;
+  return <CopyButtonView state={state} label={label} onCopy={copy} fallbackText={fallback ? text : undefined} />;
 }

@@ -1,4 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { act } from 'react';
+import { createRoot, type Root } from 'react-dom/client';
+import { FakeNode, clickHandlerOf, installFakeDom } from './testDom';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { CommissionCard, OfferingCard } from './Offerings';
 import { models } from './data';
@@ -122,5 +125,74 @@ describe('CommissionCard request copy', () => {
     const href = commissionMailto();
     expect(new URLSearchParams(href.slice(href.indexOf('?') + 1)).get('body')).toBe(commissionBody());
     expect(renderToStaticMarkup(<CopyButtonView label="Copy the commission request" state="idle" onCopy={() => {}} />)).toContain('Copy the commission request');
+  });
+});
+
+/** The request body is not otherwise on the page, so when the clipboard write is refused (no permission, insecure
+ *  context, no API) the visitor must get a visible manual-copy path: the same text in a selectable box. When it is
+ *  accepted the button confirms it. Mounted with the fake DOM from testDom.ts so the real click handler runs. */
+describe('Copy-the-request without a working clipboard', () => {
+  const v22 = models.find((m) => m.name === 'light-german-tutor-pro-v22')!;
+  const nonPublic = { ...v22, hub: { ...v22.hub, public: false } };
+  let root: Root | null = null;
+  let doc: any;
+  let savedNavigator: unknown;
+
+  beforeAll(() => {
+    doc = installFakeDom();
+    savedNavigator = (globalThis as any).navigator;
+  });
+  afterEach(() => {
+    if (root) act(() => root!.unmount());
+    root = null;
+    Object.defineProperty(globalThis, 'navigator', { value: savedNavigator, configurable: true, writable: true });
+  });
+
+  function setClipboard(writeText: ((t: string) => Promise<void>) | undefined) {
+    Object.defineProperty(globalThis, 'navigator', { value: { clipboard: writeText ? { writeText } : undefined }, configurable: true, writable: true });
+  }
+
+  function reactPropsOf(node: FakeNode): Record<string, any> {
+    const key = Object.keys(node).find((k) => k.startsWith('__reactProps$'));
+    return key ? (node as any)[key] : {};
+  }
+
+  async function mountAndClick() {
+    const container = new FakeNode('div', doc);
+    root = createRoot(container as unknown as Element);
+    await act(async () => root!.render(<OfferingCard m={nonPublic} />));
+    const button = container.find((n) => n.nodeName === 'BUTTON' && n.attrs['aria-label'] === 'Copy the request');
+    if (!button) throw new Error('OfferingCard rendered no Copy-the-request button');
+    await act(async () => clickHandlerOf(button)!());
+    return { container, button };
+  }
+
+  it('shows the request text in a selectable box when the clipboard write is rejected', async () => {
+    setClipboard(() => Promise.reject(new Error('NotAllowedError')));
+    const { container } = await mountAndClick();
+    const status = container.find((n) => n.attrs['data-testid'] === 'copy-failed');
+    expect(status?.text).toContain('copy failed');
+    const box = container.find((n) => n.nodeName === 'TEXTAREA');
+    expect(box, 'no manual-copy textarea after a rejected clipboard write').not.toBeNull();
+    const props = reactPropsOf(box!);
+    expect(props.readOnly, 'the fallback box must be read-only so the request text cannot be edited by accident').toBe(true);
+    expect(props.value).toBe(requestBody(nonPublic));
+    expect(box!.attrs['aria-label']).toBe('Copy the request by hand');
+  });
+
+  it('also offers the manual path when the clipboard API is missing', async () => {
+    setClipboard(undefined);
+    const { container } = await mountAndClick();
+    expect(container.find((n) => n.nodeName === 'TEXTAREA')).not.toBeNull();
+  });
+
+  it('confirms with "Copied" when the clipboard accepts the write', async () => {
+    const written: string[] = [];
+    setClipboard(async (t) => void written.push(t));
+    const { container, button } = await mountAndClick();
+    expect(written).toEqual([requestBody(nonPublic)]);
+    expect(button.attrs['data-copy-state']).toBe('copied');
+    expect(button.attrs['data-copied']).toBe('true');
+    expect(container.find((n) => n.nodeName === 'TEXTAREA')).toBeNull();
   });
 });

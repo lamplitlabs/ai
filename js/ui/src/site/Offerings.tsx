@@ -100,7 +100,7 @@ export function OfferingCard({ m, featured = false }: { m: SiteModel; featured?:
         ) : null}
         {!publicWeights ? (
           /* The same request as the mailto, for a visitor whose browser has no mail handler: copy it and paste it anywhere. */
-          <CopyButton text={requestBody(m)} label="Copy the request" />
+          <CopyButton text={requestBody(m)} label="Copy the request" fallback />
         ) : null}
         <Link to={`/models#${m.name}`} className={secondaryCta}>
           Datasheet
@@ -147,7 +147,7 @@ export function CommissionCard({ wide = false }: { wide?: boolean }) {
             <Mail className="size-4" aria-hidden="true" /> Start with a measurement
           </a>
           {/* The same request as the mailto, for a visitor whose browser has no mail handler: copy it and paste it anywhere. */}
-          <CopyButton text={commissionBody()} label="Copy the commission request" />
+          <CopyButton text={commissionBody()} label="Copy the commission request" fallback />
           <Link to="/#how" className={secondaryCta}>
             How we build
           </Link>
