@@ -51,6 +51,15 @@ export class FakeNode {
   }
   addEventListener() {}
   removeEventListener() {}
+  /** Moves `document.activeElement` here like a real focus() call, so tests can see where a component sent focus. */
+  focus() {
+    (this.ownerDocument as any).activeElement = this;
+  }
+  /** Records that the node's text was selected (a real select() on an input/textarea). */
+  selected = false;
+  select() {
+    this.selected = true;
+  }
   get firstChild() {
     return this.children[0] ?? null;
   }

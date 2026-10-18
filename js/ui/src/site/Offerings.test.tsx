@@ -180,6 +180,15 @@ describe('Copy-the-request without a working clipboard', () => {
     expect(box!.attrs['aria-label']).toBe('Copy the request by hand');
   });
 
+  it('moves focus to the fallback box and selects its text after the rejected write', async () => {
+    setClipboard(() => Promise.reject(new Error('NotAllowedError')));
+    const { container } = await mountAndClick();
+    const box = container.find((n) => n.nodeName === 'TEXTAREA');
+    expect(box).not.toBeNull();
+    expect(doc.activeElement, 'a keyboard or screen-reader visitor should land on the request text, not hunt for it').toBe(box);
+    expect(box!.selected, 'the text should be selected so Ctrl/Cmd+C works at once').toBe(true);
+  });
+
   it('also offers the manual path when the clipboard API is missing', async () => {
     setClipboard(undefined);
     const { container } = await mountAndClick();

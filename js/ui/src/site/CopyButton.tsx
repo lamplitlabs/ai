@@ -25,6 +25,14 @@ export function copyStateFor(accepted: boolean): CopyState {
  *  the page (the request bodies on the landing cards); without it the failed state points at the visible snippet. */
 export function CopyButtonView({ state, label, onCopy, fallbackText }: { state: CopyState; label: string; onCopy?: () => void; fallbackText?: string }) {
   const failed = state === 'failed';
+  // The box appears only after a failed click, so it takes focus and selects its text as it mounts: a keyboard or
+  // screen-reader visitor lands on the request instead of hunting for it, and Ctrl/Cmd+C works at once. A callback
+  // ref runs once per mount and nowhere on the server, where the box is never in the failed state anyway.
+  const focusOnMount = (box: HTMLTextAreaElement | null) => {
+    if (!box) return;
+    box.focus();
+    box.select();
+  };
   return (
     <span className={`inline-flex flex-wrap items-center gap-2 ${failed && fallbackText ? 'basis-full' : ''}`}>
       <button
@@ -52,6 +60,7 @@ export function CopyButtonView({ state, label, onCopy, fallbackText }: { state: 
           rows={Math.min(8, fallbackText.split('\n').length)}
           aria-label={`${label} by hand`}
           data-testid="copy-fallback"
+          ref={focusOnMount}
           onFocus={(e) => e.currentTarget.select()}
           className="mono-label basis-full rounded-md border border-border bg-background/50 p-2 text-xs text-foreground"
         />
