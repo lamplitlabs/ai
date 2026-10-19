@@ -43,7 +43,9 @@ beforeAll(async () => {
   // theme.ts and router.tsx read window at import time, so import after the stand-in is in place.
   ({ navigate } = await import('./router'));
   ({ SiteHeader, SiteLayout } = await import('./SiteLayout'));
-});
+  // The two dynamic imports above transform the whole site tree on a cold cache; under a loaded machine that has
+  // exceeded vitest's 10 s default hook timeout, which skipped all six tests. Give the hook room instead.
+}, 60_000);
 
 afterEach(() => {
   if (root) act(() => root!.unmount());
