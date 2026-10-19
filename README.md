@@ -23,7 +23,7 @@ docs/             the PULSE control plane and the site's records (ADR-001, FEAT-
 ```bash
 make setup      # cd js/ui && npm ci
 make ui-dev     # Vite dev server, http://127.0.0.1:5173
-make lint       # tsc -b, node --check on the scripts, FEAT-001 vitest count, README routes vs check-site defaults
+make lint       # tsc -b, lint:js (unused exports), node --check on the scripts, FEAT-001 vitest count, README routes vs check-site defaults, site.json hub slugs
 make test       # vitest and a production build; `npm run build` first runs scripts/sitemap.mjs (prebuild), which regenerates js/ui/public/sitemap.xml from the routes - commit it when you change a route
 make clean      # rm -rf js/ui/dist
 make ui-check   # every route headless in dark 1280 and light 390 on the built site (a Chromium-based browser; BROWSER_PATH to choose)
