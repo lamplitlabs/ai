@@ -25,5 +25,12 @@ export default defineConfig({
     rollupOptions: { input: `${here}index.html` },
   },
   server: { port: 5173, headers: isolation },
-  test: { environment: 'node', include: ['src/**/*.test.{ts,tsx}'] },
+  test: {
+    environment: 'node',
+    include: ['src/**/*.test.{ts,tsx}'],
+    // Suites that dynamically import the site tree in beforeAll (SiteLayout.test.tsx) transform it cold; on a
+    // loaded machine that exceeded vitest's 10 s default and the whole suite was skipped with "Hook timed out".
+    // Give every hook the same 60 s room so `make test` runs the same tests in every run.
+    hookTimeout: 60_000,
+  },
 });
