@@ -32,5 +32,8 @@ export default defineConfig({
     // loaded machine that exceeded vitest's 10 s default and the whole suite was skipped with "Hook timed out".
     // Give every hook the same 60 s room so `make test` runs the same tests in every run.
     hookTimeout: 60_000,
+    // The same cold transform can push a single test past vitest's 5 s default testTimeout on a loaded machine,
+    // which failed `make test` intermittently (2 of 4 runs). Set the per-test limit to the same explicit 60 s.
+    testTimeout: 60_000,
   },
 });
