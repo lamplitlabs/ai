@@ -100,12 +100,12 @@ export const NO_RUNS_YET = 'No benchmark run has been published yet. Each editio
  *  Distinct from `STALE_AFTER_DAYS` in ../data (14 days, the measurement data set age on the landing page). */
 export const GATE_STALE_AFTER_DAYS = 90;
 
-/** Whole days between the newest gate's `created_at` and `now`; null when no gate carries a parsable date. */
+/** Whole days between the newest gate's `created_at` and `now`; null when no gate carries a parsable date.
+ *  Delegates to the shared dataAgeDays in ../data so this note counts days exactly like every other age on
+ *  the site (never negative, same floor) - the stale note can never disagree with the per-row gateAge. */
 function daysSinceLatestGate(latestIso: string | null | undefined, now: Date): number | null {
-  if (!latestIso) return null;
-  const t = Date.parse(latestIso);
-  if (Number.isNaN(t)) return null;
-  return Math.floor((now.getTime() - t) / 86_400_000);
+  if (!latestIso || Number.isNaN(Date.parse(latestIso))) return null;
+  return dataAgeDays(latestIso, now);
 }
 
 /** The "last updated" note shown above the Progression table: always names the newest run's date, and when that run

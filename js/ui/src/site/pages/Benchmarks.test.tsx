@@ -115,6 +115,31 @@ describe('Benchmarks staleness note above Progression', () => {
     expect(lastUpdatedNote(null, now)).toBeNull();
     expect(lastUpdatedNote('garbage', now)).toBeNull();
   });
+
+  it('always agrees with the per-row age for the same gate and clock', () => {
+    // The "Last measured ... N days ago" age only appears in the note's stale branch, so every case here is
+    // older than GATE_STALE_AFTER_DAYS; a fresh note carries no count at all ("Last measured date.").
+    const dayCount = (text: string): number | null => {
+      if (text.includes('today')) return 0;
+      const m = text.match(/(\d+) days? ago/);
+      return m ? Number(m[1]) : null;
+    };
+    const cases = ['2026-06-01T00:00:00Z', '2026-08-15T00:00:00Z', '2026-08-20T12:30:00Z'];
+    for (const iso of cases) {
+      for (const clock of ['2026-12-01T00:00:00Z', '2026-12-01T23:59:59Z']) {
+        const now = new Date(clock);
+        const note = lastUpdatedNote(iso, now);
+        if (!note) throw new Error(`note missing for ${iso}`);
+        if (!note.stale) throw new Error(`expected a stale note for ${iso} at ${clock}`);
+        const noteDays = dayCount(note.text);
+        const age = gateAge(iso, now);
+        if (age === null) throw new Error(`gateAge missing for ${iso} at ${clock}`);
+        const rowDays = dayCount(age);
+        if (noteDays === null || rowDays === null) throw new Error(`no day count parsed for ${iso} at ${clock}`);
+        expect(noteDays, `stale note disagrees with gateAge for ${iso} at ${clock}`).toBe(rowDays);
+      }
+    }
+  });
 });
 
 /** A judge panel whose mean is not yet computed says "not measured yet" - the same wording Models/Offerings and the
