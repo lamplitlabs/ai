@@ -49,6 +49,43 @@ export function benchmarksCsvUrl(list: SiteModel[] = chronological): string {
   return `data:text/csv;charset=utf-8,${encodeURIComponent(benchmarksCsv(list))}`;
 }
 
+/** One typed row of the JSON export: the same numbers as one CSV row, but typed - `facts` stays the raw measured
+ *  rate (or null, never the formatted "xx.x%" string or the NOT_MEASURED label), `released` is a boolean and
+ *  `judge_mean` a number - so a visitor scripting against the numbers parses JSON instead of display text. */
+export interface BenchmarksJsonRow {
+  label: string;
+  edition: SiteModel['edition'];
+  params_b: number;
+  facts: number | null;
+  released: boolean;
+  judge_mean: number | null;
+}
+
+/** The same chronological rows as benchmarksCsv(), as JSON with typed values: the visitor who wants to script
+ *  against the measured numbers fetches rates, booleans and counts instead of re-parsing CSV display text. */
+export function benchmarksJson(list: SiteModel[] = chronological): string {
+  const rows: BenchmarksJsonRow[] = list.map((m) => {
+    const g = m.gate!;
+    return {
+      label: m.label,
+      edition: m.edition,
+      params_b: m.params_b,
+      facts: g.gates.facts?.actual ?? null,
+      released: g.release,
+      judge_mean: m.panel?.mean ?? null,
+    };
+  });
+  return JSON.stringify(rows, null, 2);
+}
+
+/** Filename the Download JSON link saves the same measured numbers under. */
+export const BENCHMARKS_JSON_FILENAME = 'lamplit-benchmarks.json';
+
+/** The JSON as a data: URL, the same no-blob approach as benchmarksCsvUrl, for the Download JSON link beside it. */
+export function benchmarksJsonUrl(list: SiteModel[] = chronological): string {
+  return `data:application/json;charset=utf-8,${encodeURIComponent(benchmarksJson(list))}`;
+}
+
 /** Shown in place of the Progression table when no model has a release-gate run yet. */
 export const NO_RUNS_YET = 'No benchmark run has been published yet. Each edition is measured on the fixed suite before release, and its gates and judge scores will appear here.';
 
@@ -347,6 +384,15 @@ export function Benchmarks({ now = new Date() }: { now?: Date } = {}) {
               >
                 <FileDown className="size-3" aria-hidden="true" />
                 Download CSV
+              </a>
+              <a
+                href={benchmarksJsonUrl()}
+                download={BENCHMARKS_JSON_FILENAME}
+                aria-label="Download JSON"
+                className="mono-label inline-flex items-center gap-1 rounded-md border border-border bg-background/50 px-2 py-1 text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <FileDown className="size-3" aria-hidden="true" />
+                Download JSON
               </a>
             </div>
           ) : null}

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { Benchmarks, benchmarksCsv, benchmarksCsvUrl, BENCHMARKS_CSV_FILENAME, BENCHMARKS_CSV_HEADER, csvField, GateCard, gateAge, lastUpdatedNote, GATE_STALE_AFTER_DAYS, unmetGates, unmetLabel } from './Benchmarks';
+import { Benchmarks, benchmarksCsv, benchmarksCsvUrl, benchmarksJson, benchmarksJsonUrl, BENCHMARKS_CSV_FILENAME, BENCHMARKS_CSV_HEADER, BENCHMARKS_JSON_FILENAME, csvField, GateCard, gateAge, lastUpdatedNote, GATE_STALE_AFTER_DAYS, unmetGates, unmetLabel } from './Benchmarks';
 import { GATE_DEFINITIONS, GATE_LABELS, models, NOT_MEASURED } from '../data';
 
 const withGate = models.filter((m) => m.gate);
@@ -206,6 +206,48 @@ describe('Benchmarks Download CSV', () => {
     expect(BENCHMARKS_CSV_FILENAME).toMatch(/\.csv$/);
     // The helper the component uses builds exactly this URL on its own.
     expect(benchmarksCsvUrl()).toBe(href);
+  });
+});
+
+/** The visitor who wants to script against the measured numbers - not paste them - gets the same chronological rows
+ *  as JSON with typed values (rates as numbers, nulls for what was not measured), so no CSV display text has to be
+ *  parsed back into data. */
+describe('Benchmarks Download JSON', () => {
+  it('renders the link with a data: URL that decodes back to benchmarksJson() and a .json filename', () => {
+    const html = renderToStaticMarkup(<Benchmarks />);
+    const link = html.match(/<a[^>]*aria-label="Download JSON"[^>]*>/);
+    expect(link, 'a link labelled Download JSON is rendered').toBeTruthy();
+    const tag = link![0];
+    const href = tag.match(/href="([^"]*)"/)?.[1];
+    expect(href?.startsWith('data:application/json;charset=utf-8,')).toBe(true);
+    expect(decodeURIComponent(href!.replace('data:application/json;charset=utf-8,', ''))).toBe(benchmarksJson());
+    expect(tag).toContain(`download="${BENCHMARKS_JSON_FILENAME}"`);
+    expect(BENCHMARKS_JSON_FILENAME).toMatch(/\.json$/);
+    // The helper the component uses builds exactly this URL on its own.
+    expect(benchmarksJsonUrl()).toBe(href);
+  });
+
+  it('carries the same chronological rows as the CSV, with typed values and nulls for unmeasured numbers', () => {
+    const rows = JSON.parse(benchmarksJson()) as Array<Record<string, unknown>>;
+    expect(rows.length).toBe(withGate.length);
+    const csvLines = benchmarksCsv().split('\n').slice(1);
+    expect(csvLines.length).toBe(rows.length);
+    for (const [i, row] of rows.entries()) {
+      const m = withGate.find((x) => x.label === row.label);
+      expect(m, `JSON row ${i} names a gated model`).toBeTruthy();
+      // Same row order as the CSV export: chronological by gate date.
+      expect(csvLines[i].startsWith(`${m!.label},`)).toBe(true);
+      expect(row.edition).toBe(m!.edition);
+      expect(row.params_b).toBe(m!.params_b);
+      // Typed, not display text: the raw rate, a boolean, and a number or null.
+      expect(row.facts).toBe(m!.gate!.gates.facts?.actual ?? null);
+      expect(row.released).toBe(m!.gate!.release);
+      expect(row.judge_mean).toBe(m!.panel?.mean ?? null);
+      for (const k of ['facts', 'judge_mean']) {
+        const v = row[k];
+        expect(v === null || typeof v === 'number', `${k} is a number or null`).toBe(true);
+      }
+    }
   });
 });
 describe('Progression per-gate freshness', () => {
