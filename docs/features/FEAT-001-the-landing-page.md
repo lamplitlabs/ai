@@ -31,7 +31,8 @@ where it runs, so that I can try it and decide without asking.
   the lab's method in plain words.
 - [x] `/models` - every showcase edition with runtime, weights format, size, licence and where to get it.
 - [x] `/benchmarks` - the gate results per edition (release, rates, per-category), the judge panel, measured speeds,
-  and a Copy as CSV button so the measured numbers paste straight into a spreadsheet.
+  a Copy as CSV button so the measured numbers paste straight into a spreadsheet, and Download CSV
+  (`lamplit-benchmarks.csv`) and Download JSON (`lamplit-benchmarks.json`, typed values) links for the same rows.
 - [x] `/try` - forwards to the flagship's demo; a 404 page for anything else.
 - [x] Every "try" opens the model's Space in a new tab; its label comes from the line's name.
 - [x] Light and dark themes, one stored preference; `?theme=` previews without saving.
