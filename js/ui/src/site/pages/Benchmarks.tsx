@@ -19,25 +19,55 @@ export function csvField(s: string): string {
   return /[",\n\r]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe;
 }
 
+/** One typed row of the JSON export - and the single source of truth for both exports: `benchmarksJson()`
+ *  serialises the rows as-is, and `benchmarksCsv()` formats each typed cell for the spreadsheet (adding a column
+ *  means extending this interface and the two formatters, so the typed row and the display row cannot drift).
+ *  `facts` stays the raw measured rate (or null, never the formatted "xx.x%" string or the NOT_MEASURED label),
+ *  `released` is a boolean and `judge_mean` a number, so a visitor scripting against the numbers parses JSON
+ *  instead of display text. */
+export interface BenchmarksJsonRow {
+  label: string;
+  edition: SiteModel['edition'];
+  params_b: number;
+  facts: number | null;
+  released: boolean;
+  judge_mean: number | null;
+}
+
+/** One typed row per release-gated edition, in gate order - the rows behind both benchmarksJson() and
+ *  benchmarksCsv(). */
+function benchmarksRows(list: SiteModel[]): BenchmarksJsonRow[] {
+  return list.map((m) => ({
+    label: m.label,
+    edition: m.edition,
+    params_b: m.params_b,
+    facts: m.gate!.gates.facts?.actual ?? null,
+    released: m.gate!.release,
+    judge_mean: m.panel?.mean ?? null,
+  }));
+}
+
+/** The CSV display form of one typed row field: nulls are blank cells, the facts rate is a percent with one
+ *  decimal, the judge mean keeps two decimals, and text fields go through csvField() for quoting and
+ *  formula-injection protection. */
+function benchmarksCsvCells(row: BenchmarksJsonRow): string[] {
+  return [
+    csvField(row.label),
+    csvField(row.edition),
+    String(row.params_b),
+    row.facts == null ? '' : measuredPct(row.facts, 1),
+    row.released ? 'released' : 'not released',
+    row.judge_mean == null ? '' : row.judge_mean.toFixed(2),
+  ];
+}
+
 export const BENCHMARKS_CSV_HEADER = 'label,edition,params_b,facts,release,judge_mean';
 
-/** One row per release-gated edition - label, edition, params_b, facts, release gate and judge mean - so someone
- *  comparing editions can paste the measured numbers straight into a spreadsheet instead of retyping them. */
+/** One row per release-gated edition - label, edition, params_b, facts, release gate and judge mean, the typed
+ *  benchmarksRows() fields in CSV display form - so someone comparing editions can paste the measured numbers
+ *  straight into a spreadsheet instead of retyping them. */
 export function benchmarksCsv(list: SiteModel[] = chronological): string {
-  const rows = list.map((m) => {
-    const g = m.gate!;
-    const facts = g.gates.facts?.actual;
-    const mean = m.panel?.mean;
-    return [
-      csvField(m.label),
-      csvField(m.edition),
-      String(m.params_b),
-      facts == null ? '' : measuredPct(facts, 1),
-      g.release ? 'released' : 'not released',
-      mean == null ? '' : mean.toFixed(2),
-    ].join(',');
-  });
-  return [BENCHMARKS_CSV_HEADER, ...rows].join('\n');
+  return [BENCHMARKS_CSV_HEADER, ...benchmarksRows(list).map((row) => benchmarksCsvCells(row).join(','))].join('\n');
 }
 
 /** Filename the Download CSV link saves the same measured numbers under. */
@@ -49,33 +79,10 @@ export function benchmarksCsvUrl(list: SiteModel[] = chronological): string {
   return `data:text/csv;charset=utf-8,${encodeURIComponent(benchmarksCsv(list))}`;
 }
 
-/** One typed row of the JSON export: the same numbers as one CSV row, but typed - `facts` stays the raw measured
- *  rate (or null, never the formatted "xx.x%" string or the NOT_MEASURED label), `released` is a boolean and
- *  `judge_mean` a number - so a visitor scripting against the numbers parses JSON instead of display text. */
-export interface BenchmarksJsonRow {
-  label: string;
-  edition: SiteModel['edition'];
-  params_b: number;
-  facts: number | null;
-  released: boolean;
-  judge_mean: number | null;
-}
-
 /** The same chronological rows as benchmarksCsv(), as JSON with typed values: the visitor who wants to script
  *  against the measured numbers fetches rates, booleans and counts instead of re-parsing CSV display text. */
 export function benchmarksJson(list: SiteModel[] = chronological): string {
-  const rows: BenchmarksJsonRow[] = list.map((m) => {
-    const g = m.gate!;
-    return {
-      label: m.label,
-      edition: m.edition,
-      params_b: m.params_b,
-      facts: g.gates.facts?.actual ?? null,
-      released: g.release,
-      judge_mean: m.panel?.mean ?? null,
-    };
-  });
-  return JSON.stringify(rows, null, 2);
+  return JSON.stringify(benchmarksRows(list), null, 2);
 }
 
 /** Filename the Download JSON link saves the same measured numbers under. */
