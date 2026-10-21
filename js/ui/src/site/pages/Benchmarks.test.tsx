@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { Benchmarks, GateCard, gateAge, lastUpdatedNote, GATE_STALE_AFTER_DAYS, unmetGates, unmetLabel } from './Benchmarks';
+import { Benchmarks, benchmarksCsv, BENCHMARKS_CSV_HEADER, GateCard, gateAge, lastUpdatedNote, GATE_STALE_AFTER_DAYS, unmetGates, unmetLabel } from './Benchmarks';
 import { GATE_DEFINITIONS, GATE_LABELS, models, NOT_MEASURED } from '../data';
 
 const withGate = models.filter((m) => m.gate);
@@ -158,6 +158,20 @@ describe('GateCard unmeasured gate without a note', () => {
   it('renders NOT_MEASURED, not the literal "not measured"', () => {
     expect(html).toContain(`<span>${NOT_MEASURED}</span>`);
     expect(html).not.toContain('<span>not measured</span>');
+  });
+});
+
+/** The Copy-as-CSV button next to the Progression heading puts the measured numbers on the clipboard, one row per
+ *  gated edition (label, edition, params_b, facts, release gate, judge mean), so someone comparing models pastes
+ *  them straight into a spreadsheet instead of retyping them. */
+describe('Benchmarks Copy as CSV', () => {
+  it('renders the button and copies the fixed header plus one row per gated model', () => {
+    const html = renderToStaticMarkup(<Benchmarks />);
+    expect(html).toContain('aria-label="Copy as CSV"');
+    const lines = benchmarksCsv().split('\n');
+    expect(lines[0]).toBe(BENCHMARKS_CSV_HEADER);
+    expect(lines[0]).toBe('label,edition,params_b,facts,release,judge_mean');
+    expect(lines.length).toBe(1 + withGate.length);
   });
 });
 

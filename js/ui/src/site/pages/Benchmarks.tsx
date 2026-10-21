@@ -1,13 +1,40 @@
 import { Check, Info, X } from 'lucide-react';
+import { CopyButton } from '../CopyButton';
 import { Reveal } from '../Reveal';
 import { Gauge, Index, Status, Tag } from '../lab';
-import { categoryLabel, dataAgeDays, EDITION_LABELS, factCategories, GATE_DEFINITIONS, GATE_LABELS, lines, measuredOn, models, NOT_MEASURED, pct, shortDate, siteData, type SiteModel } from '../data';
+import { categoryLabel, dataAgeDays, EDITION_LABELS, factCategories, GATE_DEFINITIONS, GATE_LABELS, lines, measuredOn, measuredPct, models, NOT_MEASURED, pct, shortDate, siteData, type SiteModel } from '../data';
 import { container } from '../cta';
 import { PageIntro } from './Models';
 
 const withGate = models.filter((m) => m.gate);
 const chronological = [...withGate].sort((a, b) => (a.gate!.created_at ?? '').localeCompare(b.gate!.created_at ?? ''));
 const latest = chronological.at(-1);
+
+/** RFC 4180 quoting: a field that contains a comma, a quote or a newline is wrapped in quotes and its quotes doubled. */
+function csvField(s: string): string {
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
+export const BENCHMARKS_CSV_HEADER = 'label,edition,params_b,facts,release,judge_mean';
+
+/** One row per release-gated edition - label, edition, params_b, facts, release gate and judge mean - so someone
+ *  comparing editions can paste the measured numbers straight into a spreadsheet instead of retyping them. */
+export function benchmarksCsv(list: SiteModel[] = chronological): string {
+  const rows = list.map((m) => {
+    const g = m.gate!;
+    const facts = g.gates.facts?.actual;
+    const mean = m.panel?.mean;
+    return [
+      csvField(m.label),
+      csvField(m.edition),
+      String(m.params_b),
+      facts == null ? '' : measuredPct(facts, 1),
+      g.release ? 'released' : 'not released',
+      mean == null ? '' : mean.toFixed(2),
+    ].join(',');
+  });
+  return [BENCHMARKS_CSV_HEADER, ...rows].join('\n');
+}
 
 /** Shown in place of the Progression table when no model has a release-gate run yet. */
 export const NO_RUNS_YET = 'No benchmark run has been published yet. Each edition is measured on the fixed suite before release, and its gates and judge scores will appear here.';
@@ -296,6 +323,11 @@ export function Benchmarks({ now = new Date() }: { now?: Date } = {}) {
       <section className={`${container} space-y-10 py-16 lg:py-20`}>
         <Reveal>
           <Index n="01">Progression</Index>
+          {latest ? (
+            <div className="mt-3 flex justify-end">
+              <CopyButton label="Copy as CSV" text={benchmarksCsv()} fallback />
+            </div>
+          ) : null}
           {updated ? (
             <p data-last-updated={updated.stale ? 'stale' : 'fresh'} className={`mt-4 text-sm ${updated.stale ? 'rounded-xl border border-warning/40 bg-warning/10 px-4 py-3 text-foreground' : 'text-muted-foreground'}`}>
               {updated.text}
