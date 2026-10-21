@@ -25,7 +25,7 @@ export function csvField(s: string): string {
  *  `facts` stays the raw measured rate (or null, never the formatted "xx.x%" string or the NOT_MEASURED label),
  *  `released` is a boolean and `judge_mean` a number, so a visitor scripting against the numbers parses JSON
  *  instead of display text. */
-export interface BenchmarksJsonRow {
+interface BenchmarksJsonRow {
   label: string;
   edition: SiteModel['edition'];
   params_b: number;
