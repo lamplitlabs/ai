@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { Benchmarks, benchmarksCsv, BENCHMARKS_CSV_HEADER, GateCard, gateAge, lastUpdatedNote, GATE_STALE_AFTER_DAYS, unmetGates, unmetLabel } from './Benchmarks';
+import { Benchmarks, benchmarksCsv, BENCHMARKS_CSV_HEADER, csvField, GateCard, gateAge, lastUpdatedNote, GATE_STALE_AFTER_DAYS, unmetGates, unmetLabel } from './Benchmarks';
 import { GATE_DEFINITIONS, GATE_LABELS, models, NOT_MEASURED } from '../data';
 
 const withGate = models.filter((m) => m.gate);
@@ -172,6 +172,22 @@ describe('Benchmarks Copy as CSV', () => {
     expect(lines[0]).toBe(BENCHMARKS_CSV_HEADER);
     expect(lines[0]).toBe('label,edition,params_b,facts,release,judge_mean');
     expect(lines.length).toBe(1 + withGate.length);
+  });
+
+  it('quotes a field containing a carriage return so it cannot split one pasted row into two', () => {
+    expect(csvField('a\rb')).toBe('"a\rb"');
+    expect(csvField('a\r\nb')).toBe('"a\r\nb"');
+  });
+
+  it("prefixes fields starting with =, +, - or @ with ' so Excel/Sheets shows text instead of running a formula", () => {
+    expect(csvField('=1+1')).toBe("'=1+1");
+    expect(csvField('+1')).toBe("'+1");
+    expect(csvField('-1')).toBe("'-1");
+    expect(csvField('@SUM(A1)')).toBe("'@SUM(A1)");
+    expect(csvField('=HYPERLINK("https://evil.example","x")')).toBe('"\'=HYPERLINK(""https://evil.example"",""x"")"');
+    // A leading apostrophe needs no doubling (only double quotes are escaped in CSV); ordinary text is untouched.
+    expect(csvField("'=1+1")).toBe("'=1+1");
+    expect(csvField('qwen3-0.6b')).toBe('qwen3-0.6b');
   });
 });
 

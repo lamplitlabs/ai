@@ -10,9 +10,13 @@ const withGate = models.filter((m) => m.gate);
 const chronological = [...withGate].sort((a, b) => (a.gate!.created_at ?? '').localeCompare(b.gate!.created_at ?? ''));
 const latest = chronological.at(-1);
 
-/** RFC 4180 quoting: a field that contains a comma, a quote or a newline is wrapped in quotes and its quotes doubled. */
-function csvField(s: string): string {
-  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+/** RFC 4180 quoting, hardened for spreadsheet paste: a field that contains a comma, a quote, a newline or a
+ *  carriage return is wrapped in quotes and its quotes doubled (a bare CR would split one row into two), and a
+ *  field starting with = + - or @ is prefixed with ' so Excel/Sheets shows it as text instead of running it as a
+ *  formula (CSV injection). */
+export function csvField(s: string): string {
+  const safe = /^[=+\-@]/.test(s) ? `'${s}` : s;
+  return /[",\n\r]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe;
 }
 
 export const BENCHMARKS_CSV_HEADER = 'label,edition,params_b,facts,release,judge_mean';
