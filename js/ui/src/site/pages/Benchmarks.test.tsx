@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { Benchmarks, benchmarksCsv, BENCHMARKS_CSV_HEADER, csvField, GateCard, gateAge, lastUpdatedNote, GATE_STALE_AFTER_DAYS, unmetGates, unmetLabel } from './Benchmarks';
+import { Benchmarks, benchmarksCsv, benchmarksCsvUrl, BENCHMARKS_CSV_FILENAME, BENCHMARKS_CSV_HEADER, csvField, GateCard, gateAge, lastUpdatedNote, GATE_STALE_AFTER_DAYS, unmetGates, unmetLabel } from './Benchmarks';
 import { GATE_DEFINITIONS, GATE_LABELS, models, NOT_MEASURED } from '../data';
 
 const withGate = models.filter((m) => m.gate);
@@ -191,8 +191,23 @@ describe('Benchmarks Copy as CSV', () => {
   });
 });
 
-/** Each Progression row says how long ago its own gate was measured, so a visitor sees per-gate staleness at a glance
- *  rather than only the newest run's date above the table. */
+/** The visitor who wants the numbers as a file (to chart or diff, not to paste) gets a download link carrying the
+ *  very text "Copy as CSV" puts on the clipboard, under a stable .csv filename so the OS files it as a spreadsheet. */
+describe('Benchmarks Download CSV', () => {
+  it('renders the link with a data: URL of benchmarksCsv() and a .csv filename', () => {
+    const html = renderToStaticMarkup(<Benchmarks />);
+    const link = html.match(/<a[^>]*aria-label="Download CSV"[^>]*>/);
+    expect(link, 'a link labelled Download CSV is rendered').toBeTruthy();
+    const tag = link![0];
+    const href = tag.match(/href="([^"]*)"/)?.[1];
+    expect(href?.startsWith('data:text/csv;charset=utf-8,')).toBe(true);
+    expect(decodeURIComponent(href!.replace('data:text/csv;charset=utf-8,', ''))).toBe(benchmarksCsv());
+    expect(tag).toContain(`download="${BENCHMARKS_CSV_FILENAME}"`);
+    expect(BENCHMARKS_CSV_FILENAME).toMatch(/\.csv$/);
+    // The helper the component uses builds exactly this URL on its own.
+    expect(benchmarksCsvUrl()).toBe(href);
+  });
+});
 describe('Progression per-gate freshness', () => {
   it('renders "measured N days ago" for every gated row', () => {
     const now = new Date(Date.parse(newest.gate!.created_at!) + 12 * 86_400_000);

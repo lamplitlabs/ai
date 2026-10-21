@@ -1,4 +1,4 @@
-import { Check, Info, X } from 'lucide-react';
+import { Check, FileDown, Info, X } from 'lucide-react';
 import { CopyButton } from '../CopyButton';
 import { Reveal } from '../Reveal';
 import { Gauge, Index, Status, Tag } from '../lab';
@@ -38,6 +38,15 @@ export function benchmarksCsv(list: SiteModel[] = chronological): string {
     ].join(',');
   });
   return [BENCHMARKS_CSV_HEADER, ...rows].join('\n');
+}
+
+/** Filename the Download CSV link saves the same measured numbers under. */
+export const BENCHMARKS_CSV_FILENAME = 'lamplit-benchmarks.csv';
+
+/** The CSV as a data: URL, so the download link works with no client-side blob dance (and renders server-side too).
+ *  encodeURIComponent escapes every byte CSV can carry - newlines, quotes, commas - so the href stays one attribute. */
+export function benchmarksCsvUrl(list: SiteModel[] = chronological): string {
+  return `data:text/csv;charset=utf-8,${encodeURIComponent(benchmarksCsv(list))}`;
 }
 
 /** Shown in place of the Progression table when no model has a release-gate run yet. */
@@ -328,8 +337,17 @@ export function Benchmarks({ now = new Date() }: { now?: Date } = {}) {
         <Reveal>
           <Index n="01">Progression</Index>
           {latest ? (
-            <div className="mt-3 flex justify-end">
+            <div className="mt-3 flex justify-end gap-2">
               <CopyButton label="Copy as CSV" text={benchmarksCsv()} fallback />
+              <a
+                href={benchmarksCsvUrl()}
+                download={BENCHMARKS_CSV_FILENAME}
+                aria-label="Download CSV"
+                className="mono-label inline-flex items-center gap-1 rounded-md border border-border bg-background/50 px-2 py-1 text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <FileDown className="size-3" aria-hidden="true" />
+                Download CSV
+              </a>
             </div>
           ) : null}
           {updated ? (
