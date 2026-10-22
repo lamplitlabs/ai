@@ -15,7 +15,7 @@ js/check-site.mjs every route headless: <h1>, fonts, console errors, failed requ
 scripts/verify.sh            the full check in one command: `make lint && make test` (runs `make setup` first when node_modules lacks tsc)
 scripts/watch-hub-links.sh   runs `make setup` if node_modules lacks tsc, builds, then runs `make hub-links`; prints only when a showcased hub link is dead or the check could not run
 .github/workflows/deploy-site.yml   build and test on GitHub, then `vercel deploy --prebuilt` (the host never sees the source)
-docs/             the PULSE control plane and the site's records (ADR-001, FEAT-001, WU-001, MEM-001, MEM-002)
+docs/             the PULSE control plane and the site's records (ADR-001, FEAT-001, WU-001, WU-002, MEM-001, MEM-002)
 ```
 
 ## Work on it
