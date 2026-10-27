@@ -214,6 +214,14 @@ describe('Benchmarks Copy as CSV', () => {
     expect(csvField("'=1+1")).toBe("'=1+1");
     expect(csvField('qwen3-0.6b')).toBe('qwen3-0.6b');
   });
+
+  it("prefixes fields starting with a tab or carriage return with ' so a spreadsheet keeps them as text", () => {
+    // The same formula-injection guard as =, +, - and @: a leading tab or CR can also slip a field into a
+    // spreadsheet cell it does not belong in, so csvField() disarms it the same way.
+    expect(csvField('\t=cmd')).toBe("'\t=cmd");
+    // The CR is disarmed by the leading apostrophe and then quoted like any CR-bearing field (RFC 4180).
+    expect(csvField('\rvalue')).toBe('"\'\rvalue"');
+  });
 });
 
 /** The visitor who wants the numbers as a file (to chart or diff, not to paste) gets a download link carrying the
