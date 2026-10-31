@@ -37,3 +37,13 @@ then still lands something instead of finishing with "no result"
 
 Accepted when `make test` passes after setup on a clean checkout. Rollback:
 revert this file.
+
+## Failure mode: malformed edit
+
+This recipe is a prose and setup document, not a build manifest. The runner
+executes its `setup:` entries before the job starts, so a malformed edit - a
+broken setup command, invalid front-matter, a path that does not exist - fails
+the job at setup time, before any site check runs, and `make test` never gets
+to report. The fix is to revert the recipe edit (see Rollback above), not to
+weaken or skip the check that surfaced the failure: the check is the guard,
+the recipe is what it guards.
