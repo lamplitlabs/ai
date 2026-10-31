@@ -21,12 +21,27 @@ export function titleFor(route: string): string {
 
 const HOME_DESCRIPTION =
   'Lamplit Labs AI builds small, specialised models you host yourself - in a browser, on a laptop, on-prem, in your private cloud, in your app or on the edge. Your data never leaves.';
+/**
+ * Routes whose page holds something other than the home pitch, so a search result or a link-share card for that
+ * link previews what it opens on: the offerings list and the measured numbers. Any other known route uses the home pitch.
+ */
+const ROUTE_DESCRIPTIONS: Record<string, string> = {
+  '/models':
+    'The models Lamplit Labs AI offers to host yourself: each line with its editions for where it runs, its licence and whether it passed its release gate.',
+  '/benchmarks':
+    'The numbers behind every Lamplit Labs AI model: a fixed suite of learner scenarios run on each edition, scored by independent frontier-model judges.',
+};
+
 const NOT_FOUND_DESCRIPTION =
   'That page does not exist on Lamplit Labs AI. The home page lists the small, specialised models you can host yourself, with the numbers they were measured on.';
 
-/** Meta description for a route; an unknown path says the page is missing instead of repeating the home page's pitch. */
+/**
+ * Meta description for a route: the offerings and the numbers describe themselves, other known routes get the home
+ * page's pitch, and an unknown path says the page is missing instead of repeating that pitch.
+ */
 export function descriptionFor(route: string): string {
-  return route in TITLES ? HOME_DESCRIPTION : NOT_FOUND_DESCRIPTION;
+  if (!(route in TITLES)) return NOT_FOUND_DESCRIPTION;
+  return ROUTE_DESCRIPTIONS[route] ?? HOME_DESCRIPTION;
 }
 
 /**

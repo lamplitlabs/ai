@@ -17,8 +17,27 @@ describe('document.title follows the route', () => {
 });
 
 describe('meta description follows the route', () => {
-  it('describes the offerings on every known route', () => {
-    for (const path of ['/', '/models', '/benchmarks', '/try']) expect(descriptionFor(path)).toMatch(/host yourself/);
+  it('gives the home page and the try page the home pitch', () => {
+    for (const path of ['/', '/try']) expect(descriptionFor(path)).toMatch(/host yourself/);
+    expect(descriptionFor('/try')).toBe(descriptionFor('/'));
+  });
+  it('previews a link to /models with the offerings it lists, not the home pitch', () => {
+    const d = descriptionFor('/models');
+    expect(d).toMatch(/Lamplit Labs AI/);
+    expect(d).toMatch(/models/);
+    expect(d).toMatch(/editions/);
+    expect(d).not.toBe(descriptionFor('/'));
+  });
+  it('previews a link to /benchmarks with the numbers it holds, not the home pitch', () => {
+    const d = descriptionFor('/benchmarks');
+    expect(d).toMatch(/Lamplit Labs AI/);
+    expect(d).toMatch(/numbers/);
+    expect(d).toMatch(/judges/);
+    expect(d).not.toBe(descriptionFor('/'));
+    expect(d).not.toBe(descriptionFor('/models'));
+  });
+  it('keeps every known description short enough for a search snippet', () => {
+    for (const path of ['/', '/models', '/benchmarks', '/try']) expect(descriptionFor(path).length).toBeLessThanOrEqual(180);
   });
   it('tells a visitor on a stale or mistyped link that the page is missing instead of repeating the home pitch', () => {
     for (const path of ['/does-not-exist', '/models/typo', '/404']) {
