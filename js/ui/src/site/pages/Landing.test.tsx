@@ -85,3 +85,50 @@ describe('Landing non-public offerings', () => {
     vi.resetModules();
   });
 });
+
+/** The hero's "download" datum and the flagship's offering card must quote the same file - the smallest export, the one a
+ *  visitor actually fetches - whatever order the producer lists the dtypes in. Reduced motion makes the datum render its
+ *  final number instead of the count-up's starting 0. */
+describe('Landing download matches the flagship offering card', () => {
+  for (const order of ['larger dtype first', 'reversed: smaller dtype first'] as const) {
+    it(`hero and card name the same dtype and size with the ${order}`, async () => {
+      vi.resetModules();
+      vi.doMock('../data', async () => {
+        const real = await vi.importActual<typeof import('../data')>('../data');
+        const f = real.flagship!;
+        const bySize = [...f.dtypes].sort((a, b) => b.size_mb - a.size_mb);
+        const flipped = { ...f, dtypes: order === 'larger dtype first' ? bySize : bySize.reverse() };
+        const showcase = real.showcaseModels.map((m) => (m.name === f.name ? flipped : m));
+        const lines = [...new Set(showcase.map((m) => m.line))].map((line) => ({ line, editions: showcase.filter((m) => m.line === line) }));
+        return { ...real, flagship: flipped, showcaseModels: showcase, lines };
+      });
+      const { Landing: MockedLanding } = await import('./Landing');
+      const { flagship, gb, weightsSpec } = await import('../data');
+      // stubbed after the imports: the router subscribes to window events at module load
+      vi.stubGlobal('window', { matchMedia: (q: string) => ({ matches: q.includes('prefers-reduced-motion') }) });
+      try {
+        const f = flagship!;
+        const sizes = new Set(f.dtypes.map((d) => d.size_mb));
+        expect(sizes.size, 'the flagship needs two dtypes of different sizes for the order to matter').toBeGreaterThan(1);
+        const smallest = f.dtypes.reduce((a, b) => (b.size_mb < a.size_mb ? b : a));
+        if (order === 'larger dtype first') expect(f.dtypes[0].size_mb).toBeGreaterThan(smallest.size_mb);
+
+        const html = renderToStaticMarkup(<MockedLanding />);
+        const hero = html.match(/>download<\/div><div class="datum-value[^"]*">([^<]*)<\/div><div[^>]*>([^<]*)<\/div>/);
+        expect(hero, 'hero download datum missing').not.toBeNull();
+        expect(hero![1]).toBe(gb(smallest.size_mb));
+        expect(hero![2].startsWith(`${smallest.dtype} · `)).toBe(true);
+
+        // the flagship's row in the comparison table and its offering card quote the same size
+        const row = html.slice(html.indexOf(`data-testid="compare-${f.name}"`));
+        expect(row.slice(0, row.indexOf('</tr>'))).toContain(`>${gb(smallest.size_mb)}</td>`);
+        if (f.hub.public) expect(html).toContain(weightsSpec(f, true));
+        expect(weightsSpec(f, true).startsWith(`${smallest.dtype} · ${gb(smallest.size_mb)} · `)).toBe(true);
+      } finally {
+        vi.unstubAllGlobals();
+        vi.doUnmock('../data');
+        vi.resetModules();
+      }
+    });
+  }
+});

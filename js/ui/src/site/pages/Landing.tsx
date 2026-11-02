@@ -7,7 +7,7 @@ import { CONTACT } from '../SiteLayout';
 import { Link } from '../router';
 import { TryLink } from '../TryLink';
 import { Datum, Index, SectionHead, Status } from '../lab';
-import { EDITION_LABELS, NOT_MEASURED, STALE_AFTER_DAYS, commissionMailto, dataAgeDays, flagship, latestMeasuredAt, lines, measured, pct, shortDate, showcaseModels, siteData } from '../data';
+import { EDITION_LABELS, NOT_MEASURED, STALE_AFTER_DAYS, commissionMailto, dataAgeDays, defaultDtype, flagship, latestMeasuredAt, lines, measured, pct, shortDate, showcaseModels, siteData } from '../data';
 import { container, primaryCta, secondaryCta } from '../cta';
 
 export { primaryCta };
@@ -21,7 +21,8 @@ export function Landing({ now }: { now?: Date } = {}) {
   const facts = g?.gates.facts;
   const gates = g ? Object.values(g.gates) : [];
   const passed = gates.filter((x) => x.ok).length;
-  const size = m?.dtypes[0];
+  // The export a visitor actually fetches - the same pick as the offering card and the comparison table, whatever order the producer lists dtypes in.
+  const size = m ? defaultDtype(m) : undefined;
   const q8 = m?.export_agreement?.q8 ?? null;
   const offered = showcaseModels.length;
   const allGatesPassed = showcaseModels.every((x) => x.gate?.release);
