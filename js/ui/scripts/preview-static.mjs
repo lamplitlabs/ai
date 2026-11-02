@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Serves dist/ (the site, after `npm run build`) the way vercel.json does: files as-is, the SPA routes (/, /models,
-// /benchmarks) fall back to index.html, every other path gets dist/404.html with a real 404 status, and the same
+// /benchmarks) serve their own page (index.html, models.html, benchmarks.html - the same app, each with its own head),
+// every other path gets dist/404.html with a real 404 status, and the same
 // Cross-Origin headers vercel.json sets. `node scripts/preview-static.mjs [port]`
 import { createServer } from 'node:http';
 import { createReadStream, existsSync, statSync } from 'node:fs';
@@ -11,8 +12,8 @@ import { fileURLToPath } from 'node:url';
 const dist = resolve(dirname(fileURLToPath(import.meta.url)), '..', 'dist');
 const port = Number(process.argv[2] || process.env.PORT || 4174);
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.wasm': 'application/wasm', '.woff2': 'font/woff2', '.png': 'image/png', '.svg': 'image/svg+xml', '.txt': 'text/plain' };
-// mirrors the "rewrites" in vercel.json: only these extension-less paths serve index.html
-const SPA_ROUTES = new Set(['/', '/models', '/benchmarks']);
+// mirrors the "rewrites" in vercel.json: only these extension-less paths serve a page, each its own file
+const SPA_ROUTES = new Map([['/', 'index.html'], ['/models', 'models.html'], ['/benchmarks', 'benchmarks.html']]);
 const headers = { 'Cross-Origin-Opener-Policy': 'same-origin', 'Cross-Origin-Embedder-Policy': 'require-corp', 'Cross-Origin-Resource-Policy': 'cross-origin' };
 
 createServer((req, res) => {
@@ -21,7 +22,7 @@ createServer((req, res) => {
   if (!file.startsWith(dist)) return void res.writeHead(403).end();
   let status = 200;
   if (!existsSync(file) || statSync(file).isDirectory()) {
-    if (SPA_ROUTES.has(path)) file = join(dist, 'index.html');
+    if (SPA_ROUTES.has(path)) file = join(dist, SPA_ROUTES.get(path));
     else {
       status = 404;
       file = join(dist, '404.html');

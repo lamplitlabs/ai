@@ -6,11 +6,14 @@ import { SITE_URL, flagship, tryLabel, tryUrl } from './data';
 import { Landing, primaryCta } from './pages/Landing';
 import { Models } from './pages/Models';
 import { Benchmarks } from './pages/Benchmarks';
+import { HOME_DESCRIPTION, HOME_TITLE, PAGE_HEADS } from './routeHead';
 
+// /models and /benchmarks take their words from PAGE_HEADS, the same strings the build writes into their prerendered
+// static head (vite.config.ts), so a page previews the same with or without JavaScript.
 const TITLES: Record<string, string> = {
-  '/': 'Lamplit Labs AI - models you can host yourself',
-  '/models': 'Offerings - Lamplit Labs AI',
-  '/benchmarks': 'Benchmarks - Lamplit Labs AI',
+  '/': HOME_TITLE,
+  '/models': PAGE_HEADS['/models'].title,
+  '/benchmarks': PAGE_HEADS['/benchmarks'].title,
   '/try': `${tryLabel()} - Lamplit Labs AI`,
 };
 
@@ -19,17 +22,13 @@ export function titleFor(route: string): string {
   return TITLES[route] ?? 'Not found - Lamplit Labs AI';
 }
 
-const HOME_DESCRIPTION =
-  'Lamplit Labs AI builds small, specialised models you host yourself - in a browser, on a laptop, on-prem, in your private cloud, in your app or on the edge. Your data never leaves.';
 /**
  * Routes whose page holds something other than the home pitch, so a search result or a link-share card for that
  * link previews what it opens on: the offerings list and the measured numbers. Any other known route uses the home pitch.
  */
 const ROUTE_DESCRIPTIONS: Record<string, string> = {
-  '/models':
-    'The models Lamplit Labs AI offers to host yourself: each line with its editions for where it runs, its licence and whether it passed its release gate.',
-  '/benchmarks':
-    'The numbers behind every Lamplit Labs AI model: a fixed suite of learner scenarios run on each edition, scored by independent frontier-model judges.',
+  '/models': PAGE_HEADS['/models'].description,
+  '/benchmarks': PAGE_HEADS['/benchmarks'].description,
 };
 
 const NOT_FOUND_DESCRIPTION =

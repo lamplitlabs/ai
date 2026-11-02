@@ -1,7 +1,9 @@
 import { defineConfig } from 'vitest/config';
+import type { Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { fileURLToPath } from 'node:url';
+import { PAGE_HEADS, routePageHtml } from './src/site/routeHead';
 
 const here = fileURLToPath(new URL('.', import.meta.url));
 // The same Cross-Origin headers vercel.json sets in production, so the dev server behaves like the host.
@@ -11,10 +13,26 @@ const isolation = {
   'Cross-Origin-Resource-Policy': 'cross-origin',
 };
 
+// Link unfurlers that run no JavaScript (Slack, X, LinkedIn, iMessage) read only the HTML the host serves. Emit a copy
+// of the built index.html per PAGE_HEADS route with that route's title, description and og:url in its static head;
+// vercel.json (and scripts/preview-static.mjs) serve /models and /benchmarks from these files.
+const routePages = (): Plugin => ({
+  name: 'lamplit:route-pages',
+  apply: 'build',
+  enforce: 'post',
+  generateBundle(_options, bundle) {
+    const index = bundle['index.html'];
+    if (index?.type !== 'asset') return this.error('route-pages: the build emitted no index.html');
+    for (const [route, { file }] of Object.entries(PAGE_HEADS)) {
+      this.emitFile({ type: 'asset', fileName: file, source: routePageHtml(String(index.source), route as keyof typeof PAGE_HEADS) });
+    }
+  },
+});
+
 // One build: the site (index.html → dist/), deployed to ai.lamplitlabs.com (ADR-001). The models it lists are built
 // and measured elsewhere; the only thing that crosses over is src/data/site.json.
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(), routePages()],
   resolve: { alias: { '@': `${here}src` } },
   base: '/',
   build: {

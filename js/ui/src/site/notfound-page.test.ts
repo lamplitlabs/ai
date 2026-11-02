@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { PAGE_HEADS } from './routeHead';
 
 // Vercel serves public/404.html for paths vercel.json does not rewrite, so a visitor on a typo'd URL sees the
 // site's own page instead of the generic Vercel one. A rewrite of public/ must not drop it or its way home.
@@ -21,10 +22,10 @@ describe('vercel.json unknown-route fallback', () => {
   const vercel = JSON.parse(readFileSync(fileURLToPath(new URL('../../vercel.json', import.meta.url)), 'utf8'));
   const rewrites: Array<{ source: string; destination: string; statusCode?: number }> = vercel.rewrites;
 
-  it('keeps /models and /benchmarks on index.html (/ is the file itself)', () => {
-    for (const route of ['/models', '/benchmarks']) {
+  it('serves /models and /benchmarks from their own page (/ is index.html itself)', () => {
+    for (const route of ['/models', '/benchmarks'] as const) {
       const rule = rewrites.find((r) => r.source === route);
-      expect(rule?.destination, `${route} rewrite`).toBe('/index.html');
+      expect(rule?.destination, `${route} rewrite`).toBe(`/${PAGE_HEADS[route].file}`);
       expect(rule?.statusCode).toBeUndefined();
     }
   });
