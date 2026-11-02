@@ -1,0 +1,109 @@
+# ai.lamplitlabs.com - the site (js/ui) deployed to Vercel (ADR-001).
+#
+# The Vercel project is not connected to this repository. The site is built and tested here; the Vercel CLI then
+# builds the output (`vercel build`) and uploads only that (`vercel deploy --prebuilt`) - Vercel never sees the
+# source. Runs on main (pushes and manual runs) deploy to production; pull requests get a preview URL.
+#
+# Repository secrets, created by the owner (Settings -> Secrets and variables -> Actions):
+#   VERCEL_TOKEN       Account Settings -> Tokens, Scope = the team that owns the project (a project-scoped token
+#                      cannot deploy: the CLI reads the team first, vercel/vercel#17506)
+#   VERCEL_ORG_ID      the team id, team_...   (Team -> Settings -> General)
+#   VERCEL_PROJECT_ID  the project id, prj_... (Project -> Settings -> General; Root Directory stays empty)
+# Without them the workflow still builds and tests, and its summary names what is missing. With them, the deploy
+# job first checks the three values against Vercel's API (.github/scripts/vercel-preflight.sh) and names the
+# wrong one; the CLI's own errors do not.
+name: deploy-site
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - js/ui/**
+      - .github/workflows/deploy-site.yml
+      - .github/scripts/vercel-preflight.sh
+  pull_request:
+    paths:
+      - js/ui/**
+      - .github/workflows/deploy-site.yml
+      - .github/scripts/vercel-preflight.sh
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-site-${{ github.ref }}
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: 24
+  VERCEL_CLI: vercel@59
+
+jobs:
+  build:
+    name: build and test the site
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      configured: ${{ steps.secrets.outputs.configured }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: js/ui/package-lock.json
+      - run: npm ci
+        working-directory: js/ui
+      - run: npm test
+        working-directory: js/ui
+      - run: npm run build
+        working-directory: js/ui
+      - name: Are the Vercel secrets set?
+        id: secrets
+        env:
+          TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          ORG: ${{ secrets.VERCEL_ORG_ID }}
+          PROJECT: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          missing=""
+          [ -n "$TOKEN" ]   || missing="$missing VERCEL_TOKEN"
+          [ -n "$ORG" ]     || missing="$missing VERCEL_ORG_ID"
+          [ -n "$PROJECT" ] || missing="$missing VERCEL_PROJECT_ID"
+          echo "configured=$([ -z "$missing" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          [ -z "$missing" ] || printf '### Site built, not deployed\n\nMissing repository secret(s): `%s`. Add them under Settings → Secrets and variables → Actions and re-run.\n' "${missing# }" >> "$GITHUB_STEP_SUMMARY"
+
+  deploy:
+    name: deploy to Vercel (${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }})
+    needs: build
+    if: needs.build.outputs.configured == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
+      url: ${{ steps.deploy.outputs.url }}
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      VERCEL_TARGET: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
+      PROD: ${{ github.ref == 'refs/heads/main' && '--prod' || '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check the three secrets against Vercel
+        run: .github/scripts/vercel-preflight.sh
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: js/ui/package-lock.json
+      - run: npm ci
+        working-directory: js/ui
+      - name: Pull, build and deploy with the Vercel CLI
+        id: deploy
+        working-directory: js/ui
+        run: |
+          npx --yes "$VERCEL_CLI" pull --yes --environment="$VERCEL_TARGET" --token="$VERCEL_TOKEN"
+          npx --yes "$VERCEL_CLI" build $PROD --token="$VERCEL_TOKEN"
+          url=$(npx --yes "$VERCEL_CLI" deploy --prebuilt $PROD --token="$VERCEL_TOKEN")
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          printf '### Deployed to Vercel (%s)\n\n%s\n' "$VERCEL_TARGET" "$url" >> "$GITHUB_STEP_SUMMARY"

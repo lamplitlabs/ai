@@ -1,0 +1,718 @@
+@import 'tailwindcss';
+
+/* Dark mode follows the `.dark` class on <html> (toggle in the header), defaulting to the OS setting. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Lamplit Labs tokens (the palette of lamplitlabs.com: warm amber on near-black, paper-white by day).
+   Tailwind 4 turns these into bg-*, text-*, border-*, font-* utilities. */
+@theme {
+  --color-background: hsl(40 20% 99%);
+  --color-foreground: hsl(30 10% 8%);
+  --color-card: hsl(40 20% 100%);
+  --color-card-foreground: hsl(30 10% 8%);
+  --color-muted: hsl(35 15% 94%);
+  --color-muted-foreground: hsl(30 8% 46%);
+  --color-border: hsl(35 12% 88%);
+  --color-input: hsl(35 12% 88%);
+  --color-ring: hsl(36 80% 50%);
+  --color-primary: hsl(36 80% 50%);
+  --color-primary-foreground: hsl(30 15% 8%);
+  --color-secondary: hsl(35 15% 94%);
+  --color-secondary-foreground: hsl(30 10% 12%);
+  --color-popover: hsl(40 20% 100%);
+  --color-popover-foreground: hsl(30 10% 8%);
+  --color-accent: hsl(36 60% 92%);
+  --color-accent-foreground: hsl(30 30% 18%);
+  --color-success: hsl(150 45% 36%);
+  --color-success-foreground: hsl(150 40% 97%);
+  --color-warning: hsl(30 85% 45%);
+  --color-destructive: hsl(4 70% 48%);
+  --color-destructive-foreground: hsl(4 70% 98%);
+  --color-glow: hsl(36 90% 55%);
+  --color-learner: hsl(30 10% 12%);
+  --color-learner-foreground: hsl(40 20% 97%);
+  --color-reference: hsl(38 60% 92%);
+  --color-reference-foreground: hsl(30 40% 25%);
+  --radius-lg: 1rem;
+  --radius-md: 0.75rem;
+  --radius-sm: 0.5rem;
+  --font-sans: 'Inter Variable', Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Fraunces Variable', Fraunces, 'Iowan Old Style', Georgia, 'Times New Roman', serif;
+  --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --animate-lamp-pulse: lamp-pulse 3.5s ease-in-out infinite;
+  --animate-flow: flow 1.6s linear infinite;
+  --animate-status: status-pulse 2.4s ease-in-out infinite;
+  --animate-float: float 7s ease-in-out infinite;
+}
+
+/* lab surfaces: the blueprint grid and the hairlines are one step above the background in both themes */
+:root {
+  --grid-line: hsl(30 10% 8% / 0.07);
+  --grid-dot: hsl(30 10% 8% / 0.16);
+  --glass: hsl(40 20% 100% / 0.72);
+  --glass-edge: hsl(0 0% 100% / 0.6);
+}
+.dark {
+  --grid-line: hsl(40 15% 95% / 0.045);
+  --grid-dot: hsl(40 15% 95% / 0.12);
+  --glass: hsl(240 10% 7% / 0.62);
+  --glass-edge: hsl(0 0% 100% / 0.05);
+}
+
+.dark {
+  --color-background: hsl(240 12% 4%);
+  --color-foreground: hsl(40 15% 95%);
+  --color-card: hsl(240 10% 6%);
+  --color-card-foreground: hsl(40 15% 95%);
+  --color-muted: hsl(240 8% 12%);
+  --color-muted-foreground: hsl(40 8% 60%);
+  --color-border: hsl(240 8% 14%);
+  --color-input: hsl(240 8% 16%);
+  --color-ring: hsl(38 85% 55%);
+  --color-primary: hsl(38 85% 55%);
+  --color-primary-foreground: hsl(240 12% 6%);
+  --color-secondary: hsl(240 8% 12%);
+  --color-secondary-foreground: hsl(40 15% 92%);
+  --color-popover: hsl(240 10% 7%);
+  --color-popover-foreground: hsl(40 15% 95%);
+  --color-accent: hsl(240 8% 14%);
+  --color-accent-foreground: hsl(40 15% 95%);
+  --color-success: hsl(150 45% 55%);
+  --color-success-foreground: hsl(150 40% 8%);
+  --color-warning: hsl(38 85% 60%);
+  --color-destructive: hsl(4 70% 62%);
+  --color-destructive-foreground: hsl(4 70% 8%);
+  --color-glow: hsl(38 90% 50%);
+  --color-learner: hsl(38 85% 55%);
+  --color-learner-foreground: hsl(240 12% 6%);
+  --color-reference: hsl(38 30% 14%);
+  --color-reference-foreground: hsl(40 40% 88%);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    color-scheme: light;
+  }
+  html.dark {
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: 'cv11', 'ss01';
+  }
+  .font-display {
+    font-variation-settings: 'opsz' 144, 'SOFT' 30;
+    letter-spacing: -0.01em;
+  }
+  .font-mono {
+    font-feature-settings: 'zero', 'ss02';
+  }
+  ::selection {
+    @apply bg-primary/20;
+  }
+}
+
+/* Markdown inside bubbles: compact, readable tables and lists. */
+.prose-bubble :is(p, ul, ol, table, pre, blockquote) + :is(p, ul, ol, table, pre, blockquote) {
+  margin-top: 0.5rem;
+}
+.prose-bubble ul {
+  @apply list-disc pl-5;
+}
+.prose-bubble ol {
+  @apply list-decimal pl-5;
+}
+.prose-bubble strong {
+  @apply font-semibold;
+}
+.prose-bubble code {
+  @apply rounded bg-muted px-1 py-0.5 font-mono text-[0.85em];
+}
+.prose-bubble table {
+  @apply my-1 w-full border-collapse text-[0.9em];
+}
+.prose-bubble th,
+.prose-bubble td {
+  @apply border border-border px-2 py-1 text-left align-top;
+}
+.prose-bubble th {
+  @apply bg-muted font-medium;
+}
+.prose-bubble a {
+  @apply underline underline-offset-2;
+}
+
+/* Streaming cursor */
+.bubble.live > :last-child::after {
+  content: '▍';
+  @apply ml-0.5 animate-pulse text-muted-foreground;
+}
+
+/* Mic level ring */
+@keyframes ping-soft {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(1.7);
+    opacity: 0;
+  }
+}
+.listening::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  border: 2px solid currentColor;
+  animation: ping-soft 1.2s ease-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .listening::before,
+  .bubble.live > :last-child::after {
+    animation: none;
+  }
+}
+
+/* small entrance animations (no tailwindcss-animate dependency) */
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.98);
+  }
+}
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+  }
+}
+.animate-in {
+  animation: enter 0.18s ease-out both;
+}
+.slide-in-from-right {
+  animation: slide-in-right 0.22s ease-out both;
+}
+
+/* ---- Lamplit Labs motifs (ported from lamplitlabs.com) ---- */
+
+/* the amber cone of light over the hero */
+.hero-lamplight {
+  background: radial-gradient(ellipse 60% 50% at 50% -10%, color-mix(in srgb, var(--color-glow) 28%, transparent), transparent 70%);
+}
+.dark .hero-lamplight {
+  background: radial-gradient(ellipse 60% 50% at 50% -10%, color-mix(in srgb, var(--color-glow) 22%, transparent), transparent 70%);
+}
+.lamplit-text {
+  color: var(--color-primary);
+  text-shadow: 0 0 24px color-mix(in srgb, var(--color-glow) 45%, transparent);
+}
+.lamp-glow {
+  filter: drop-shadow(0 0 12px color-mix(in srgb, var(--color-glow) 55%, transparent));
+  animation: var(--animate-lamp-pulse);
+}
+@keyframes lamp-pulse {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 10px color-mix(in srgb, var(--color-glow) 45%, transparent));
+  }
+  50% {
+    filter: drop-shadow(0 0 22px color-mix(in srgb, var(--color-glow) 75%, transparent));
+  }
+}
+
+/* scroll reveal: fade up once when the block enters the viewport */
+.reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition:
+    opacity 0.7s ease-out,
+    transform 0.7s ease-out;
+}
+.reveal.visible {
+  opacity: 1;
+  transform: none;
+}
+.reveal-stagger > * {
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity 0.6s ease-out,
+    transform 0.6s ease-out;
+}
+.reveal-stagger.visible > * {
+  opacity: 1;
+  transform: none;
+}
+.reveal-stagger.visible > :nth-child(2) {
+  transition-delay: 0.08s;
+}
+.reveal-stagger.visible > :nth-child(3) {
+  transition-delay: 0.16s;
+}
+.reveal-stagger.visible > :nth-child(4) {
+  transition-delay: 0.24s;
+}
+.reveal-stagger.visible > :nth-child(5) {
+  transition-delay: 0.32s;
+}
+.reveal-stagger.visible > :nth-child(6) {
+  transition-delay: 0.4s;
+}
+
+/* hero entrance: staggered on first paint */
+@keyframes hero-entrance {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.hero-entrance-1,
+.hero-entrance-2,
+.hero-entrance-3,
+.hero-entrance-4 {
+  animation: hero-entrance 0.8s ease-out both;
+}
+.hero-entrance-2 {
+  animation-delay: 0.12s;
+}
+.hero-entrance-3 {
+  animation-delay: 0.24s;
+}
+.hero-entrance-4 {
+  animation-delay: 0.36s;
+}
+
+/* nav links underline from the left */
+.nav-link {
+  position: relative;
+}
+.nav-link::after {
+  content: '';
+  position: absolute;
+  left: 0.75rem;
+  right: 0.75rem;
+  bottom: 0.15rem;
+  height: 1px;
+  background: var(--color-primary);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.25s ease;
+}
+.nav-link:hover::after,
+.nav-link[aria-current='page']::after {
+  transform: scaleX(1);
+}
+
+/* a curve drawing itself */
+@keyframes draw {
+  from {
+    stroke-dashoffset: 400;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.draw-path {
+  stroke-dasharray: 400;
+  animation: draw 1.8s ease-out both;
+}
+
+/* cards catch the light on hover */
+.card-glow {
+  position: relative;
+  overflow: hidden;
+}
+.card-glow::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background: radial-gradient(400px circle at var(--x, 50%) var(--y, 0%), color-mix(in srgb, var(--color-glow) 14%, transparent), transparent 60%);
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+.card-glow:hover::before {
+  opacity: 1;
+}
+
+/* the process illustration: dashes travel along the pipe, the active stage lights up */
+@keyframes flow {
+  to {
+    stroke-dashoffset: -24;
+  }
+}
+.flow-line {
+  stroke-dasharray: 6 18;
+  animation: var(--animate-flow);
+}
+.stage {
+  transition:
+    opacity 0.5s ease,
+    transform 0.5s ease;
+}
+.stage[data-active='false'] {
+  opacity: 0.65;
+}
+.stage[data-active='true'] .stage-dot {
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--color-glow) 22%, transparent), 0 0 24px color-mix(in srgb, var(--color-glow) 60%, transparent);
+}
+@keyframes shrink-in {
+  0% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  60% {
+    transform: scale(0.28);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.28);
+    opacity: 0;
+  }
+}
+@keyframes drift-up {
+  from {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-46px);
+    opacity: 0;
+  }
+}
+.particle {
+  animation: drift-up 2.4s ease-out infinite;
+}
+@keyframes orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.orbit {
+  animation: orbit 28s linear infinite;
+  transform-origin: center;
+}
+.orbit-reverse {
+  animation: orbit 28s linear infinite reverse;
+  transform-origin: center;
+}
+
+/* ---- Lab instruments (the ai. site: the brand read through an instrument panel) ---- */
+/* The `--sweep` angle the glow-border animates; registered so the browser can interpolate it. */
+@property --sweep {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+/* In the components layer so Tailwind utilities (`normal-case`, `text-primary`, ...) can override these classes. */
+@layer components {
+
+  /* mono labels: section indices, datum keys, status lines */
+  .mono-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 1.4;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-feature-settings: 'zero', 'ss02';
+  }
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* the blueprint: a fine dot grid that fades out from the centre; sits under heroes and section heads */
+  .lab-grid {
+    position: relative;
+    isolation: isolate;
+  }
+  .lab-grid::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image: radial-gradient(var(--grid-dot) 1px, transparent 1.2px);
+    background-size: 28px 28px;
+    background-position: center top;
+    mask-image: radial-gradient(ellipse 80% 70% at 50% 20%, black 20%, transparent 80%);
+    -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 20%, black 20%, transparent 80%);
+  }
+  .lab-grid-lines::before {
+    background-image: linear-gradient(var(--grid-line) 1px, transparent 1px), linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: radial-gradient(ellipse 90% 90% at 50% 0%, black 10%, transparent 75%);
+    -webkit-mask-image: radial-gradient(ellipse 90% 90% at 50% 0%, black 10%, transparent 75%);
+  }
+
+  /* film grain over the dark theme keeps large flat areas from looking like a slide */
+  .lab-grain {
+    position: relative;
+  }
+  .lab-grain::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    pointer-events: none;
+    opacity: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0.6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 160px 160px;
+    mix-blend-mode: overlay;
+  }
+  .dark .lab-grain::after {
+    opacity: 0.055;
+  }
+
+  /* glass: the card surface of the lab - translucent, a hairline, a highlight on the top edge */
+  .glass {
+    background: var(--glass);
+    border: 1px solid var(--color-border);
+    box-shadow: inset 0 1px 0 0 var(--glass-edge);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    transition:
+      border-color 0.3s ease,
+      transform 0.3s ease,
+      box-shadow 0.3s ease;
+  }
+  .glass:hover {
+    border-color: color-mix(in srgb, var(--color-primary) 40%, var(--color-border));
+  }
+  .glass-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: inset 0 1px 0 0 var(--glass-edge), 0 18px 40px -20px color-mix(in srgb, var(--color-glow) 35%, transparent);
+  }
+
+  /* registration marks: four small corner ticks, the drafting-table signature of the lab cards */
+  .corner-marks {
+    --tick: color-mix(in srgb, var(--color-primary) 70%, transparent);
+    --len: 10px;
+    background-image:
+      linear-gradient(var(--tick), var(--tick)),
+      linear-gradient(var(--tick), var(--tick)),
+      linear-gradient(var(--tick), var(--tick)),
+      linear-gradient(var(--tick), var(--tick)),
+      linear-gradient(var(--tick), var(--tick)),
+      linear-gradient(var(--tick), var(--tick)),
+      linear-gradient(var(--tick), var(--tick)),
+      linear-gradient(var(--tick), var(--tick));
+    background-repeat: no-repeat;
+    background-size:
+      var(--len) 1px,
+      1px var(--len),
+      var(--len) 1px,
+      1px var(--len),
+      var(--len) 1px,
+      1px var(--len),
+      var(--len) 1px,
+      1px var(--len);
+    background-position:
+      -1px -1px,
+      -1px -1px,
+      calc(100% + 1px) -1px,
+      calc(100% + 1px) -1px,
+      -1px calc(100% + 1px),
+      -1px calc(100% + 1px),
+      calc(100% + 1px) calc(100% + 1px),
+      calc(100% + 1px) calc(100% + 1px);
+  }
+  .corner-marks-hover {
+    --tick: transparent;
+    transition: --tick 0.3s ease;
+  }
+  .corner-marks-hover:hover {
+    --tick: color-mix(in srgb, var(--color-primary) 70%, transparent);
+  }
+
+  /* a slow amber sweep around the featured card: a 1px ring cut out of a rotating conic gradient with a mask, so it
+     works on the glass surface too (whose backdrop-filter forms a stacking context that a z-index:-1 layer cannot
+     get behind) */
+  @keyframes sweep {
+    to {
+      --sweep: 360deg;
+    }
+  }
+  .glow-border {
+    position: relative;
+    box-shadow: inset 0 1px 0 0 var(--glass-edge), 0 0 60px -18px color-mix(in srgb, var(--color-glow) 45%, transparent);
+  }
+  .glow-border::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: conic-gradient(from var(--sweep), transparent 0 62%, color-mix(in srgb, var(--color-glow) 95%, transparent) 84%, transparent 100%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    pointer-events: none;
+    animation: sweep 9s linear infinite;
+  }
+
+  /* the live status dot */
+  @keyframes status-pulse {
+    0%,
+    100% {
+      box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-success) 55%, transparent);
+    }
+    60% {
+      box-shadow: 0 0 0 6px transparent;
+    }
+  }
+  .status-dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 9999px;
+    background: var(--color-success);
+    animation: var(--animate-status);
+  }
+  .status-dot.pending {
+    background: var(--color-warning);
+  }
+
+  /* scroll progress hairline under the header */
+  .scroll-progress {
+    position: absolute;
+    left: 0;
+    bottom: -1px;
+    height: 1px;
+    width: 100%;
+    transform-origin: left;
+    transform: scaleX(var(--progress, 0));
+    background: linear-gradient(90deg, var(--color-primary), var(--color-glow));
+    box-shadow: 0 0 12px color-mix(in srgb, var(--color-glow) 60%, transparent);
+    pointer-events: none;
+  }
+
+  /* amber-to-paper gradient type for one word in a heading */
+  .text-lamp {
+    background: linear-gradient(100deg, var(--color-glow) 0%, hsl(44 95% 66%) 45%, var(--color-foreground) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* big display numerals in the measurement strip */
+  .datum-value {
+    font-family: var(--font-display);
+    font-variation-settings: 'opsz' 144, 'SOFT' 20;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+
+  /* the horizon line the hero sits on */
+  .horizon {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--color-primary) 55%, transparent) 30%, color-mix(in srgb, var(--color-primary) 55%, transparent) 70%, transparent);
+  }
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-6px);
+    }
+  }
+  .float {
+    animation: var(--animate-float);
+  }
+  .float-late {
+    animation: var(--animate-float);
+    animation-delay: -3.5s;
+  }
+
+  /* segmented progress (the process rail) */
+  .segments {
+    display: grid;
+    gap: 4px;
+  }
+  .segments > i {
+    display: block;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--color-border);
+    transition: background 0.4s ease;
+  }
+  .segments > i[data-on='true'] {
+    background: var(--color-primary);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--color-glow) 60%, transparent);
+  }
+
+  /* table numerals and hairlines on the benchmarks page */
+  .lab-table th {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+  .lab-table td {
+    font-variant-numeric: tabular-nums;
+  }
+  .lab-table tbody tr {
+    transition: background 0.2s ease;
+  }
+  .lab-table tbody tr:hover {
+    background: color-mix(in srgb, var(--color-primary) 5%, transparent);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .glow-border::before,
+    .status-dot,
+    .float,
+    .float-late {
+      animation: none;
+    }
+    .glass,
+    .glass-lift {
+      transition: none;
+    }
+    .glass-lift:hover {
+      transform: none;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .reveal-stagger > * {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .hero-entrance-1,
+  .hero-entrance-2,
+  .hero-entrance-3,
+  .hero-entrance-4,
+  .lamp-glow,
+  .flow-line,
+  .particle,
+  .orbit,
+  .orbit-reverse,
+  .draw-path {
+    animation: none;
+  }
+  .stage {
+    transition: none;
+  }
+  .stage[data-active='false'] {
+    opacity: 1;
+  }
+}
