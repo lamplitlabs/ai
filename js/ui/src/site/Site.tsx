@@ -44,8 +44,12 @@ export function descriptionFor(route: string): string {
 }
 
 /**
- * `<meta name=robots>` for a route. The host answers every path with the app and HTTP 200 (vercel.json SPA rewrite),
- * so an unknown path carries `noindex` to tell crawlers the page is missing; known routes carry no robots meta.
+ * `<meta name=robots>` for a route; known routes carry none. vercel.json rewrites only /models and /benchmarks to the
+ * app (/ is index.html itself) and serves every other unknown path as /404.html with HTTP 404, as
+ * scripts/preview-static.mjs does, so a crawler already gets a typo'd URL as missing. This `noindex` only covers an
+ * unknown route the app reaches anyway: client-side navigation, or the Vite dev server answering every path with the
+ * app. Keep that catch-all at 404: a 200 rewrite to index.html would answer every typo with the home page's HTML, a
+ * soft 404 that crawlers which do not run JavaScript would index.
  */
 export function robotsFor(route: string): string | null {
   return route in TITLES ? null : 'noindex';
