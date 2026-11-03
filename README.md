@@ -12,6 +12,7 @@ js/ui/            the site - React 19, Tailwind CSS 4, Vite; one build, index.ht
   vercel.json     the host's rules: /models and /benchmarks rewrite to their own prerendered page (models.html, benchmarks.html: the app with that page's title, description and og:url in its static head, for link previews that run no JavaScript; emitted by vite.config.ts from src/site/routeHead.ts), unknown paths get a real 404, /try -> the flagship's demo, Cross-Origin headers
   scripts/        preview-static.mjs serves dist/ the way the host does, for the headless check; sitemap.mjs regenerates public/sitemap.xml
 js/check-site.mjs every route headless: <h1>, fonts, console errors, failed requests; screenshots on request
+js/find-browser.mjs  which browser check-site launches: --browser, BROWSER_PATH, Playwright's headless shell, Chrome for Testing, then an installed Chrome/Chromium/Brave (never Edge); always --use-mock-keychain
 scripts/verify.sh            the full check in one command: `make lint && make test` (runs `make setup` first when node_modules lacks tsc)
 scripts/watch-hub-links.sh   runs `make setup` if node_modules lacks tsc, builds, then runs `make hub-links`; prints only when a showcased hub link is dead or the check could not run
 .github/workflows/deploy-site.yml   build and test on GitHub, then `vercel deploy --prebuilt` (the host never sees the source)
@@ -24,9 +25,9 @@ docs/             the PULSE control plane and the site's records (ADR-001, FEAT-
 make setup      # cd js/ui && npm ci
 make ui-dev     # Vite dev server, http://127.0.0.1:5173
 make lint       # tsc -b, lint:js (unused exports), node --check on the scripts, FEAT-001 vitest count, README routes vs check-site defaults, site.json hub slugs
-make test       # vitest and a production build; `npm run build` first runs js/ui/scripts/sitemap.mjs (prebuild), which regenerates js/ui/public/sitemap.xml from the routes - commit it when you change a route
+make test       # vitest, node --test js/find-browser.test.mjs (check-site's browser order) and a production build; `npm run build` first runs js/ui/scripts/sitemap.mjs (prebuild), which regenerates js/ui/public/sitemap.xml from the routes - commit it when you change a route
 make clean      # rm -rf js/ui/dist
-make ui-check   # every route headless in dark 1280 and light 390 on the built site (a Chromium-based browser; BROWSER_PATH to choose)
+make ui-check   # every route headless in dark 1280 and light 390 on the built site (finds Playwright's chrome-headless-shell, e.g. from `npx playwright install chromium --only-shell`, else Chrome for Testing or an installed Chrome/Chromium/Brave, never Edge; BROWSER_PATH to choose)
 make hub-links  # ui-check plus a HEAD request to every showcase hub link (Try it / View weights); a 404 fails (needs network)
 node js/check-site.mjs --base http://127.0.0.1:4174 --shots /tmp/site   # screenshots per route
 sh scripts/verify.sh           # make lint && make test in one go (installs deps first if node_modules lacks tsc)

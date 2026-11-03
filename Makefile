@@ -19,7 +19,8 @@ lint: ## Type-check the site (tsc -b), flag unused exports (lint:js), syntax-che
 	@sh scripts/check-test-count.sh
 	@sh scripts/check-routes-doc.sh
 
-test: ## Unit tests (vitest) and a production build
+test: ## Unit tests (vitest; node --test for check-site's browser order) and a production build
+	node --test --test-reporter=spec js/find-browser.test.mjs
 	cd $(UI) && npm test && npm run build
 
 build: ## Production build only (js/ui/dist)
@@ -37,7 +38,7 @@ define with_preview
 	  $(1); status=$$?; kill $$pid; exit $$status
 endef
 
-ui-check: ## Every route headless on the built site (needs Chrome/Edge; BROWSER_PATH to point at one), dark 1280 and light 390
+ui-check: ## Every route headless on the built site (finds Playwright's headless shell or Chrome; BROWSER_PATH to choose), dark 1280 and light 390
 	$(call with_preview,node js/check-site.mjs --base http://127.0.0.1:$(PORT) --theme dark --width 1280 && \
 	  node js/check-site.mjs --base http://127.0.0.1:$(PORT) --theme light --width 390)
 

@@ -17,10 +17,17 @@
 // Every route runs under a hard timeout (--route-timeout ms, default 10s): a host where headless Chromium accepts
 // the navigation but never answers the CDP evaluate fails fast with a message naming the stuck route instead of
 // hanging `make ui-check`.
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+//
+// The browser (js/find-browser.mjs has the full order and its unit test): --browser, then $BROWSER_PATH, then
+// Playwright's chrome-headless-shell downloads (under $PLAYWRIGHT_BROWSERS_PATH, ~/Library/Caches/ms-playwright or
+// ~/.cache/ms-playwright), then Playwright's Chrome for Testing, each newest revision first, then an installed
+// Google Chrome, Chromium or Brave. Microsoft Edge is never auto-detected. The browser always starts with
+// --use-mock-keychain, so a full Chrome never raises the macOS "Chrome Safe Storage" keychain dialog.
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
+import { browserArgs, browserCandidates, findBrowser } from './find-browser.mjs';
 
 const args = Object.fromEntries(
   process.argv.slice(2).reduce((acc, a, i, arr) => {
@@ -34,21 +41,12 @@ const routes = (args.routes || '/,/models,/benchmarks,/nothing-here').split(',')
 const theme = args.theme || 'dark';
 const width = Number(args.width || 1280);
 const routeTimeout = Number(args['route-timeout'] || process.env.CHECK_SITE_ROUTE_TIMEOUT_MS || 10000);
-const candidates = [
-  args.browser,
-  process.env.BROWSER_PATH,
-  '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
-  '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge',
-  '/Applications/Chromium.app/Contents/MacOS/Chromium',
-  '/Applications/Brave Browser.app/Contents/MacOS/Brave Browser',
-  '/usr/bin/google-chrome',
-  '/usr/bin/chromium',
-  '/usr/bin/chromium-browser',
-  '/usr/bin/microsoft-edge',
-].filter(Boolean);
-const browser = candidates.find((p) => existsSync(p));
+const browserOptions = { explicit: args.browser === 'true' ? undefined : args.browser };
+const browser = findBrowser(browserOptions);
 if (!browser) {
-  console.error('no Chromium-based browser found; pass --browser <path>');
+  console.error('no Chromium-based browser found; looked for:');
+  for (const p of browserCandidates(browserOptions)) console.error(`  ${p}`);
+  console.error('pass --browser <path> or set BROWSER_PATH (`npx playwright install chromium --only-shell` downloads one)');
   process.exit(2);
 }
 if (args.shots) mkdirSync(args.shots, { recursive: true });
@@ -97,7 +95,7 @@ async function launchOnce() {
   port = 9300 + Math.floor(Math.random() * 500);
   profile = join(tmp, `check-site-${process.pid}-${port}`);
   rmSync(profile, { recursive: true, force: true });
-  proc = spawn(browser, [`--headless=new`, `--remote-debugging-port=${port}`, `--user-data-dir=${profile}`, '--no-first-run', '--disable-gpu', '--hide-scrollbars', `--window-size=${width},900`, 'about:blank'], { stdio: 'ignore' });
+  proc = spawn(browser, browserArgs({ port, profile, width }), { stdio: 'ignore' });
   let exited = false;
   proc.once('exit', () => { exited = true; });
   for (let i = 0; i < 100; i++) {
@@ -321,5 +319,5 @@ if (hubEnabled) {
   }
 }
 
-console.log(JSON.stringify({ base, theme, ok: !failed, pages: results, ...(hubLinks ? { hub_links: hubLinks } : {}) }, null, 2));
+console.log(JSON.stringify({ base, theme, browser, ok: !failed, pages: results, ...(hubLinks ? { hub_links: hubLinks } : {}) }, null, 2));
 process.exit(failed ? 1 : 0);
