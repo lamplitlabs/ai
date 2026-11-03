@@ -234,6 +234,31 @@ export const GATE_DEFINITIONS: Record<string, string> = {
   export: 'The export the browser runs gives the same answers as the trained weights it was made from.',
 };
 
+/**
+ * The measured rates of a gate run that are not release gates (`gate.rates` keys absent from `gate.gates`): published
+ * beside the gates as plain shares, with no threshold. Keys follow site.json; a key missing from a run is skipped.
+ */
+export const RATE_LABELS: Record<string, string> = {
+  no_emoji: 'no emoji',
+  length_budget: 'within the length budget',
+  markdown_sane: 'well-formed Markdown',
+  all_checks: 'passes every check at once',
+};
+
+/** What each non-gate rate measures, in one sentence, like GATE_DEFINITIONS. */
+export const RATE_DEFINITIONS: Record<string, string> = {
+  no_emoji: 'The answer contains no emoji.',
+  length_budget: 'The answer stays within the length budget set for its task.',
+  markdown_sane: 'Any Markdown in the answer is well formed.',
+  all_checks: 'The share of answers that pass every check at once - the strictest number of the run.',
+};
+
+/** The non-gate rates a run measured, in RATE_LABELS order: keys the run lacks, or that are also release gates, are left out. */
+export const otherRates = (g: Pick<GateSummary, 'rates' | 'gates'>): [string, number][] =>
+  Object.keys(RATE_LABELS)
+    .filter((k) => !(k in (g.gates ?? {})) && typeof g.rates?.[k] === 'number')
+    .map((k) => [k, g.rates[k]]);
+
 export const CATEGORY_LABELS: Record<string, string> = {
   'adjective-declension': 'Adjective endings',
   'c1-connectors': 'Two-part connectors (C1)',

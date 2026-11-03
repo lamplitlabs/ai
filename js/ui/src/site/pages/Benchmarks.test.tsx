@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { Benchmarks, benchmarksCsv, benchmarksCsvUrl, benchmarksJson, benchmarksJsonUrl, BENCHMARKS_CSV_FILENAME, BENCHMARKS_CSV_HEADER, BENCHMARKS_JSON_FILENAME, csvField, GateCard, gateAge, lastUpdatedNote, GATE_STALE_AFTER_DAYS, unmetGates, unmetLabel } from './Benchmarks';
-import { GATE_DEFINITIONS, GATE_LABELS, models, NOT_MEASURED } from '../data';
+import { GATE_DEFINITIONS, GATE_LABELS, models, NOT_MEASURED, otherRates, pct, RATE_DEFINITIONS, RATE_LABELS, showcaseModels } from '../data';
 
 const withGate = models.filter((m) => m.gate);
 const newest = withGate.reduce((best, m) => ((m.gate!.created_at ?? '') > (best.gate!.created_at ?? '') ? m : best));
@@ -319,5 +319,64 @@ describe('GateCard unmeasured gate without a note', () => {
   it('renders NOT_MEASURED, not the literal "not measured"', () => {
     expect(html).toContain(`<span>${NOT_MEASURED}</span>`);
     expect(html).not.toContain('<span>not measured</span>');
+  });
+});
+
+/** Every rate a gate run measured is published: the ones that are not release gates (no_emoji, length_budget,
+ *  markdown_sane, all_checks) sit under "Other checks" as plain percentages, with no threshold. */
+describe('GateCard other checks', () => {
+  const NON_GATE = ['no_emoji', 'length_budget', 'markdown_sane', 'all_checks'];
+  const showcase = showcaseModels.filter((m) => m.gate);
+
+  it('every non-gate rate has a label and a definition', () => {
+    for (const k of NON_GATE) {
+      expect(RATE_LABELS[k], `no label for ${k}`).toBeTruthy();
+      expect(RATE_DEFINITIONS[k], `no definition for ${k}`).toBeTruthy();
+    }
+  });
+
+  it('renders the four rates with their labels and values for each showcase model', () => {
+    expect(showcase.length).toBeGreaterThan(0);
+    for (const m of showcase) {
+      const html = renderToStaticMarkup(<GateCard m={m} />);
+      expect(html).toContain('Other checks');
+      for (const k of NON_GATE) {
+        const v = m.gate!.rates[k];
+        expect(v, `${m.name} has no ${k} rate`).toBeTypeOf('number');
+        const row = html.match(new RegExp(`<li[^>]*data-rate="${k}"[^>]*>.*?</li>`));
+        expect(row, `${m.name}: no row for ${k}`).not.toBeNull();
+        expect(row![0]).toContain(RATE_LABELS[k]);
+        expect(row![0]).toContain(pct(v, 1));
+      }
+    }
+  });
+
+  it('shows the lowest measured number, all_checks, on the page', () => {
+    const html = renderToStaticMarkup(<Benchmarks />);
+    for (const m of showcase) expect(html).toContain(pct(m.gate!.rates.all_checks, 1));
+  });
+
+  it('never repeats a release gate under other checks', () => {
+    for (const m of showcase) for (const [k] of otherRates(m.gate!)) expect(m.gate!.gates[k]).toBeUndefined();
+  });
+
+  it('a model without non-gate rates renders no empty section', () => {
+    const base = showcase[0];
+    for (const rates of [{}, Object.fromEntries(Object.entries(base.gate!.rates).filter(([k]) => !NON_GATE.includes(k)))]) {
+      const m = { ...base, gate: { ...base.gate!, rates } } as typeof base;
+      const html = renderToStaticMarkup(<GateCard m={m} />);
+      expect(html).not.toContain('Other checks');
+      expect(html).not.toContain('data-other-rates');
+    }
+  });
+
+  it('skips a missing key and keeps the rest', () => {
+    const base = showcase[0];
+    const { markdown_sane: _drop, ...rates } = base.gate!.rates;
+    const m = { ...base, gate: { ...base.gate!, rates } } as typeof base;
+    const html = renderToStaticMarkup(<GateCard m={m} />);
+    expect(html).toContain('Other checks');
+    expect(html).not.toContain('data-rate="markdown_sane"');
+    expect(html).toContain('data-rate="all_checks"');
   });
 });

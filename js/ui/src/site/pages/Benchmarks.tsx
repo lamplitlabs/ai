@@ -2,7 +2,7 @@ import { Check, FileDown, Info, X } from 'lucide-react';
 import { CopyButton } from '../CopyButton';
 import { Reveal } from '../Reveal';
 import { Gauge, Index, Status, Tag } from '../lab';
-import { categoryLabel, dataAgeDays, EDITION_LABELS, factCategories, GATE_DEFINITIONS, GATE_LABELS, lines, measuredOn, models, NOT_MEASURED, pct, shortDate, siteData, type SiteModel } from '../data';
+import { categoryLabel, dataAgeDays, EDITION_LABELS, factCategories, GATE_DEFINITIONS, GATE_LABELS, lines, measuredOn, models, NOT_MEASURED, otherRates, pct, RATE_DEFINITIONS, RATE_LABELS, shortDate, siteData, type SiteModel } from '../data';
 import { container } from '../cta';
 import { PageIntro } from './Models';
 
@@ -182,6 +182,7 @@ export function GateCard({ m }: { m: SiteModel }) {
   const g = m.gate!;
   const gates = Object.entries(g.gates);
   const passed = gates.filter(([, v]) => v.ok).length;
+  const others = otherRates(g);
   return (
     <article id={m.name} className="glass corner-marks scroll-mt-20 rounded-3xl p-6 sm:p-8 lg:p-10">
       <div className="flex flex-wrap items-center gap-2">
@@ -224,6 +225,22 @@ export function GateCard({ m }: { m: SiteModel }) {
               </li>
             ))}
           </ul>
+          {others.length ? (
+            <div className="mt-8" data-other-rates>
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <h3 className="mono-label text-muted-foreground">Other checks</h3>
+                <span className="mono-label text-muted-foreground/70">measured, not a release gate</span>
+              </div>
+              <ul className="mt-4 space-y-2.5">
+                {others.map(([k, v]) => (
+                  <li key={k} data-rate={k} className="flex items-center justify-between gap-3 text-sm" title={RATE_DEFINITIONS[k]}>
+                    <span>{RATE_LABELS[k]}</span>
+                    <span className="mono-label tnum text-foreground">{pct(v, 1)}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
         </div>
         <div>
           <Index n="b">Facts by category</Index>
