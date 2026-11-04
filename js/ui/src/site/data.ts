@@ -289,6 +289,10 @@ export const categoryLabel = (k: string) => CATEGORY_LABELS[k] ?? k.replace(/-/g
 
 /** Categories with a facts rate, best first. */
 export const factCategories = (g: GateSummary) => Object.entries(g.by_category).filter((e): e is [string, CategoryRates & { facts: number }] => e[1].facts != null).sort((a, b) => b[1].facts - a[1].facts);
+/** Every category, best all-checks rate (`ok`) first, ties by key - including the ones with no facts rate (dialogue,
+ *  translation...), so the page publishes each category's weakest number too. */
+export const allCategories = (g: GateSummary): [string, CategoryRates][] =>
+  Object.entries(g.by_category).sort((a, b) => b[1].ok - a[1].ok || (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
 
 export const pct = (x: number | null | undefined, digits = 0) => (x == null ? NOT_MEASURED : `${(x * 100).toFixed(digits)}%`);
 /** What a card shows in place of a number nobody measured yet. One phrase for every field, so no card falls back to a bare dash

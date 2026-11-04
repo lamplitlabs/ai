@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { Benchmarks, benchmarksCsv, benchmarksCsvUrl, benchmarksJson, benchmarksJsonUrl, BENCHMARKS_CSV_FILENAME, BENCHMARKS_CSV_HEADER, BENCHMARKS_JSON_FILENAME, csvField, GateCard, gateAge, lastUpdatedNote, GATE_STALE_AFTER_DAYS, unmetGates, unmetLabel } from './Benchmarks';
-import { GATE_DEFINITIONS, GATE_LABELS, models, NOT_MEASURED, otherRates, pct, RATE_DEFINITIONS, RATE_LABELS, showcaseModels } from '../data';
+import { allCategories, categoryLabel, GATE_DEFINITIONS, GATE_LABELS, models, NOT_MEASURED, otherRates, pct, RATE_DEFINITIONS, RATE_LABELS, showcaseModels } from '../data';
 
 const withGate = models.filter((m) => m.gate);
 const newest = withGate.reduce((best, m) => ((m.gate!.created_at ?? '') > (best.gate!.created_at ?? '') ? m : best));
@@ -378,5 +378,52 @@ describe('GateCard other checks', () => {
     expect(html).toContain('Other checks');
     expect(html).not.toContain('data-rate="markdown_sane"');
     expect(html).toContain('data-rate="all_checks"');
+  });
+});
+
+/** "By category" lists every scenario category with its all-checks rate (`ok`), not only the categories that have a
+ *  facts rate: dialogue, grammar-explain, scenario-brief and translation have no facts rate but still pass or fail. */
+describe('GateCard by category', () => {
+  const showcase = showcaseModels.filter((m) => m.gate);
+  const rowOf = (html: string, k: string) => html.match(new RegExp(`<li[^>]*data-category="${k}"[^>]*>.*?</li>`))?.[0];
+
+  it('renders a category without a facts rate, with its all-checks rate and no facts number', () => {
+    const base = withGate[0];
+    const m = {
+      ...base,
+      gate: { ...base.gate!, by_category: { ...base.gate!.by_category, 'free-talk': { n: 5, ok: 0.4, not_truncated: 1, length_budget: 1 }, clock: { n: 8, ok: 0.875, facts: 1, not_truncated: 1, length_budget: 1 } } },
+    } as typeof base;
+    const html = renderToStaticMarkup(<GateCard m={m} />);
+    expect(html).toContain('By category');
+    const row = rowOf(html, 'free-talk');
+    expect(row, 'no row for a category without facts').toBeDefined();
+    expect(row).toContain(categoryLabel('free-talk'));
+    expect(row).toContain('n=5');
+    expect(row).toContain('>40%<');
+    expect(row).not.toContain('facts ');
+    const clock = rowOf(html, 'clock');
+    expect(clock).toContain('>88%<');
+    expect(clock).toContain('facts 100%');
+  });
+
+  it('every showcase category appears with its ok rate, including the ones with no facts rate', () => {
+    expect(showcase.length).toBeGreaterThan(0);
+    let withoutFacts = 0;
+    for (const m of showcase) {
+      const html = renderToStaticMarkup(<GateCard m={m} />);
+      for (const [k, v] of Object.entries(m.gate!.by_category)) {
+        const row = rowOf(html, k);
+        expect(row, `${m.name}: no row for ${k}`).toBeDefined();
+        expect(row).toContain(`>${pct(v.ok)}<`);
+        if (v.facts != null) expect(row).toContain(`facts ${pct(v.facts)}`);
+        else withoutFacts++;
+      }
+    }
+    expect(withoutFacts, 'site.json has no category without facts, so this test does not discriminate').toBeGreaterThan(0);
+  });
+
+  it('allCategories sorts by ok, best first, ties by key, and keeps every category', () => {
+    const g = { by_category: { b: { n: 1, ok: 0.5 }, a: { n: 1, ok: 0.5, facts: 1 }, c: { n: 1, ok: 0.9 } } } as unknown as Parameters<typeof allCategories>[0];
+    expect(allCategories(g).map(([k]) => k)).toEqual(['c', 'a', 'b']);
   });
 });
