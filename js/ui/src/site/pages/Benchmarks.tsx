@@ -2,7 +2,7 @@ import { Check, FileDown, Info, X } from 'lucide-react';
 import { CopyButton } from '../CopyButton';
 import { Reveal } from '../Reveal';
 import { Gauge, Index, Status, Tag } from '../lab';
-import { categoryLabel, dataAgeDays, EDITION_LABELS, factCategories, GATE_DEFINITIONS, GATE_LABELS, lines, measuredOn, models, NOT_MEASURED, otherRates, pct, RATE_DEFINITIONS, RATE_LABELS, shortDate, siteData, type SiteModel } from '../data';
+import { allCategories, categoryLabel, dataAgeDays, EDITION_LABELS, GATE_DEFINITIONS, GATE_LABELS, lines, measuredOn, models, NOT_MEASURED, otherRates, pct, RATE_DEFINITIONS, RATE_LABELS, shortDate, siteData, type SiteModel } from '../data';
 import { container } from '../cta';
 import { PageIntro } from './Models';
 
@@ -183,6 +183,7 @@ export function GateCard({ m }: { m: SiteModel }) {
   const gates = Object.entries(g.gates);
   const passed = gates.filter(([, v]) => v.ok).length;
   const others = otherRates(g);
+  const factsThreshold = g.gates.facts?.threshold ?? 0.85;
   return (
     <article id={m.name} className="glass corner-marks scroll-mt-20 rounded-3xl p-6 sm:p-8 lg:p-10">
       <div className="flex flex-wrap items-center gap-2">
@@ -243,19 +244,34 @@ export function GateCard({ m }: { m: SiteModel }) {
           ) : null}
         </div>
         <div>
-          <Index n="b">Facts by category</Index>
-          <ul className="mt-5 space-y-3">
-            {factCategories(g).map(([k, v]) => (
-              <li key={k} className="text-sm">
-                <div className="flex items-center justify-between gap-3">
-                  <span>
-                    {categoryLabel(k)} <span className="mono-label text-muted-foreground/70">· n={v.n}</span>
-                  </span>
-                  <span className="mono-label tnum text-foreground">{pct(v.facts)}</span>
-                </div>
-                <Gauge className="mt-1.5" value={v.facts} ok={v.facts >= (g.gates.facts?.threshold ?? 0.85)} />
-              </li>
-            ))}
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <Index n="b">By category</Index>
+            <span className="mono-label text-muted-foreground/70" title={RATE_DEFINITIONS.all_checks}>
+              all checks · facts where measured
+            </span>
+          </div>
+          <ul className="mt-5 space-y-3" data-by-category>
+            {allCategories(g).map(([k, v]) => {
+              const factsOk = v.facts != null && v.facts >= factsThreshold;
+              return (
+                <li key={k} data-category={k} className="text-sm">
+                  <div className="flex items-center justify-between gap-3">
+                    <span>
+                      {categoryLabel(k)} <span className="mono-label text-muted-foreground/70">· n={v.n}</span>
+                    </span>
+                    <span className="mono-label tnum flex items-baseline gap-3">
+                      {v.facts != null ? (
+                        <span className={factsOk ? 'text-muted-foreground' : 'text-warning'} title={`facts rate; gate ${pct(factsThreshold)}`}>
+                          facts {pct(v.facts)}
+                        </span>
+                      ) : null}
+                      <span className="text-foreground">{pct(v.ok)}</span>
+                    </span>
+                  </div>
+                  <Gauge className="mt-1.5" value={v.ok} />
+                </li>
+              );
+            })}
           </ul>
         </div>
       </div>
