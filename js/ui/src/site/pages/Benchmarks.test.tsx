@@ -194,8 +194,8 @@ describe('Benchmarks Copy as CSV', () => {
     const html = renderToStaticMarkup(<Benchmarks />);
     expect(html).toContain('aria-label="Copy as CSV"');
     const lines = benchmarksCsv().split('\n');
-    expect(lines[0]).toBe(BENCHMARKS_CSV_HEADER);
-    expect(lines[0]).toBe('label,edition,params_b,facts,release,judge_mean');
+    expect(lines[0].startsWith(`${BENCHMARKS_CSV_HEADER},`)).toBe(true);
+    expect(BENCHMARKS_CSV_HEADER).toBe('label,edition,params_b,facts,release,judge_mean');
     expect(lines.length).toBe(1 + withGate.length);
   });
 
@@ -425,5 +425,79 @@ describe('GateCard by category', () => {
   it('allCategories sorts by ok, best first, ties by key, and keeps every category', () => {
     const g = { by_category: { b: { n: 1, ok: 0.5 }, a: { n: 1, ok: 0.5, facts: 1 }, c: { n: 1, ok: 0.9 } } } as unknown as Parameters<typeof allCategories>[0];
     expect(allCategories(g).map(([k]) => k)).toEqual(['c', 'a', 'b']);
+  });
+});
+
+/** The By category numbers the page shows (all-checks rate and facts rate per scenario category) travel with the
+ *  exports, built from the same allCategories() rows GateCard renders, so a visitor who downloads the numbers gets
+ *  the weakest categories too, not only the headline facts gate. */
+describe('Benchmarks export carries By category', () => {
+  const rowOf = (html: string, k: string) => html.match(new RegExp(`<li[^>]*data-category="${k}"[^>]*>.*?</li>`))?.[0];
+  const csvTable = () => {
+    const [header, ...body] = benchmarksCsv().split('\n');
+    const cols = header.split(',');
+    return { cols, rows: body.map((l) => Object.fromEntries(l.split(',').map((v, i) => [cols[i], v]))) };
+  };
+
+  it('JSON lists each edition\'s categories in the page\'s order with the raw rates the page prints', () => {
+    const rows = JSON.parse(benchmarksJson()) as Array<{ label: string; categories: Array<{ key: string; label: string; n: number; ok: number; facts: number | null }> }>;
+    let withoutFacts = 0;
+    for (const row of rows) {
+      const m = withGate.find((x) => x.label === row.label)!;
+      expect(row.categories.map((c) => c.key)).toEqual(allCategories(m.gate!).map(([k]) => k));
+      const html = renderToStaticMarkup(<GateCard m={m} />);
+      for (const c of row.categories) {
+        const v = m.gate!.by_category[c.key];
+        expect(c).toEqual({ key: c.key, label: categoryLabel(c.key), n: v.n, ok: v.ok, facts: v.facts ?? null });
+        const li = rowOf(html, c.key);
+        expect(li, `${m.name}: page row for ${c.key}`).toBeDefined();
+        expect(li).toContain(`>${pct(c.ok)}<`);
+        expect(li).toContain(`n=${c.n}`);
+        if (c.facts != null) expect(li).toContain(`facts ${pct(c.facts)}`);
+        else {
+          expect(li).not.toContain('facts ');
+          withoutFacts++;
+        }
+      }
+    }
+    expect(withoutFacts, 'site.json has no category without facts, so this test does not discriminate').toBeGreaterThan(0);
+  });
+
+  it('CSV has n, ok and facts columns per category whose cells are the text the page shows', () => {
+    const { cols, rows } = csvTable();
+    const keys = [...new Set(withGate.flatMap((m) => Object.keys(m.gate!.by_category)))].sort();
+    expect(cols.slice(6)).toEqual(keys.flatMap((k) => [`category.${k}.n`, `category.${k}.ok`, `category.${k}.facts`]));
+    for (const row of rows) {
+      const m = withGate.find((x) => x.label === row.label)!;
+      const html = renderToStaticMarkup(<GateCard m={m} />);
+      for (const k of keys) {
+        const v = m.gate!.by_category[k];
+        if (!v) {
+          expect([row[`category.${k}.n`], row[`category.${k}.ok`], row[`category.${k}.facts`]]).toEqual(['', '', '']);
+          continue;
+        }
+        const li = rowOf(html, k)!;
+        expect(row[`category.${k}.n`]).toBe(String(v.n));
+        expect(li).toContain(`n=${row[`category.${k}.n`]}`);
+        expect(li).toContain(`>${row[`category.${k}.ok`]}<`);
+        if (v.facts == null) expect(row[`category.${k}.facts`]).toBe('');
+        else expect(li).toContain(`facts ${row[`category.${k}.facts`]}`);
+      }
+    }
+  });
+
+  it('a category only one edition has gets blank cells on the others, and odd keys stay csvField-hardened', () => {
+    const [a, b] = withGate;
+    const extra = { n: 3, ok: 2 / 3, not_truncated: 1, length_budget: 1 };
+    const odd = '=cmd,"x"';
+    const ma = { ...a, gate: { ...a.gate!, by_category: { ...a.gate!.by_category, 'only-here': extra, [odd]: { ...extra, facts: 0.5 } } } } as typeof a;
+    const lines = benchmarksCsv([ma, b]).split('\n');
+    expect(lines[0]).toContain(',category.only-here.n,category.only-here.ok,category.only-here.facts');
+    // The key is wrapped in "category." so it cannot start a formula, and its comma and quotes are quoted per RFC 4180.
+    expect(lines[0]).toContain(`,${csvField(`category.${odd}.n`)},`);
+    expect(csvField(`category.${odd}.n`)).toBe('"category.=cmd,""x"".n"');
+    const json = JSON.parse(benchmarksJson([ma, b])) as Array<{ categories: Array<{ key: string; ok: number }> }>;
+    expect(json[0].categories.find((c) => c.key === 'only-here')?.ok).toBe(2 / 3);
+    expect(json[1].categories.some((c) => c.key === 'only-here')).toBe(false);
   });
 });
