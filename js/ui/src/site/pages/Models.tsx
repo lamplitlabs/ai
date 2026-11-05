@@ -6,7 +6,7 @@ import { Reveal } from '../Reveal';
 import { Link } from '../router';
 import { TryLink } from '../TryLink';
 import { Gauge, Index, Spec, Status, Tag } from '../lab';
-import { categoryLabel, licenceName, weightsAvailability, EDITION_LABELS, factCategories, gb, lines, measuredOn, measuredPct, models, pct, runsIn, runsInDetail, mailtoFor, modelCta, requestBody, shortDate, showcaseModels, weightsDetail, weightsFormat, defaultDtype, selfHostCommand, type SiteModel } from '../data';
+import { categoryLabel, licenceName, weightsAvailability, EDITION_LABELS, factCategories, gb, lines, measuredOn, measuredPct, models, pct, runsIn, runsInDetail, mailtoFor, modelCta, requestBody, shortDate, showcaseModels, weightsDetail, weightsFormat, defaultDtype, EXPORT_FIDELITY_BAR, exportFidelity, exportsBySize, fidelityOk, selfHostCommand, type SiteModel } from '../data';
 import { container, primaryCta, secondaryCta } from '../cta';
 
 /** The page head shared by /models and /benchmarks: index, eyebrow, a large title, the lead, an optional status chip. */
@@ -46,6 +46,9 @@ export function ModelCard({ m, featured }: { m: SiteModel; featured: boolean }) 
   const g = m.gate;
   const facts = g?.gates.facts;
   const size = defaultDtype(m);
+  // the fidelity of the export the download Spec quotes, so the number sits beside the file a visitor fetches
+  const fidelity = size ? exportFidelity(m, size.dtype) : null;
+  const exportList = exportsBySize(m);
   const cats = g ? factCategories(g) : [];
   const strongest = cats[0];
   const weakest = cats[cats.length - 1];
@@ -136,13 +139,23 @@ export function ModelCard({ m, featured }: { m: SiteModel; featured: boolean }) 
           icon={<FileDown className="size-3.5" />}
           k={m.weights === 'pytorch' ? 'weights' : 'download'}
           v={size ? gb(size.size_mb) : m.weights_mb ? gb(m.weights_mb) : 'on request'}
-          sub={size ? `${size.dtype} · ${size.chunks > 1 ? `${size.chunks} files` : 'one file'}` : publicWeights ? 'bf16 · safetensors · on the Hugging Face Hub' : 'delivered as a Hugging Face repository or as files'}
+          sub={size ? `${size.dtype} · ${size.chunks > 1 ? `${size.chunks} files` : 'one file'}${fidelity != null ? ` · fidelity ${pct(fidelity, 1)}` : ''}` : publicWeights ? 'bf16 · safetensors · on the Hugging Face Hub' : 'delivered as a Hugging Face repository or as files'}
         />
         <Spec icon={<Globe className="size-3.5" />} k="runs in" v={runsIn(m)} sub={runsInDetail(m)} />
         <Spec icon={<Server className="size-3.5" />} k="format" v={weightsFormat(m)} sub={weightsDetail(m)} />
         <Spec icon={<Scale className="size-3.5" />} k="licence" v={licenceName(m)} sub="inherited from the base" />
         <Spec icon={<Sparkles className="size-3.5" />} k="grounding" v={m.grounding ? 'verified reference' : 'none'} sub={m.grounding ? 'attached at run time' : 'answers from weights alone'} />
       </dl>
+      {exportList.length > 1 ? (
+        <p className="mono-label mt-4 flex flex-wrap gap-x-4 gap-y-1 text-muted-foreground" data-testid="export-list">
+          <span>exports</span>
+          {exportList.map(({ size: d, fidelity: f }) => (
+            <span key={d.dtype} data-dtype={d.dtype}>
+              {d.dtype} · {gb(d.size_mb)} · <span className={fidelityOk(f) === true ? 'text-success' : fidelityOk(f) === false ? 'text-warning' : undefined}>fidelity {measuredPct(f, 1)}</span>
+            </span>
+          ))}
+        </p>
+      ) : null}
 
       {g ? (
         <div className="mt-8 rounded-2xl border border-border bg-background/50 p-5 sm:p-6">
@@ -158,7 +171,14 @@ export function ModelCard({ m, featured }: { m: SiteModel; featured: boolean }) 
             {m.weights === 'pytorch' ? (
               <Number k="measured on" v="bf16 weights" sub="the trained weights themselves, in PyTorch - there is no quantised export to compare" />
             ) : (
-              <Number k="export fidelity" v={measuredPct(m.export_agreement?.q8)} sub={m.export_agreement?.q8 != null ? 'quantised export agrees with the trained weights' : 'no fidelity number for this edition yet'} ok={m.export_agreement?.q8 != null ? m.export_agreement.q8 >= 0.95 : undefined} value={m.export_agreement?.q8 ?? undefined} threshold={0.95} />
+              <Number
+                k="export fidelity"
+                v={measuredPct(fidelity, 1)}
+                sub={fidelity != null && size ? `the ${size.dtype} download agrees with the trained weights${fidelityOk(fidelity) ? '' : ` - under the ${pct(EXPORT_FIDELITY_BAR)} bar`}` : 'no fidelity number for this edition yet'}
+                ok={fidelityOk(fidelity)}
+                value={fidelity ?? undefined}
+                threshold={EXPORT_FIDELITY_BAR}
+              />
             )}
           </div>
           {strongest && weakest ? (
@@ -232,7 +252,7 @@ export function Models() {
             <div className="mono-label text-primary">reading the numbers</div>
             <h2 className="mt-3 font-semibold">How to read the numbers</h2>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              <strong className="text-foreground">Facts</strong> is the share of answers whose checkable statements match the reference pack; the release gate asks for 85%. <strong className="text-foreground">Release gates</strong> are deterministic checks on every answer of the suite - it never loops, finishes, stays in the asked language, avoids assistant talk, matches the reference, cites genders and plurals that match the lexicon, has the right shape for the task and, for a browser edition, the export agrees with the trained weights; an edition is released when every gate passes. <strong className="text-foreground">Export fidelity</strong> is how often the quantised file the browser runs gives the same answer as the trained weights; an edition that ships as trained weights is measured on those weights directly and has no such number. Independent judges also score every answer 1-5; their scores are on the benchmarks page, per judge.
+              <strong className="text-foreground">Facts</strong> is the share of answers whose checkable statements match the reference pack; the release gate asks for 85%. <strong className="text-foreground">Release gates</strong> are deterministic checks on every answer of the suite - it never loops, finishes, stays in the asked language, avoids assistant talk, matches the reference, cites genders and plurals that match the lexicon, has the right shape for the task and, for a browser edition, the export agrees with the trained weights; an edition is released when every gate passes. <strong className="text-foreground">Export fidelity</strong> is how often a quantised file gives the same answer as the trained weights - each export (q8, q4) has its own number, and a card quotes the one of the file it offers for download; an edition that ships as trained weights is measured on those weights directly and has no such number. Independent judges also score every answer 1-5; their scores are on the benchmarks page, per judge.
             </p>
           </div>
           <div className="glass rounded-2xl p-6 sm:p-7">

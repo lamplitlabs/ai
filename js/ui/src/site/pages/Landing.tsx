@@ -7,7 +7,7 @@ import { CONTACT } from '../SiteLayout';
 import { Link } from '../router';
 import { TryLink } from '../TryLink';
 import { Datum, Index, SectionHead, Status } from '../lab';
-import { EDITION_LABELS, NOT_MEASURED, STALE_AFTER_DAYS, commissionMailto, dataAgeDays, defaultDtype, flagship, latestMeasuredAt, lines, measured, pct, shortDate, showcaseModels, siteData } from '../data';
+import { EDITION_LABELS, NOT_MEASURED, STALE_AFTER_DAYS, commissionMailto, dataAgeDays, defaultDtype, EXPORT_FIDELITY_BAR, exportFidelity, fidelityOk, flagship, latestMeasuredAt, lines, measured, pct, shortDate, showcaseModels, siteData } from '../data';
 import { container, primaryCta, secondaryCta } from '../cta';
 
 export { primaryCta };
@@ -23,7 +23,8 @@ export function Landing({ now }: { now?: Date } = {}) {
   const passed = gates.filter((x) => x.ok).length;
   // The export a visitor actually fetches - the same pick as the offering card and the comparison table, whatever order the producer lists dtypes in.
   const size = m ? defaultDtype(m) : undefined;
-  const q8 = m?.export_agreement?.q8 ?? null;
+  // the fidelity of the very export the download datum quotes (the smallest, q4 today), not the larger q8's
+  const fidelity = m && size ? exportFidelity(m, size.dtype) : null;
   const offered = showcaseModels.length;
   const allGatesPassed = showcaseModels.every((x) => x.gate?.release);
 
@@ -76,7 +77,7 @@ export function Landing({ now }: { now?: Date } = {}) {
             <Reveal stagger className="grid grid-cols-2 lg:grid-cols-4">
               <Datum className="border-b border-border py-7 pr-6 md:border-r lg:border-b-0" k="facts checked" value={(facts?.actual ?? 0) * 100} format={(v) => `${v.toFixed(1)}%`} sub={`against the reference · gate ${pct(facts?.threshold)} · ${g.suite_size} scenarios`} ok={facts?.ok} />
               <Datum className="border-b border-border py-7 pr-6 md:pl-6 lg:border-b-0 lg:border-r" k="release gates" value={passed} format={(v) => `${Math.round(v)} / ${gates.length}`} sub={g.release ? 'every gate passed' : 'not all gates passed yet'} ok={g.release} />
-              <Datum className="border-border py-7 pr-6 md:border-r lg:pl-6" k="export fidelity" value={(q8 ?? 0) * 100} format={(v) => measured(q8, () => `${v.toFixed(1)}%`)} sub={q8 == null ? 'no fidelity number for this edition yet' : 'q8 file agrees with the trained weights'} ok={q8 != null ? q8 >= 0.95 : undefined} />
+              <Datum className="border-border py-7 pr-6 md:border-r lg:pl-6" k="export fidelity" value={(fidelity ?? 0) * 100} format={(v) => measured(fidelity, () => `${v.toFixed(1)}%`)} sub={fidelity == null || !size ? 'no fidelity number for this edition yet' : `${size.dtype} file agrees with the trained weights${fidelityOk(fidelity) === false ? ` · under the ${pct(EXPORT_FIDELITY_BAR)} bar` : ''}`} ok={fidelityOk(fidelity)} />
               <Datum className="py-7 md:pl-6" k="download" value={size ? size.size_mb / 1000 : 0} format={(v) => (size ? (size.size_mb >= 1000 ? `${v.toFixed(1)} GB` : `${Math.round(v * 1000)} MB`) : NOT_MEASURED)} sub={size ? `${size.dtype} · ${size.chunks > 1 ? `${size.chunks} files` : 'one file'} · ${m.browser ? 'runs in the browser' : 'desktop and server'}` : undefined} />
             </Reveal>
             <p className="mono-label flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-border py-3 text-muted-foreground/80">

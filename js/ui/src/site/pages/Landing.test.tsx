@@ -103,7 +103,7 @@ describe('Landing download matches the flagship offering card', () => {
         return { ...real, flagship: flipped, showcaseModels: showcase, lines };
       });
       const { Landing: MockedLanding } = await import('./Landing');
-      const { flagship, gb, weightsSpec } = await import('../data');
+      const { exportFidelity, flagship, gb, weightsSpec } = await import('../data');
       // stubbed after the imports: the router subscribes to window events at module load
       vi.stubGlobal('window', { matchMedia: (q: string) => ({ matches: q.includes('prefers-reduced-motion') }) });
       try {
@@ -121,7 +121,19 @@ describe('Landing download matches the flagship offering card', () => {
 
         // the flagship's row in the comparison table and its offering card quote the same size
         const row = html.slice(html.indexOf(`data-testid="compare-${f.name}"`));
-        expect(row.slice(0, row.indexOf('</tr>'))).toContain(`>${gb(smallest.size_mb)}</td>`);
+        const cells = row.slice(0, row.indexOf('</tr>'));
+        expect(cells).toContain(`>${gb(smallest.size_mb)}<`);
+        // ... and every one of them carries that same export's fidelity, never another dtype's
+        const fidelity = exportFidelity(f, smallest.dtype);
+        expect(fidelity, 'the smallest export needs a measured fidelity for this test').not.toBeNull();
+        const shown = `${(fidelity! * 100).toFixed(1)}%`;
+        const heroFidelity = html.match(/>export fidelity<\/div><div class="datum-value[^"]*">([^<]*)<\/div><div[^>]*>([^<]*)<\/div>/);
+        expect(heroFidelity, 'hero export fidelity datum missing').not.toBeNull();
+        expect(heroFidelity![1]).toBe(shown);
+        expect(heroFidelity![2].startsWith(`${smallest.dtype} file agrees with the trained weights`)).toBe(true);
+        expect(cells).toContain(`${smallest.dtype} · fidelity <span`);
+        expect(cells).toContain(`>${shown}</span>`);
+        if (f.hub.public) expect(weightsSpec(f, true)).toContain(`· fidelity ${shown} ·`);
         if (f.hub.public) expect(html).toContain(weightsSpec(f, true));
         expect(weightsSpec(f, true).startsWith(`${smallest.dtype} · ${gb(smallest.size_mb)} · `)).toBe(true);
       } finally {
@@ -131,4 +143,25 @@ describe('Landing download matches the flagship offering card', () => {
       }
     });
   }
+});
+
+/** The hero's download datum quotes the smallest export (q4), so its export-fidelity datum must be that file's own
+ *  number (83.3%, below the 95% bar and toned so) - not q8's 95.8% - and say which file it measured. */
+describe('Landing hero export fidelity follows the download', () => {
+  it('shows q4 83.3% beside the q4 download, toned below the bar', () => {
+    vi.stubGlobal('window', { matchMedia: (q: string) => ({ matches: q.includes('prefers-reduced-motion') }) });
+    try {
+      const html = renderToStaticMarkup(<Landing />);
+      const fidelity = html.match(/>export fidelity<\/div><div class="datum-value[^"]*text-(success|warning)[^"]*">([^<]*)<\/div><div[^>]*>([^<]*)<\/div>/);
+      const download = html.match(/>download<\/div><div class="datum-value[^"]*">([^<]*)<\/div><div[^>]*>([^<]*)<\/div>/);
+      expect(fidelity, 'hero export fidelity datum missing or untoned').not.toBeNull();
+      expect(download![2].startsWith('q4 · ')).toBe(true);
+      expect(fidelity![2]).toBe('83.3%');
+      expect(fidelity![1]).toBe('warning');
+      expect(fidelity![3]).toBe('q4 file agrees with the trained weights · under the 95% bar');
+      expect(html).not.toContain('q8 file agrees');
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
 });

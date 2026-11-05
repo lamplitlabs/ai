@@ -3,7 +3,7 @@ import { Link } from './router';
 import { TryLink } from './TryLink';
 import { CopyButton } from './CopyButton';
 import { Gauge, Spec, Tag } from './lab';
-import { commissionBody, commissionMailto, defaultDtype, EDITION_LABELS, gb, mailtoFor, measuredPct, modelCta, NOT_MEASURED, requestBody, runsIn, runsInDetail, selfHostCommand, shortDate, weightsAvailability, weightsSpec, type SiteModel } from './data';
+import { commissionBody, commissionMailto, defaultDtype, EDITION_LABELS, exportFidelity, fidelityOk, gb, mailtoFor, measuredPct, modelCta, NOT_MEASURED, requestBody, runsIn, runsInDetail, selfHostCommand, shortDate, weightsAvailability, weightsSpec, type SiteModel } from './data';
 import { primaryCta, secondaryCta } from './cta';
 
 /**
@@ -208,7 +208,10 @@ export function OfferingComparison({ models: ms }: { models: SiteModel[] }) {
                 <td className={td}>{runsIn(m)}</td>
                 <td className={`${td} font-semibold ${facts?.ok ? 'text-success' : facts ? 'text-warning' : ''}`}>{measuredPct(facts?.actual, 1)}</td>
                 <td className={`${td} ${g ? (g.release ? 'text-success' : 'text-warning') : ''}`}>{g ? `${passed} / ${gates.length}` : NOT_MEASURED}</td>
-                <td className={td}>{size ? gb(size.size_mb) : NOT_MEASURED}</td>
+                <td className={td}>
+                  {size ? gb(size.size_mb) : NOT_MEASURED}
+                  {size ? <FidelityNote m={m} dtype={size.dtype} /> : null}
+                </td>
                 <td className={`${td} text-muted-foreground`}>{g?.created_at ? shortDate(g.created_at) : NOT_MEASURED}</td>
                 <td className={td}>
                   {pull ? (
@@ -226,6 +229,24 @@ export function OfferingComparison({ models: ms }: { models: SiteModel[] }) {
           })}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+/** The download cell's second line: which export the size is and how often that very file agrees with the trained
+ *  weights, toned against the 95% bar - so the table never pairs q4's size with q8's fidelity. */
+function FidelityNote({ m, dtype }: { m: SiteModel; dtype: string }) {
+  const f = exportFidelity(m, dtype);
+  const ok = fidelityOk(f);
+  return (
+    <div className="mono-label mt-1 font-normal text-muted-foreground" data-testid={`compare-fidelity-${m.name}`}>
+      {dtype}
+      {f != null ? (
+        <>
+          {' · fidelity '}
+          <span className={ok ? 'text-success' : 'text-warning'}>{measuredPct(f, 1)}</span>
+        </>
+      ) : null}
     </div>
   );
 }
