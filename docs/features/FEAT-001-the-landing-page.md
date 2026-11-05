@@ -34,7 +34,8 @@ where it runs, so that I can try it and decide without asking.
   with its all-checks rate and its facts rate where measured, and under "Other checks" every
   measured rate that is not a release gate, such as all_checks), the judge panel, measured speeds,
   a Copy as CSV button so the measured numbers paste straight into a spreadsheet, and Download CSV
-  (`lamplit-benchmarks.csv`) and Download JSON (`lamplit-benchmarks.json`, typed values) links for the same rows.
+  (`lamplit-benchmarks.csv`) and Download JSON (`lamplit-benchmarks.json`, typed values) links for the same rows;
+  every export carries each edition's By category numbers (case count, all-checks rate, facts rate) as the page shows them.
 - [x] `/try` - forwards to the flagship's demo; a 404 page for anything else.
 - [x] Every "try" opens the model's Space in a new tab; its label comes from the line's name.
 - [x] Light and dark themes, one stored preference; `?theme=` previews without saving.
