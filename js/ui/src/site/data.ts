@@ -129,13 +129,35 @@ export const licenceName = (m: SiteModel) => m.licence.split(' (')[0].trim() || 
 export const weightsAvailability = (m: SiteModel, publicWeights: boolean) => (publicWeights ? `public weights${m.hub.revision ? ` · ${m.hub.revision}` : ''}` : `weights on request · ${CONTACT}`);
 /** The weights spec line of an offering card: dtype · size · licence for public weights, format · licence otherwise. */
 /** The export a visitor downloads by default: the smallest measured dtype (ties broken by dtype name), so the card's size is the one they actually fetch. */
-export const defaultDtype = (m: Pick<SiteModel, 'dtypes'>): DtypeSize | undefined =>
-  [...m.dtypes].sort((a, b) => a.size_mb - b.size_mb || a.dtype.localeCompare(b.dtype))[0];
+const bySize = (a: DtypeSize, b: DtypeSize) => a.size_mb - b.size_mb || a.dtype.localeCompare(b.dtype);
+export const defaultDtype = (m: Pick<SiteModel, 'dtypes'>): DtypeSize | undefined => [...m.dtypes].sort(bySize)[0];
+/** The share of answers an export must give exactly as the trained weights do; the site draws every fidelity gauge against it. */
+export const EXPORT_FIDELITY_BAR = 0.95;
+/**
+ * How often one export (a dtype: q8, q4, ...) answers as the trained weights do, or null when that export was not
+ * compared (or the edition has no export, like a pytorch one). Every place that quotes a dtype's download size quotes
+ * this same dtype's number beside it, so a visitor pointed at the q4 file sees q4's fidelity, not q8's.
+ */
+export const exportFidelity = (m: Pick<SiteModel, 'export_agreement'>, dtype: string | null | undefined): number | null =>
+  dtype ? (m.export_agreement?.[dtype] ?? null) : null;
+/** ok/warning tone of a fidelity number against EXPORT_FIDELITY_BAR; undefined (no tone) when it was not measured. */
+export const fidelityOk = (f: number | null): boolean | undefined => (f == null ? undefined : f >= EXPORT_FIDELITY_BAR);
+/** Every export of an edition, smallest (the default download) first, each with its own fidelity - one list for every card. */
+export const exportsBySize = (m: Pick<SiteModel, 'dtypes' | 'export_agreement'>): { size: DtypeSize; fidelity: number | null }[] =>
+  [...m.dtypes].sort(bySize).map((size) => ({ size, fidelity: exportFidelity(m, size.dtype) }));
+/** "fidelity 83.3%" for a dtype's export, or null when it was not compared - the short form set beside a download size. */
+export const fidelityText = (m: Pick<SiteModel, 'export_agreement'>, dtype: string | null | undefined): string | null => {
+  const f = exportFidelity(m, dtype);
+  return f == null ? null : `fidelity ${pct(f, 1)}`;
+};
 export function weightsSpec(m: SiteModel, publicWeights: boolean): string {
   const licence = licenceName(m);
   if (!publicWeights) return `${m.weights === 'pytorch' ? 'merged bf16' : 'export'} · ${licence}`;
   const size = defaultDtype(m);
-  if (size) return `${size.dtype} · ${gb(size.size_mb)} · ${licence}`;
+  if (size) {
+    const fidelity = fidelityText(m, size.dtype);
+    return `${size.dtype} · ${gb(size.size_mb)} · ${fidelity ? `${fidelity} · ` : ''}${licence}`;
+  }
   if (m.weights_mb) return `bf16 · ${gb(m.weights_mb)} · ${licence}`;
   return `size unmeasured · ${licence}`;
 }

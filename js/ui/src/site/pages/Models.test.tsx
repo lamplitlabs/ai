@@ -244,3 +244,56 @@ describe('/models comparison table', () => {
     }
   });
 });
+
+/** The card quotes the smallest export (q4) as the download, so the fidelity beside it must be q4's own number -
+ *  not q8's - toned against the 95% bar; where the card lists every export, each dtype carries its own fidelity. */
+describe('ModelCard export fidelity per download', () => {
+  const exported = models.filter((m) => m.weights !== 'pytorch' && m.dtypes.length > 0 && m.export_agreement);
+
+  it('site.json has an edition whose q4 and q8 exports disagree on fidelity (the case this guards)', () => {
+    const m = exported.find((x) => x.export_agreement?.q4 != null && x.export_agreement?.q8 != null);
+    expect(m, 'no edition with both q4 and q8 fidelity').toBeDefined();
+    expect(m!.export_agreement!.q4).not.toBe(m!.export_agreement!.q8);
+  });
+
+  for (const m of exported) {
+    it(`${m.name} shows the fidelity of the export it offers for download`, () => {
+      const html = renderToStaticMarkup(<ModelCard m={m} featured={false} />);
+      const size = data.defaultDtype(m)!;
+      const f = data.exportFidelity(m, size.dtype);
+      const number = html.match(/>export fidelity<\/div><div class="datum-value[^"]*text-(success|warning)[^"]*">([^<]*)<\/div><div[^>]*>([^<]*)<\/div>/);
+      expect(number, 'export fidelity Number missing or untoned').not.toBeNull();
+      expect(number![2]).toBe(measuredPct(f, 1));
+      expect(number![1]).toBe(f! >= 0.95 ? 'success' : 'warning');
+      expect(number![3]).toContain(`the ${size.dtype} download agrees with the trained weights`);
+      if (f! < 0.95) expect(number![3]).toContain('under the 95% bar');
+      // each listed export carries its own number
+      if (m.dtypes.length > 1) {
+        for (const d of m.dtypes) {
+          const item = html.slice(html.indexOf(`data-dtype="${d.dtype}"`));
+          expect(item.slice(0, item.indexOf('</span></span>'))).toContain(`fidelity ${measuredPct(data.exportFidelity(m, d.dtype), 1)}`);
+        }
+      }
+    });
+  }
+
+  it('the flagship card shows 83.3% beside q4 and 95.8% beside q8, q4 below the bar', () => {
+    const m = exported.find((x) => x.export_agreement?.q4 === 0.8333 && x.export_agreement?.q8 === 0.9583);
+    expect(m, 'site.json no longer has the q4 0.8333 / q8 0.9583 edition').toBeDefined();
+    const html = renderToStaticMarkup(<ModelCard m={m!} featured />);
+    expect(html).toMatch(/>export fidelity<\/div><div class="[^"]*text-warning[^"]*">83\.3%</);
+    expect(html).not.toMatch(/>export fidelity<\/div><div class="[^"]*">95\.8%</);
+    expect(html).toMatch(/data-dtype="q4">q4 · [^<]* · <span class="text-warning">fidelity 83\.3%<\/span>/);
+    expect(html).toMatch(/data-dtype="q8">q8 · [^<]* · <span class="text-success">fidelity 95\.8%<\/span>/);
+    expect(html).toContain('q4 · 2 files · fidelity 83.3%');
+  });
+
+  it('a pytorch edition keeps "measured on bf16 weights" and no fidelity number', () => {
+    for (const m of models.filter((x) => x.weights === 'pytorch')) {
+      const html = renderToStaticMarkup(<ModelCard m={m} featured={false} />);
+      expect(html).toContain('>bf16 weights<');
+      expect(html).not.toContain('>export fidelity<');
+      expect(html).not.toContain('data-testid="export-list"');
+    }
+  });
+});

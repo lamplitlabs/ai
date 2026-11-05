@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { CATEGORY_LABELS, CONTACT, commissionMailto, contactMailto, dataAgeDays, defaultDtype, EDITION_LABELS, gb, mailtoFor, modelCta, factCategories, flagship, latestMeasuredAt, licenceName, lines, models, NOT_MEASURED, pct, runsIn, runsInDetail, selfHostCommand, shortDate, showcaseModels, siteData, spaceUrl, tryLabel, tryUrl, weightsAvailability, weightsSpec } from './data';
+import { CATEGORY_LABELS, CONTACT, commissionMailto, contactMailto, dataAgeDays, defaultDtype, EDITION_LABELS, EXPORT_FIDELITY_BAR, exportFidelity, exportsBySize, fidelityOk, fidelityText, gb, mailtoFor, modelCta, factCategories, flagship, latestMeasuredAt, licenceName, lines, models, NOT_MEASURED, pct, runsIn, runsInDetail, selfHostCommand, shortDate, showcaseModels, siteData, spaceUrl, tryLabel, tryUrl, weightsAvailability, weightsSpec } from './data';
 
 describe('site data (site.json is generated outside this repo, ADR-001)', () => {
   it('leads with a browser-runnable flagship and offers one edition of each kind per line', () => {
@@ -248,5 +248,27 @@ describe('small formatting helpers shown on model cards and /benchmarks', () => 
     expect(selfHostCommand(noRev)).toBe('huggingface-cli download lamplit/tiny-ocr --local-dir ./tiny-ocr');
     expect(selfHostCommand({ ...base, hub: { repo: 'lamplit/tiny-ocr', public: false, revision: 'v1.2.0' } })).toBeNull();
     expect(selfHostCommand({ ...base, hub: { repo: null, public: true } })).toBeNull();
+  });
+});
+
+describe('exportFidelity', () => {
+  const m = { export_agreement: { fp32: 1, q8: 0.9583, q4: 0.8333 } };
+  it('reads the named export, null for an unmeasured dtype or an edition without exports', () => {
+    expect(exportFidelity(m, 'q4')).toBe(0.8333);
+    expect(exportFidelity(m, 'q8')).toBe(0.9583);
+    expect(exportFidelity(m, 'q2')).toBeNull();
+    expect(exportFidelity(m, undefined)).toBeNull();
+    expect(exportFidelity({ export_agreement: null }, 'q4')).toBeNull();
+  });
+  it('tones against the 95% bar and lists exports smallest first, each with its own number', () => {
+    expect(EXPORT_FIDELITY_BAR).toBe(0.95);
+    expect(fidelityOk(0.8333)).toBe(false);
+    expect(fidelityOk(0.9583)).toBe(true);
+    expect(fidelityOk(null)).toBeUndefined();
+    const q8 = { dtype: 'q8', size_mb: 3552, chunks: 2, max_chunk_mb: 1796, wasm: false };
+    const q4 = { dtype: 'q4', size_mb: 2086, chunks: 2, max_chunk_mb: 1808, wasm: false };
+    expect(exportsBySize({ ...m, dtypes: [q8, q4] }).map((x) => [x.size.dtype, x.fidelity])).toEqual([['q4', 0.8333], ['q8', 0.9583]]);
+    expect(fidelityText(m, 'q4')).toBe('fidelity 83.3%');
+    expect(fidelityText(m, 'q2')).toBeNull();
   });
 });
