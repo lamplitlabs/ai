@@ -6,7 +6,7 @@ import { Reveal } from '../Reveal';
 import { Link } from '../router';
 import { TryLink } from '../TryLink';
 import { Gauge, Index, Spec, Status, Tag } from '../lab';
-import { categoryLabel, licenceName, weightsAvailability, EDITION_LABELS, factCategories, gb, lines, measuredOn, measuredPct, models, pct, runsIn, runsInDetail, mailtoFor, modelCta, requestBody, shortDate, showcaseModels, weightsDetail, weightsFormat, defaultDtype, EXPORT_FIDELITY_BAR, exportFidelity, exportsBySize, fidelityOk, selfHostCommand, type SiteModel } from '../data';
+import { categoryLabel, licenceName, weightsAvailability, EDITION_LABELS, factCategories, gb, lines, measuredOn, measuredPct, models, pct, runsIn, runsInDetail, mailtoFor, modelCta, requestBody, shortDate, showcaseModels, weightsDetail, weightsFormat, defaultDtype, EXPORT_FIDELITY_BAR, exportFidelity, exportsBySize, fidelityOk, selfHostCommand, systemPrompt, type SiteModel } from '../data';
 import { container, primaryCta, secondaryCta } from '../cta';
 
 /** The page head shared by /models and /benchmarks: index, eyebrow, a large title, the lead, an optional status chip. */
@@ -57,6 +57,7 @@ export function ModelCard({ m, featured }: { m: SiteModel; featured: boolean }) 
   const cta = modelCta(m);
   const { publicWeights } = cta;
   const selfHost = selfHostCommand(m);
+  const prompt = systemPrompt(m);
   return (
     <article className={`glass card-glow corner-marks scroll-mt-20 rounded-3xl p-6 sm:p-8 lg:p-10 ${featured ? 'glow-border' : ''}`} id={m.name}>
       <div className="flex flex-wrap items-center gap-2">
@@ -130,6 +131,20 @@ export function ModelCard({ m, featured }: { m: SiteModel; featured: boolean }) 
           <pre className="mt-2 overflow-x-auto rounded-xl border border-border bg-background/50 p-3 text-xs leading-relaxed">
             <code>{selfHost}</code>
           </pre>
+        </div>
+      ) : null}
+      {prompt ? (
+        /* The gate numbers above were measured under this exact prompt; a self-hosted deployment must send it as the
+           system message, verbatim, for them to hold. */
+        <div className="mt-4" data-testid="system-prompt-block">
+          <div className="flex items-center justify-between gap-2">
+            <div className="mono-label text-muted-foreground">system prompt · send it verbatim</div>
+            <CopyButton text={prompt} label="Copy the system prompt" fallback />
+          </div>
+          <pre className="mt-2 whitespace-pre-wrap rounded-xl border border-border bg-background/50 p-3 text-xs leading-relaxed" data-testid="system-prompt">
+            {prompt}
+          </pre>
+          <p className="mt-2 text-xs leading-relaxed text-muted-foreground">The numbers on this card were measured with this prompt as the system message; send it as the system message, word for word, or they need not hold for your deployment.</p>
         </div>
       ) : null}
 

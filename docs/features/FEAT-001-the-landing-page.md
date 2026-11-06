@@ -29,7 +29,9 @@ where it runs, so that I can try it and decide without asking.
 
 - [x] `/` - the lab's pitch, the offerings grouped by line with one card per edition, the built-to-order card, and
   the lab's method in plain words.
-- [x] `/models` - every showcase edition with runtime, weights format, size, licence and where to get it.
+- [x] `/models` - every showcase edition with runtime, weights format, size, licence and where to get it,
+  and, where the data carries one, the system prompt the edition was trained under (shown verbatim with a
+  "Copy the system prompt" button, since the published numbers hold only when a self-hosted deployment sends it).
 - [x] `/benchmarks` - the gate results per edition (release, rates, every scenario category
   with its all-checks rate and its facts rate where measured, and under "Other checks" every
   measured rate that is not a release gate, such as all_checks), the judge panel, measured speeds,
