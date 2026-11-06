@@ -27,4 +27,5 @@
    [`rollback.md`](rollback.md) and verify recovery.
 10. Close any Tier 1 or Tier 2 artifact with its `delivered:` date and update
     the controlling ADR's `delivery:` mark.
-11. Update `docs/memory/mistakes.md` if the lesson is durable.
+11. If the lesson is durable, add a `docs/memory/MEM-NNN-*.md` from
+    [`_template.md`](../memory/_template.md) (see [`memory-update.md`](memory-update.md)).
