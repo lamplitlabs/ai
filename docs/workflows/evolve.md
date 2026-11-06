@@ -55,7 +55,7 @@ own evaluators say it is better. Skill: `pulse-evolve`.
    - **operating-layer signals**, only when no product hypothesis is
      eligible or a product signal's cause is in the operating layer:
      verification failures, review findings (including tier-honesty checks),
-     executed rollbacks, entries in `docs/memory/mistakes.md`, and the
+     executed rollbacks, `docs/memory/MEM-NNN-*.md` notes, and the
      lead-time report.
    One variable only.
 3. **Branch and change.** Create an experiment branch named
