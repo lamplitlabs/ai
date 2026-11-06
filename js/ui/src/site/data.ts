@@ -219,6 +219,14 @@ export const selfHostCommand = (m: SiteModel) => {
   const rev = m.hub.revision ? ` --revision ${m.hub.revision}` : '';
   return `huggingface-cli download ${m.hub.repo}${rev} --local-dir ./${m.name}`;
 };
+/**
+ * The system prompt an edition was trained under, trimmed - what a self-hosted deployment must send verbatim for the
+ * published gate numbers to hold. Null when the data carries none (or only whitespace), so the card shows nothing.
+ */
+export const systemPrompt = (m: SiteModel) => {
+  const p = typeof m.system_prompt === 'string' ? m.system_prompt.trim() : '';
+  return p || null;
+};
 export function modelCta(m: SiteModel): ModelCta {
   const hub = hubUrl(m);
   const tryHref = tryUrl(m);

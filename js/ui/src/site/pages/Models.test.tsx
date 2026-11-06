@@ -229,6 +229,56 @@ describe('ModelCard self-host snippet', () => {
   });
 });
 
+// A visitor who self-hosts an edition must send the system prompt it was trained under, or the gate numbers on the card
+// do not hold for them: every edition with a prompt shows it verbatim with a copy button; one without shows no block.
+describe('ModelCard system prompt', () => {
+  const escape = (t: string) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#x27;');
+  const withPrompt = data.showcaseModels.filter((m) => typeof m.system_prompt === 'string' && m.system_prompt.trim() !== '');
+
+  it('site.json has at least one showcase edition with a trained system prompt', () => {
+    expect(withPrompt.length).toBeGreaterThan(0);
+  });
+
+  for (const m of withPrompt) {
+    it(`${m.name} shows its system prompt verbatim with a copy button`, () => {
+      const html = renderToStaticMarkup(<ModelCard m={m} featured={false} />);
+      expect(html).toContain('data-testid="system-prompt"');
+      const start = html.indexOf('data-testid="system-prompt"');
+      const block = html.slice(start, html.indexOf('</pre>', start));
+      expect(block).toContain(escape(m.system_prompt!.trim()));
+      const header = html.slice(html.indexOf('data-testid="system-prompt-block"'), start);
+      expect(header).toContain('aria-label="Copy the system prompt"');
+      expect(header).toContain('send it verbatim');
+    });
+  }
+
+  it('copies the exact trimmed prompt', async () => {
+    const m = withPrompt[0];
+    expect(data.systemPrompt({ ...m, system_prompt: `  ${m.system_prompt}\n` })).toBe(m.system_prompt!.trim());
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal('navigator', { clipboard: { writeText } });
+    try {
+      expect(await copyText(data.systemPrompt(m)!)).toBe(true);
+      expect(writeText).toHaveBeenCalledWith(m.system_prompt!.trim());
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('renders no block for an edition with no system prompt (null or blank)', () => {
+    const none = models.filter((m) => m.system_prompt == null);
+    expect(none.map((m) => m.name)).toContain('light-german-tutor-pro-v22');
+    for (const m of none) {
+      expect(renderToStaticMarkup(<ModelCard m={m} featured={false} />)).not.toContain('data-testid="system-prompt');
+    }
+    const blank = { ...withPrompt[0], system_prompt: '   ' };
+    expect(data.systemPrompt(blank)).toBeNull();
+    const html = renderToStaticMarkup(<ModelCard m={blank} featured={false} />);
+    expect(html).not.toContain('data-testid="system-prompt');
+    expect(html).not.toContain('Copy the system prompt');
+  });
+});
+
 /** A visitor landing directly on /models from a search compares the editions' measured numbers before scrolling the datasheets. */
 describe('/models comparison table', () => {
   it('renders the OfferingComparison table above the first datasheet when more than one edition is listed', () => {
