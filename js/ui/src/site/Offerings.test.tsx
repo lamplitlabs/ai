@@ -205,3 +205,26 @@ describe('Copy-the-request without a working clipboard', () => {
     expect(container.find((n) => n.nodeName === 'TEXTAREA')).toBeNull();
   });
 });
+
+/** The landing card says how fast an edition runs where it was measured, in one short line; an edition with no
+ *  measured speed shows no line at all. */
+describe('OfferingCard measured speed', () => {
+  it('light-german-tutor-v17 shows tokens/s, machine, dtype and first load', () => {
+    const m = models.find((x) => x.name === 'light-german-tutor-v17')!;
+    const s = m.measured[0];
+    const html = renderToStaticMarkup(<OfferingCard m={m} />);
+    const i = html.indexOf('data-testid="offering-speed"');
+    expect(i, 'no speed line on the v17 offering').toBeGreaterThan(-1);
+    const line = html.slice(i, html.indexOf('</p>', i));
+    expect(line).toContain(`${s.tok_s} tokens/s · Apple-silicon laptop · ${s.dtype}`);
+    expect(line).toContain(`first load ${s.load_network_s} s`);
+    expect(line).toContain(`from cache ${s.load_cache_s} s`);
+  });
+  it('light-german-tutor-pro-v22 (no measurement) shows no speed line', () => {
+    const m = models.find((x) => x.name === 'light-german-tutor-pro-v22')!;
+    const html = renderToStaticMarkup(<OfferingCard m={m} />);
+    expect(html).not.toContain('data-testid="offering-speed"');
+    expect(html).not.toContain('tokens/s');
+    expect(html).not.toContain(NOT_MEASURED);
+  });
+});

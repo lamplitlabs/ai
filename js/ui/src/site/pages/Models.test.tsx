@@ -347,3 +347,41 @@ describe('ModelCard export fidelity per download', () => {
     }
   });
 });
+
+/** A visitor choosing what to download sees how fast the edition ran where it was measured (tokens/s, machine, dtype,
+ *  first load and from cache), straight from site.json's measured[]; an edition with no measurement shows no speed. */
+describe('ModelCard measured speed', () => {
+  const speedSpec = (html: string) => {
+    const i = html.indexOf('data-testid="speed"');
+    return i < 0 ? null : html.slice(i, html.indexOf('</div>', i));
+  };
+
+  it('light-german-tutor-v17 shows its measured tokens/s, machine, dtype and load times', () => {
+    const m = models.find((x) => x.name === 'light-german-tutor-v17')!;
+    const s = m.measured[0];
+    expect(data.speedText(m)).toBe(`${s.tok_s} tokens/s · Apple-silicon laptop · ${s.dtype}`);
+    const spec = speedSpec(renderToStaticMarkup(<ModelCard m={m} featured={false} />));
+    expect(spec, 'no speed Spec on the v17 datasheet').not.toBeNull();
+    expect(spec).toContain(`${s.tok_s} tokens/s`);
+    expect(spec).toContain(`Apple-silicon laptop · ${s.dtype}`);
+    expect(spec).toContain(`first load ${s.load_network_s} s`);
+    expect(spec).toContain(`from cache ${s.load_cache_s} s`);
+    expect(spec).not.toContain('/ 5');
+  });
+
+  it('light-german-tutor-pro-v22 (no measurement) shows no speed and no "not measured" placeholder', () => {
+    const m = models.find((x) => x.name === 'light-german-tutor-pro-v22')!;
+    expect(m.measured).toEqual([]);
+    expect(data.speedText(m)).toBeNull();
+    const html = renderToStaticMarkup(<ModelCard m={m} featured={false} />);
+    expect(html).not.toContain('data-testid="speed"');
+    expect(html).not.toContain('tokens/s');
+  });
+
+  it('a row with a blank tok_s counts as unmeasured; a missing load time is left out', () => {
+    const v17 = models.find((x) => x.name === 'light-german-tutor-v17')!;
+    expect(data.speedText({ ...v17, measured: [{ ...v17.measured[0], tok_s: '  ' }] })).toBeNull();
+    expect(data.loadText({ ...v17.measured[0], load_network_s: null, load_cache_s: 5 })).toBe('from cache 5 s');
+    expect(data.loadText({ ...v17.measured[0], load_network_s: null, load_cache_s: null })).toBeNull();
+  });
+});

@@ -2,7 +2,7 @@ import { Check, FileDown, Info, X } from 'lucide-react';
 import { CopyButton } from '../CopyButton';
 import { Reveal } from '../Reveal';
 import { Gauge, Index, Status, Tag } from '../lab';
-import { allCategories, categoryLabel, dataAgeDays, EDITION_LABELS, GATE_DEFINITIONS, GATE_LABELS, lines, measuredOn, models, NOT_MEASURED, otherRates, pct, RATE_DEFINITIONS, RATE_LABELS, shortDate, siteData, type SiteModel } from '../data';
+import { allCategories, categoryLabel, dataAgeDays, EDITION_LABELS, GATE_DEFINITIONS, GATE_LABELS, lines, loadText, measuredOn, models, NOT_MEASURED, otherRates, pct, RATE_DEFINITIONS, RATE_LABELS, shortDate, siteData, type SiteModel } from '../data';
 import { container } from '../cta';
 import { PageIntro } from './Models';
 
@@ -319,9 +319,7 @@ export function GateCard({ m }: { m: SiteModel }) {
                   <span className="datum-value text-2xl font-semibold">{s.tok_s}</span> <span className="text-xs text-muted-foreground">tokens/s</span>
                 </div>
                 <div className="mt-1 text-xs">
-                  {s.load_network_s != null ? `first load ${s.load_network_s} s` : ''}
-                  {s.load_network_s != null && s.load_cache_s != null ? ' · ' : ''}
-                  {s.load_cache_s != null ? `from cache ${s.load_cache_s} s` : ''}
+                  {loadText(s)}
                 </div>
               </li>
             ))}

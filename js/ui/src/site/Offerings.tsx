@@ -1,9 +1,9 @@
-import { ArrowRight, ArrowUpRight, Cpu, Globe, KeyRound, Mail, Wrench } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, Cpu, Gauge as GaugeIcon, Globe, KeyRound, Mail, Wrench } from 'lucide-react';
 import { Link } from './router';
 import { TryLink } from './TryLink';
 import { CopyButton } from './CopyButton';
 import { Gauge, Spec, Tag } from './lab';
-import { commissionBody, commissionMailto, defaultDtype, EDITION_LABELS, exportFidelity, fidelityOk, gb, mailtoFor, measuredPct, modelCta, NOT_MEASURED, requestBody, runsIn, runsInDetail, selfHostCommand, shortDate, weightsAvailability, weightsSpec, type SiteModel } from './data';
+import { commissionBody, commissionMailto, defaultDtype, EDITION_LABELS, exportFidelity, fidelityOk, gb, mailtoFor, measuredPct, modelCta, NOT_MEASURED, requestBody, runsIn, runsInDetail, selfHostCommand, shortDate, speedOf, speedText, weightsAvailability, weightsSpec, type SiteModel } from './data';
 import { primaryCta, secondaryCta } from './cta';
 
 /**
@@ -21,6 +21,7 @@ export function OfferingCard({ m, featured = false }: { m: SiteModel; featured?:
   const cta = modelCta(m);
   const { publicWeights } = cta;
   const pull = selfHostCommand(m);
+  const speed = speedOf(m);
   const primary = cta.kind === 'try' ? (
     <TryLink href={cta.href} className={primaryCta}>
       Try it
@@ -52,6 +53,16 @@ export function OfferingCard({ m, featured = false }: { m: SiteModel; featured?:
         <Spec icon={<Globe className="size-3.5" />} k="runs in" v={runsIn(m)} sub={runsInDetail(m)} />
         <Spec icon={<KeyRound className="size-3.5" />} k="weights" v={publicWeights ? 'yours to download' : 'yours on request'} sub={weightsSpec(m, publicWeights)} />
       </dl>
+      {speed ? (
+        /* How fast it ran where it was measured; an edition with no measured speed shows no line at all. */
+        <p className="mt-4 flex items-start gap-1.5 text-xs text-muted-foreground" data-testid="offering-speed" title={speed.machineFull}>
+          <GaugeIcon className="mt-px size-3.5 shrink-0 text-primary" aria-hidden="true" />
+          <span>
+            <span className="font-medium text-foreground">{speedText(m)}</span>
+            {speed.load ? ` · ${speed.load}` : ''}
+          </span>
+        </p>
+      ) : null}
 
       {g ? (
         <div className="mt-6 rounded-2xl border border-border bg-background/50 p-4 sm:p-5">

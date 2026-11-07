@@ -1,4 +1,4 @@
-import { ArrowUpRight, Cpu, FileDown, Globe, Mail, Scale, Server, Sparkles } from 'lucide-react';
+import { ArrowUpRight, Cpu, FileDown, Gauge as GaugeIcon, Globe, Mail, Scale, Server, Sparkles } from 'lucide-react';
 import { type ReactNode } from 'react';
 import { CopyButton } from '../CopyButton';
 import { CommissionCard, OfferingComparison } from '../Offerings';
@@ -6,7 +6,7 @@ import { Reveal } from '../Reveal';
 import { Link } from '../router';
 import { TryLink } from '../TryLink';
 import { Gauge, Index, Spec, Status, Tag } from '../lab';
-import { categoryLabel, licenceName, weightsAvailability, EDITION_LABELS, factCategories, gb, lines, measuredOn, measuredPct, models, pct, runsIn, runsInDetail, mailtoFor, modelCta, requestBody, shortDate, showcaseModels, weightsDetail, weightsFormat, defaultDtype, EXPORT_FIDELITY_BAR, exportFidelity, exportsBySize, fidelityOk, selfHostCommand, systemPrompt, type SiteModel } from '../data';
+import { categoryLabel, licenceName, weightsAvailability, EDITION_LABELS, factCategories, gb, lines, measuredOn, measuredPct, models, pct, runsIn, runsInDetail, mailtoFor, modelCta, requestBody, shortDate, showcaseModels, weightsDetail, weightsFormat, defaultDtype, EXPORT_FIDELITY_BAR, exportFidelity, exportsBySize, fidelityOk, selfHostCommand, speedOf, systemPrompt, type SiteModel } from '../data';
 import { container, primaryCta, secondaryCta } from '../cta';
 
 /** The page head shared by /models and /benchmarks: index, eyebrow, a large title, the lead, an optional status chip. */
@@ -58,6 +58,8 @@ export function ModelCard({ m, featured }: { m: SiteModel; featured: boolean }) 
   const { publicWeights } = cta;
   const selfHost = selfHostCommand(m);
   const prompt = systemPrompt(m);
+  // how fast the edition ran where it was measured; null (and no Spec) for an edition with no measured speed
+  const speed = speedOf(m);
   return (
     <article className={`glass card-glow corner-marks scroll-mt-20 rounded-3xl p-6 sm:p-8 lg:p-10 ${featured ? 'glow-border' : ''}`} id={m.name}>
       <div className="flex flex-wrap items-center gap-2">
@@ -148,7 +150,7 @@ export function ModelCard({ m, featured }: { m: SiteModel; featured: boolean }) 
         </div>
       ) : null}
 
-      <dl className="mt-8 grid grid-cols-2 gap-x-6 gap-y-6 border-t border-border pt-8 sm:grid-cols-3 lg:grid-cols-6">
+      <dl className={`mt-8 grid grid-cols-2 gap-x-6 gap-y-6 border-t border-border pt-8 sm:grid-cols-3 ${speed ? 'lg:grid-cols-7' : 'lg:grid-cols-6'}`}>
         <Spec icon={<Cpu className="size-3.5" />} k="size" v={`${m.params_b}B parameters`} sub={`base ${m.base_model.split('/').pop()}`} />
         <Spec
           icon={<FileDown className="size-3.5" />}
@@ -157,6 +159,9 @@ export function ModelCard({ m, featured }: { m: SiteModel; featured: boolean }) 
           sub={size ? `${size.dtype} · ${size.chunks > 1 ? `${size.chunks} files` : 'one file'}${fidelity != null ? ` · fidelity ${pct(fidelity, 1)}` : ''}` : publicWeights ? 'bf16 · safetensors · on the Hugging Face Hub' : 'delivered as a Hugging Face repository or as files'}
         />
         <Spec icon={<Globe className="size-3.5" />} k="runs in" v={runsIn(m)} sub={runsInDetail(m)} />
+        {speed ? (
+          <Spec testId="speed" title={speed.machineFull} icon={<GaugeIcon className="size-3.5" />} k="speed" v={speed.tokS} sub={[`${speed.machine} · ${speed.dtype}`, speed.load].filter(Boolean).join(' · ')} />
+        ) : null}
         <Spec icon={<Server className="size-3.5" />} k="format" v={weightsFormat(m)} sub={weightsDetail(m)} />
         <Spec icon={<Scale className="size-3.5" />} k="licence" v={licenceName(m)} sub="inherited from the base" />
         <Spec icon={<Sparkles className="size-3.5" />} k="grounding" v={m.grounding ? 'verified reference' : 'none'} sub={m.grounding ? 'attached at run time' : 'answers from weights alone'} />

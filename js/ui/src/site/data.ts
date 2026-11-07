@@ -120,6 +120,22 @@ export const latestMeasuredAt = showcaseModels.map((m) => m.measured_at ?? '').s
 export const EDITION_LABELS: Record<Edition, string> = { browser: 'browser edition', medium: 'medium edition' };
 /** Where an edition runs, from its weights: a browser export or a GPU-sized checkpoint. */
 export const runsIn = (m: SiteModel) => (m.weights === 'pytorch' ? 'GPU server · workstation' : m.browser ? 'browser · desktop · server' : 'desktop · server');
+/** The speed an edition was measured at where it ran: the first `measured[]` row with a tokens/s value. `machine` is the
+ *  short name (the part before the first comma, "Apple-silicon laptop"); `machineFull` keeps the whole description.
+ *  Null when the edition has no measurement - the cards then show nothing rather than "not measured". */
+export function speedOf(m: SiteModel) {
+  const s = m.measured.find((r) => r && r.tok_s != null && String(r.tok_s).trim());
+  if (!s) return null;
+  return { tokS: `${String(s.tok_s).trim()} tokens/s`, machine: s.machine.split(',')[0].trim(), machineFull: s.machine, dtype: s.dtype, load: loadText(s) };
+}
+/** "first load 22 s · from cache 5 s", either half alone, or null when neither was measured. */
+export const loadText = (s: Measured) =>
+  [s.load_network_s != null ? `first load ${s.load_network_s} s` : null, s.load_cache_s != null ? `from cache ${s.load_cache_s} s` : null].filter(Boolean).join(' · ') || null;
+/** One line for a card: "3-9 tokens/s · Apple-silicon laptop · q8", or null when the edition has no measured speed. */
+export const speedText = (m: SiteModel) => {
+  const s = speedOf(m);
+  return s ? `${s.tokS} · ${s.machine} · ${s.dtype}` : null;
+};
 export const runsInDetail = (m: SiteModel) => (m.weights === 'pytorch' ? `${m.memory_gb ? `about ${m.memory_gb} GB of memory` : 'a GPU'} · PyTorch` : m.browser ? (m.wasm ? 'WebGPU / WASM' : 'WebGPU (Chrome, Edge)') : 'ONNX Runtime (desktop · server)');
 export const weightsFormat = (m: SiteModel) => (m.weights === 'pytorch' ? 'safetensors' : 'ONNX');
 export const weightsDetail = (m: SiteModel) => (m.weights === 'pytorch' ? 'merged weights · bf16' : `opset ${m.opset ?? NOT_MEASURED} · ORT ${m.runtime.onnxruntime ?? NOT_MEASURED}`);

@@ -128,9 +128,9 @@ export function Gauge({ value, threshold, ok, className = '' }: { value: number;
 }
 
 /** Mono key over a plain value: the spec-sheet cell. */
-export function Spec({ k, v, sub, icon }: { k: string; v: ReactNode; sub?: ReactNode; icon?: ReactNode }) {
+export function Spec({ k, v, sub, icon, testId, title }: { k: string; v: ReactNode; sub?: ReactNode; icon?: ReactNode; testId?: string; title?: string }) {
   return (
-    <div className="min-w-0">
+    <div className="min-w-0" data-testid={testId} title={title}>
       <dt className="mono-label flex items-center gap-1.5 text-muted-foreground">
         {icon ? <span className="text-primary">{icon}</span> : null}
         {k}
