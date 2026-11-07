@@ -30,6 +30,8 @@ where it runs, so that I can try it and decide without asking.
 - [x] `/` - the lab's pitch, the offerings grouped by line with one card per edition, the built-to-order card, and
   the lab's method in plain words.
 - [x] `/models` - every showcase edition with runtime, weights format, size, licence and where to get it,
+  how fast it ran where it was measured (tokens/s, machine and dtype, first load and from cache, from `measured[]`;
+  the landing's offering card repeats it in one line, and an edition with no measurement shows no speed at all),
   and, where the data carries one, the system prompt the edition was trained under (shown verbatim with a
   "Copy the system prompt" button, since the published numbers hold only when a self-hosted deployment sends it).
 - [x] `/benchmarks` - the gate results per edition (release, rates, every scenario category
